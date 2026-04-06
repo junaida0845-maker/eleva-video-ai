@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ELEVA — はじめの設定</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--gold:#c9a84c;--gold-light:#f0d070;--black:#0a0a0a;--black-card:#111111;--black-border:#1a1a1a;--border-gold:rgba(201,168,76,0.2);--text-primary:#fff;--text-secondary:#aaa;--text-muted:#666;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--black);color:var(--text-primary);min-height:100vh;display:flex;flex-direction:column;}
+.progress-bar{height:4px;background:#333;position:fixed;top:0;left:0;right:0;z-index:100;}
+.progress-fill{height:100%;background:var(--gold);transition:width 0.4s ease;}
+.page-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;max-width:600px;margin:0 auto;width:100%;}
+.step{display:none;width:100%;}
+.step.active{display:block;}
+.step-num{color:var(--text-muted);font-size:12px;letter-spacing:0.1em;margin-bottom:12px;text-align:center;}
+.step-title{color:var(--gold-light);font-size:clamp(22px,4vw,32px);font-weight:800;text-align:center;margin-bottom:10px;line-height:1.2;}
+.step-desc{color:var(--text-secondary);font-size:15px;text-align:center;margin-bottom:32px;line-height:1.6;}
+.choice-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:28px;}
+.choice-card{background:var(--black-card);border:2px solid var(--border-gold);border-radius:16px;padding:24px 20px;cursor:pointer;text-align:center;transition:all 0.2s;user-select:none;}
+.choice-card:hover{border-color:var(--gold);}
+.choice-card.selected{border-color:var(--gold);background:rgba(201,168,76,0.1);color:var(--gold-light);}
+.choice-card .icon{font-size:36px;margin-bottom:12px;display:block;}
+.choice-card .label{color:#fff;font-size:16px;font-weight:600;}
+.choice-card .sublabel{color:var(--text-secondary);font-size:12px;margin-top:6px;}
+.choice-card.selected .label{color:var(--gold-light);}
+/* Platform multi-select */
+.platform-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:28px;}
+.platform-item{background:var(--black-card);border:2px solid var(--border-gold);border-radius:14px;padding:18px;cursor:pointer;text-align:center;transition:all 0.2s;}
+.platform-item:hover{border-color:var(--gold);}
+.platform-item.selected{border-color:var(--gold);background:rgba(201,168,76,0.1);}
+.platform-item .pi{font-size:28px;margin-bottom:8px;display:block;}
+.platform-item .pn{color:#fff;font-size:14px;font-weight:600;}
+.platform-item.selected .pn{color:var(--gold-light);}
+/* Genre grid */
+.genre-grid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:28px;}
+.genre-chip{background:var(--black-border);border:1px solid var(--border-gold);color:#fff;padding:10px 16px;border-radius:20px;cursor:pointer;font-size:14px;transition:all 0.2s;}
+.genre-chip:hover{border-color:var(--gold);}
+.genre-chip.selected{background:rgba(201,168,76,0.15);border-color:var(--gold);color:var(--gold-light);}
+/* Follower options */
+.follower-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:28px;}
+.follower-opt{background:var(--black-card);border:2px solid var(--border-gold);border-radius:12px;padding:16px;cursor:pointer;transition:all 0.2s;text-align:center;}
+.follower-opt:hover,.follower-opt.selected{border-color:var(--gold);background:rgba(201,168,76,0.1);}
+.follower-opt span{color:#fff;font-size:15px;font-weight:600;display:block;}
+.follower-opt small{color:var(--text-secondary);font-size:12px;}
+/* Frequency */
+.freq-opts{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:16px;}
+.freq-opt{background:var(--black-card);border:2px solid var(--border-gold);border-radius:12px;padding:14px 20px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:space-between;}
+.freq-opt:hover,.freq-opt.selected{border-color:var(--gold);background:rgba(201,168,76,0.1);}
+.freq-opt span{color:#fff;font-size:14px;font-weight:500;}
+/* Nav */
+.step-nav{display:flex;gap:12px;width:100%;}
+.btn-next{flex:1;background:var(--gold);color:#000;border:none;padding:16px;border-radius:12px;font-weight:700;font-size:16px;cursor:pointer;transition:all 0.2s;}
+.btn-next:hover{background:var(--gold-light);}
+.btn-next:disabled{background:#333;color:#666;cursor:not-allowed;}
+.btn-back{background:none;border:1px solid var(--border-gold);color:var(--text-muted);padding:16px 20px;border-radius:12px;cursor:pointer;font-size:14px;}
+.btn-back:hover{border-color:var(--gold);color:var(--gold);}
+/* Plan modal */
+.plan-modal{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:1000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.plan-modal-box{background:var(--black-card);border:2px solid var(--gold);border-radius:24px;padding:36px;max-width:420px;width:90%;text-align:center;}
+.plan-modal-label{color:var(--text-secondary);font-size:13px;margin-bottom:8px;}
+.plan-modal-name{color:var(--gold);font-size:32px;font-weight:900;margin-bottom:8px;}
+.plan-modal-price{color:#fff;font-size:22px;font-weight:700;margin-bottom:8px;}
+.plan-modal-desc{color:var(--text-secondary);font-size:14px;margin-bottom:24px;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:20%"></div></div>
+
+<div class="page-wrap">
+  <!-- Step 1: Purpose -->
+  <div class="step active" id="step-1">
+    <div class="step-num">ステップ 1 / 5</div>
+    <h1 class="step-title" data-i18n="your_purpose">SNS活用の目的は？</h1>
+    <p class="step-desc">あなたに最適な設定をご提案します。</p>
+    <div class="choice-grid">
+      <div class="choice-card" onclick="select('purpose','personal',this)" data-value="personal">
+        <span class="icon">👤</span>
+        <div class="label" data-i18n="personal_sns">個人SNS運用</div>
+        <div class="sublabel">趣味・副業・個人ブランド</div>
+      </div>
+      <div class="choice-card" onclick="select('purpose','business',this)" data-value="business">
+        <span class="icon">🏪</span>
+        <div class="label" data-i18n="business_pr">お店PR・商品販売</div>
+        <div class="sublabel">店舗・EC・法人</div>
+      </div>
+    </div>
+    <button class="btn-next" id="next-1" onclick="nextStep(2)" disabled data-i18n="next">次へ</button>
+  </div>
+
+  <!-- Step 2: Platforms -->
+  <div class="step" id="step-2">
+    <div class="step-num">ステップ 2 / 5</div>
+    <h2 class="step-title" data-i18n="target_platforms">メインで使うSNSは？</h2>
+    <p class="step-desc">複数選択できます</p>
+    <div class="platform-grid">
+      <div class="platform-item" onclick="togglePlatform('tiktok',this)"><span class="pi">🎵</span><span class="pn">TikTok</span></div>
+      <div class="platform-item" onclick="togglePlatform('instagram',this)"><span class="pi">📸</span><span class="pn">Instagram</span></div>
+      <div class="platform-item" onclick="togglePlatform('youtube',this)"><span class="pi">▶️</span><span class="pn">YouTube</span></div>
+      <div class="platform-item" onclick="togglePlatform('x',this)"><span class="pi">𝕏</span><span class="pn">X</span></div>
+    </div>
+    <div class="step-nav">
+      <button class="btn-back" onclick="goStep(1)">← 戻る</button>
+      <button class="btn-next" id="next-2" onclick="nextStep(3)" disabled data-i18n="next">次へ</button>
+    </div>
+  </div>
+
+  <!-- Step 3: Genres -->
+  <div class="step" id="step-3">
+    <div class="step-num">ステップ 3 / 5</div>
+    <h2 class="step-title" data-i18n="select_genres">コンテンツのジャンルを選択</h2>
+    <p class="step-desc">当てはまるものをすべて選んでください</p>
+    <div class="genre-grid" id="genre-grid">
+      <div class="genre-chip" onclick="toggleGenre('beauty',this)">💄 美容・コスメ</div>
+      <div class="genre-chip" onclick="toggleGenre('food',this)">🍜 グルメ・料理</div>
+      <div class="genre-chip" onclick="toggleGenre('travel',this)">✈️ 旅行</div>
+      <div class="genre-chip" onclick="toggleGenre('fashion',this)">👗 ファッション</div>
+      <div class="genre-chip" onclick="toggleGenre('fitness',this)">💪 フィットネス</div>
+      <div class="genre-chip" onclick="toggleGenre('pet',this)">🐾 ペット</div>
+      <div class="genre-chip" onclick="toggleGenre('tech',this)">💻 テック・ガジェット</div>
+      <div class="genre-chip" onclick="toggleGenre('gaming',this)">🎮 ゲーム</div>
+      <div class="genre-chip" onclick="toggleGenre('music',this)">🎵 音楽・アート</div>
+      <div class="genre-chip" onclick="toggleGenre('edu',this)">📚 教育・ハウツー</div>
+      <div class="genre-chip" onclick="toggleGenre('shop',this)">🛍️ 商品PR</div>
+      <div class="genre-chip" onclick="toggleGenre('restaurant',this)">🏪 店舗PR</div>
+      <div class="genre-chip" onclick="toggleGenre('comedy',this)">😄 面白・コメディ</div>
+      <div class="genre-chip" onclick="toggleGenre('news',this)">📰 ニュース・社会</div>
+    </div>
+    <div class="step-nav">
+      <button class="btn-back" onclick="goStep(2)">← 戻る</button>
+      <button class="btn-next" id="next-3" onclick="nextStep(4)" disabled data-i18n="next">次へ</button>
+    </div>
+  </div>
+
+  <!-- Step 4: Followers -->
+  <div class="step" id="step-4">
+    <div class="step-num">ステップ 4 / 5</div>
+    <h2 class="step-title" data-i18n="follower_count">現在のフォロワー数</h2>
+    <p class="step-desc">最もフォロワーの多いSNSの数を選択してください</p>
+    <div class="follower-opts">
+      <div class="follower-opt" onclick="select('follower_range','0-1k',this)"><span>〜1,000人</span><small>これから始める</small></div>
+      <div class="follower-opt" onclick="select('follower_range','1k-10k',this)"><span>1K〜10K</span><small>成長中</small></div>
+      <div class="follower-opt" onclick="select('follower_range','10k-100k',this)"><span>10K〜100K</span><small>中堅クリエイター</small></div>
+      <div class="follower-opt" onclick="select('follower_range','100k+',this)"><span>100K以上</span><small>インフルエンサー</small></div>
+    </div>
+    <div class="step-nav">
+      <button class="btn-back" onclick="goStep(3)">← 戻る</button>
+      <button class="btn-next" id="next-4" onclick="nextStep(5)" disabled data-i18n="next">次へ</button>
+    </div>
+  </div>
+
+  <!-- Step 5: Frequency + Experience -->
+  <div class="step" id="step-5">
+    <div class="step-num">ステップ 5 / 5</div>
+    <h2 class="step-title" data-i18n="posting_habits">投稿頻度と経験</h2>
+    <p class="step-desc" data-i18n="posting_frequency">投稿頻度</p>
+    <div class="freq-opts" style="margin-bottom:24px;">
+      <div class="freq-opt" onclick="select('posting_frequency','daily',this)"><span data-i18n="quiz_q3_a">毎日</span></div>
+      <div class="freq-opt" onclick="select('posting_frequency','medium',this)"><span data-i18n="quiz_q3_b">週3〜5回</span></div>
+      <div class="freq-opt" onclick="select('posting_frequency','low',this)"><span data-i18n="quiz_q3_c">週1〜2回</span></div>
+    </div>
+    <p class="step-desc" data-i18n="experience_level">SNS運用経験</p>
+    <div class="freq-opts">
+      <div class="freq-opt" onclick="select('experience_level','beginner',this)"><span>🌱 初めて</span></div>
+      <div class="freq-opt" onclick="select('experience_level','intermediate',this)"><span>📈 ある程度ある</span></div>
+      <div class="freq-opt" onclick="select('experience_level','advanced',this)"><span>⚡ バリバリ運用中</span></div>
+    </div>
+    <div class="step-nav" style="margin-top:24px;">
+      <button class="btn-back" onclick="goStep(4)">← 戻る</button>
+      <button class="btn-next" id="next-5" onclick="completeOnboarding()" disabled>完了 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Plan Recommendation Modal -->
+<div class="plan-modal" id="plan-modal" style="display:none;">
+  <div class="plan-modal-box">
+    <div style="font-size:40px;margin-bottom:16px;">✨</div>
+    <div class="plan-modal-label">あなたへのおすすめ</div>
+    <div class="plan-modal-name" id="rec-plan-name">PRO</div>
+    <div class="plan-modal-price" id="rec-plan-price">¥2,980/月</div>
+    <div class="plan-modal-desc" id="rec-plan-desc">あなたのSNS運用スタイルに最適なプランです。</div>
+    <div style="display:flex;gap:12px;flex-direction:column;">
+      <a href="/payment.html" id="rec-plan-btn" class="btn-next" style="display:block;text-decoration:none;text-align:center;padding:16px;background:var(--gold);color:#000;border-radius:12px;font-weight:700;font-size:16px;" data-i18n="start_now">今すぐ始める</a>
+      <button onclick="window.location.href='/dashboard.html'" style="background:none;border:none;color:var(--text-muted);font-size:13px;cursor:pointer;">スキップして無料で始める</button>
+    </div>
+  </div>
+</div>
+
+<script src="/eleva-i18n.js"></script>
+<script src="/eleva-shared.js"></script>
+<script>
+const answers={purpose:null,target_platforms:[],account_genres:[],follower_range:null,posting_frequency:null,experience_level:null};
+let currentStep=1;
+
+function select(key,val,el){
+  const container=el.closest('.choice-grid,.follower-opts,.freq-opts');
+  container?.querySelectorAll('.choice-card,.follower-opt,.freq-opt').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+  answers[key]=val;
+  // Check if next-btn can be enabled
+  checkNext();
+}
+
+function togglePlatform(platform,el){
+  el.classList.toggle('selected');
+  answers.target_platforms=Array.from(document.querySelectorAll('.platform-item.selected')).map((e,i)=>{
+    const platforms=['tiktok','instagram','youtube','x'];
+    return e.querySelector('.pn').textContent.toLowerCase().trim();
+  });
+  checkNext();
+}
+
+function toggleGenre(genre,el){
+  el.classList.toggle('selected');
+  answers.account_genres=Array.from(document.querySelectorAll('.genre-chip.selected')).map(e=>e.dataset.genre||genre);
+  checkNext();
+}
+
+function checkNext(){
+  const btns={'step-1':answers.purpose,'step-2':answers.target_platforms.length>0,'step-3':true,'step-4':answers.follower_range,'step-5':answers.posting_frequency&&answers.experience_level};
+  const stepKey='step-'+currentStep;
+  const nextId='next-'+currentStep;
+  const btn=document.getElementById(nextId);
+  if(btn)btn.disabled=!btns[stepKey];
+}
+
+function nextStep(step){goStep(step);}
+
+function goStep(step){
+  document.getElementById('step-'+currentStep).classList.remove('active');
+  currentStep=step;
+  document.getElementById('step-'+step).classList.add('active');
+  document.getElementById('progress-fill').style.width=(step/5*100)+'%';
+  checkNext();
+  window.scrollTo(0,0);
+}
+
+function getRecommendedPlan(){
+  const {purpose,target_platforms,posting_frequency,experience_level}=answers;
+  if(purpose==='business')return{name:'BUSINESS',price:'¥9,800/月',desc:'ビジネス向けの充実した機能で、複数SNS管理と無制限生成が可能です。'};
+  if(posting_frequency==='daily'||experience_level==='advanced')return{name:'PRO',price:'¥2,980/月',desc:'毎日投稿のクリエイターに最適。高品質4K動画を量産できます。'};
+  return{name:'FREE',price:'¥0/月',desc:'まずは無料で始めて、必要になったらアップグレードしましょう。'};
+}
+
+async function completeOnboarding(){
+  const sb=ELEVA.getSupabase();
+  const {data:{session}}=await sb.auth.getSession();
+  const userId=session?.user?.id;
+  if(userId){
+    try{
+      await fetch(ELEVA.SUPABASE_URL+'/rest/v1/user_onboarding',{
+        method:'POST',headers:{'Content-Type':'application/json','apikey':ELEVA.SUPABASE_ANON_KEY,'Authorization':'Bearer '+ELEVA.SUPABASE_ANON_KEY,'Prefer':'return=minimal'},
+        body:JSON.stringify({user_id:userId,...answers,completed:true,created_at:new Date().toISOString()})
+      });
+      await sb.from('profiles').upsert({id:userId,onboarding_completed:true,account_genres:answers.account_genres,target_platforms:answers.target_platforms});
+    }catch(e){console.error('Onboarding save error:',e);}
+  }
+  const plan=getRecommendedPlan();
+  document.getElementById('rec-plan-name').textContent=plan.name;
+  document.getElementById('rec-plan-price').textContent=plan.price;
+  document.getElementById('rec-plan-desc').textContent=plan.desc;
+  document.getElementById('plan-modal').style.display='flex';
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  ELEVA.initElevaPage({page:'onboarding',skipSplash:false});
+  ELEVA.applyLanguage(localStorage.getItem('eleva_lang')||'ja');
+});
+</script>
+</body>
+</html>

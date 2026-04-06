@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ELEVA — 設定</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--gold:#c9a84c;--gold-light:#f0d070;--gold-dark:#a07830;--black:#0a0a0a;--black-card:#111111;--black-border:#1a1a1a;--border-gold:rgba(201,168,76,0.2);--text-primary:#fff;--text-secondary:#aaa;--text-muted:#666;--text-gold:#c9a84c;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--black);color:var(--text-primary);min-height:100vh;padding-top:56px;}
+::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-thumb{background:rgba(201,168,76,0.3);}
+.top-bar{position:fixed;top:0;left:0;right:0;height:56px;background:rgba(10,10,10,0.95);border-bottom:1px solid var(--border-gold);display:flex;align-items:center;justify-content:flex-end;padding:0 20px;gap:12px;z-index:100;backdrop-filter:blur(8px);}
+.top-bar-center{position:absolute;left:50%;transform:translateX(-50%);font-size:16px;font-weight:800;color:var(--gold-light);}
+.lang-btn-top{background:none;border:1px solid var(--border-gold);color:var(--gold);padding:6px 12px;border-radius:16px;cursor:pointer;font-size:12px;}
+.page-wrap{max-width:700px;margin:0 auto;padding:24px 16px 100px;}
+.section-title{color:var(--gold-light);font-size:20px;font-weight:700;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border-gold);}
+.card{background:var(--black-card);border:1px solid var(--border-gold);border-radius:16px;padding:24px;margin-bottom:20px;}
+.card-title{color:var(--gold);font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:16px;}
+.form-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.form-row:last-child{border-bottom:none;}
+.form-label{color:var(--text-secondary);font-size:13px;}
+.form-value{color:#fff;font-size:13px;font-weight:500;}
+input[type=text],input[type=email],select{background:var(--black-border);border:1px solid rgba(201,168,76,0.3);color:#fff;padding:10px 14px;border-radius:8px;font-size:14px;outline:none;transition:border-color 0.2s;font-family:'Inter',sans-serif;min-width:200px;}
+input[type=text]:focus,input[type=email]:focus,select:focus{border-color:var(--gold);}
+input::placeholder{color:var(--text-muted);}
+select option{background:#1a1a1a;color:#fff;}
+.btn-gold{background:var(--gold);color:#000;border:none;padding:10px 20px;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px;transition:all 0.2s;}
+.btn-gold:hover{background:var(--gold-light);}
+.btn-outline{background:transparent;border:1px solid var(--gold);color:var(--gold);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;transition:all 0.2s;}
+.btn-outline:hover{background:rgba(201,168,76,0.1);}
+.btn-danger{background:transparent;border:1px solid #ff4444;color:#ff4444;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;}
+/* SNS Items */
+.sns-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.sns-info{display:flex;align-items:center;gap:12px;}
+.sns-icon{font-size:24px;width:40px;text-align:center;}
+.sns-name{color:#fff;font-size:14px;font-weight:600;}
+.connected-dot{width:8px;height:8px;border-radius:50%;background:#44ff88;display:inline-block;margin-right:6px;}
+.sns-status{font-size:12px;color:var(--text-secondary);}
+/* Plan */
+.plan-badge{display:inline-block;background:var(--gold);color:#000;padding:4px 12px;border-radius:12px;font-size:12px;font-weight:700;}
+/* Toggle */
+.toggle{position:relative;display:inline-block;width:48px;height:26px;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:#333;border-radius:13px;cursor:pointer;transition:0.3s;}
+.toggle-slider::before{content:'';position:absolute;width:20px;height:20px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.3s;}
+input:checked+.toggle-slider{background:var(--gold);}
+input:checked+.toggle-slider::before{transform:translateX(22px);}
+/* Cancellation modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-box{background:#111111;border:1px solid var(--border-gold);border-radius:20px;padding:32px;max-width:480px;width:90%;max-height:80vh;overflow-y:auto;}
+.modal-step-title{color:var(--gold-light);font-size:18px;font-weight:700;margin-bottom:16px;}
+.cancel-link{color:var(--text-muted);font-size:12px;cursor:pointer;background:none;border:none;text-decoration:underline;}
+.char-counter{text-align:right;font-size:12px;color:var(--text-muted);margin-top:4px;}
+.char-counter.active{color:var(--gold);}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div class="top-bar-center" data-i18n="settings">設定</div>
+  <button class="lang-btn-top" onclick="ELEVA.showLanguageModal()">🌐</button>
+</div>
+
+<div class="page-wrap">
+  <!-- Account Info -->
+  <div class="section-title" data-i18n="account_info">アカウント情報</div>
+  <div class="card">
+    <div class="form-row">
+      <span class="form-label" data-i18n="email">メールアドレス</span>
+      <span class="form-value" id="user-email">—</span>
+    </div>
+    <div class="form-row">
+      <span class="form-label">ユーザーID</span>
+      <span class="form-value" id="user-id" style="font-size:11px;color:var(--text-muted);">—</span>
+    </div>
+    <div class="form-row">
+      <span class="form-label">表示名</span>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="text" id="display-name" placeholder="表示名" style="min-width:160px;"/>
+        <button class="btn-gold" onclick="saveName()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SNS Linking -->
+  <div class="section-title" data-i18n="sns_linking">SNS連携</div>
+  <div class="card">
+    <div class="card-title">連携済みアカウント</div>
+    <div class="sns-row">
+      <div class="sns-info"><span class="sns-icon">🎵</span><div><div class="sns-name">TikTok</div><div class="sns-status" id="tiktok-status">未連携</div></div></div>
+      <button class="btn-outline" id="tiktok-btn" onclick="connectSNS('tiktok')">連携する</button>
+    </div>
+    <div class="sns-row">
+      <div class="sns-info"><span class="sns-icon">📸</span><div><div class="sns-name">Instagram</div><div class="sns-status" id="instagram-status">未連携</div></div></div>
+      <button class="btn-outline" id="instagram-btn" onclick="connectSNS('instagram')">連携する</button>
+    </div>
+    <div class="sns-row">
+      <div class="sns-info"><span class="sns-icon">▶️</span><div><div class="sns-name">YouTube</div><div class="sns-status" id="youtube-status">未連携</div></div></div>
+      <button class="btn-outline" id="youtube-btn" onclick="connectSNS('youtube')">連携する</button>
+    </div>
+    <div class="sns-row" style="border-bottom:none;">
+      <div class="sns-info"><span class="sns-icon">𝕏</span><div><div class="sns-name">X (Twitter)</div><div class="sns-status" id="x-status">未連携</div></div></div>
+      <button class="btn-outline" id="x-btn" onclick="connectSNS('x')">連携する</button>
+    </div>
+  </div>
+
+  <!-- Plan -->
+  <div class="section-title" data-i18n="plan_info">プラン情報</div>
+  <div class="card">
+    <div class="form-row">
+      <span class="form-label">現在のプラン</span>
+      <span class="plan-badge" id="current-plan">FREE</span>
+    </div>
+    <div class="form-row">
+      <span class="form-label">次回請求日</span>
+      <span class="form-value" id="next-billing">—</span>
+    </div>
+    <div class="form-row">
+      <span class="form-label">残りクレジット</span>
+      <span class="form-value" id="credits-left">—</span>
+    </div>
+    <div style="padding-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+      <a href="/payment.html" class="btn-gold" style="text-decoration:none;" data-i18n="plan_upgrade">プランをアップグレード</a>
+      <button class="btn-outline" onclick="changeplan()">プランを変更</button>
+    </div>
+    <!-- Plan change dropdown -->
+    <div id="plan-change-area" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--border-gold);">
+      <label style="color:var(--text-secondary);font-size:13px;display:block;margin-bottom:8px;">変更先プランを選択</label>
+      <select id="plan-select" style="width:100%;margin-bottom:12px;">
+        <option value="free">FREE — ¥0/月</option>
+        <option value="pro">PRO — ¥2,980/月</option>
+        <option value="business">BUSINESS — ¥9,800/月</option>
+      </select>
+      <div style="display:flex;gap:10px;">
+        <a href="/payment.html" class="btn-gold" style="text-decoration:none;">支払いへ進む</a>
+        <button class="btn-outline" onclick="document.getElementById('plan-change-area').style.display='none'">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Social Proof Toggle -->
+  <div class="section-title">ソーシャルプルーフ</div>
+  <div class="card">
+    <div class="form-row" style="border-bottom:none;">
+      <div>
+        <span class="form-label" style="display:block;color:#fff;font-size:14px;">実績データの表示に同意する</span>
+        <span style="color:var(--text-muted);font-size:12px;margin-top:4px;display:block;">あなたのフォロワー数推移が匿名でLPに表示される場合があります</span>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="social-proof-toggle" onchange="saveSocialProof(this.checked)"/>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Notification Settings -->
+  <div class="section-title">通知設定</div>
+  <div class="card">
+    <div class="form-row" style="border-bottom:none;">
+      <div>
+        <span class="form-label" style="display:block;color:#fff;font-size:14px;">生成完了プッシュ通知</span>
+        <span style="color:var(--text-muted);font-size:12px;margin-top:4px;display:block;">動画の生成が完了したときに通知を受け取る</span>
+      </div>
+      <button class="btn-outline" onclick="ELEVA.requestPushPermission()" style="font-size:12px;">通知を許可</button>
+    </div>
+  </div>
+
+  <!-- Cancellation -->
+  <div class="section-title" style="color:var(--gold-light);">その他</div>
+  <div class="card" style="text-align:center;padding:20px;">
+    <button class="cancel-link" onclick="startCancellation()" data-i18n="cancellation">解約手続き</button>
+  </div>
+
+  <!-- Logout -->
+  <div style="text-align:center;padding:12px 0 20px;">
+    <button onclick="ELEVA.logout()" style="background:none;border:none;color:var(--text-muted);font-size:13px;cursor:pointer;" data-i18n="logout">ログアウト</button>
+  </div>
+</div>
+
+<!-- Cancellation Modal -->
+<div id="cancel-modal" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <!-- Step 1: Reasons -->
+    <div id="cancel-step-1">
+      <div class="modal-step-title">解約理由を教えてください</div>
+      <p style="color:#fff;font-size:14px;margin-bottom:16px;">いただいたご意見はサービス改善に役立てます。</p>
+      <div id="cancel-reasons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;color:#fff;font-size:14px;"><input type="radio" name="cancel-reason" value="expensive" style="accent-color:var(--gold)"/> 料金が高い</label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;color:#fff;font-size:14px;"><input type="radio" name="cancel-reason" value="not-using" style="accent-color:var(--gold)"/> あまり使わなかった</label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;color:#fff;font-size:14px;"><input type="radio" name="cancel-reason" value="quality" style="accent-color:var(--gold)"/> 動画品質に満足できなかった</label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;color:#fff;font-size:14px;"><input type="radio" name="cancel-reason" value="competitor" style="accent-color:var(--gold)"/> 他のサービスに移行する</label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;color:#fff;font-size:14px;"><input type="radio" name="cancel-reason" value="other" style="accent-color:var(--gold)"/> その他</label>
+      </div>
+      <div style="margin-bottom:16px;">
+        <label style="color:var(--text-secondary);font-size:13px;display:block;margin-bottom:6px;">詳細をご記入ください（任意）</label>
+        <textarea id="cancel-feedback" rows="4" placeholder="ご意見をお聞かせください..." style="width:100%;background:var(--black-border);border:1px solid var(--gold);color:#fff;padding:12px;border-radius:8px;font-family:'Inter',sans-serif;font-size:14px;resize:vertical;outline:none;" oninput="updateCharCount(this)"></textarea>
+        <div class="char-counter" id="char-counter">0 / 500</div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn-gold" onclick="goToCancelStep2()" style="flex:1;">次へ</button>
+        <button class="btn-outline" onclick="document.getElementById('cancel-modal').style.display='none'" style="flex:1;">キャンセル</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Retention offer -->
+    <div id="cancel-step-2" style="display:none;">
+      <div class="modal-step-title" style="color:var(--gold-light);">⚠️ 解約する前に</div>
+      <p style="color:#fff;font-size:14px;margin-bottom:16px;">解約するとこれらの特典が失われます：</p>
+      <ul style="color:var(--text-secondary);font-size:13px;line-height:2;margin-bottom:20px;list-style:none;padding:0;">
+        <li style="color:#aaa;">• 残りクレジットがすべて消滅します</li>
+        <li style="color:#aaa;">• 生成した動画のクラウド保存が停止します</li>
+        <li style="color:#aaa;">• SNSトレンド分析が利用できなくなります</li>
+        <li style="color:#aaa;">• 現在の料金から<strong style="color:var(--gold);">50%OFF</strong>でご継続いただけます</li>
+      </ul>
+      <div style="display:flex;gap:10px;flex-direction:column;">
+        <button class="btn-gold" onclick="document.getElementById('cancel-modal').style.display='none'" style="font-size:16px;padding:14px;">やっぱりやめる（継続する）</button>
+        <button onclick="goToCancelStep3()" style="background:#333;color:#666;border:none;padding:10px;border-radius:8px;cursor:pointer;font-size:12px;margin-top:8px;">それでも解約する</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Confirm -->
+    <div id="cancel-step-3" style="display:none;">
+      <div class="modal-step-title">解約を確認する</div>
+      <p style="color:#fff;font-size:14px;margin-bottom:6px;">本当に解約しますか？</p>
+      <p style="color:#ff4444;font-size:13px;margin-bottom:20px;">⚠️ この操作は取り消せません。</p>
+      <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-bottom:20px;">
+        <input type="checkbox" id="cancel-confirm-check" style="margin-top:2px;accent-color:var(--gold)"/>
+        <span style="color:#fff;font-size:13px;">解約の条件をすべて理解し、同意します</span>
+      </label>
+      <div style="display:flex;gap:10px;flex-direction:column;">
+        <button class="btn-gold" onclick="document.getElementById('cancel-modal').style.display='none'" style="font-size:16px;padding:14px;">やっぱり続ける</button>
+        <button id="final-cancel-btn" onclick="submitCancellation()" style="background:#333;color:#666;border:none;padding:10px;border-radius:8px;cursor:pointer;font-size:12px;margin-top:8px;" disabled>解約を完了する</button>
+      </div>
+    </div>
+
+    <!-- Step 4: Complete -->
+    <div id="cancel-step-4" style="display:none;text-align:center;">
+      <div style="font-size:40px;margin-bottom:16px;color:var(--gold-light);animation:pulse 2s infinite;">ELEVA</div>
+      <h3 style="color:var(--gold-light);margin-bottom:12px;">解約が完了しました</h3>
+      <p style="color:var(--text-secondary);font-size:14px;margin-bottom:24px;">ご利用いただきありがとうございました。またいつでもお戻りください。</p>
+      <button class="btn-outline" onclick="window.location.href='/login.html'">トップページへ</button>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes pulse{0%,100%{text-shadow:0 0 20px rgba(240,208,112,0.5);}50%{text-shadow:0 0 40px rgba(240,208,112,0.9),0 0 80px rgba(201,168,76,0.4);}}
+</style>
+
+<script src="/eleva-i18n.js"></script>
+<script src="/eleva-shared.js"></script>
+<script>
+const sb=ELEVA.getSupabase();
+let currentUser=null;
+
+function changeplan(){
+  const area=document.getElementById('plan-change-area');
+  area.style.display=area.style.display==='none'?'block':'none';
+}
+
+function connectSNS(platform){
+  alert(platform+'の連携は近日公開予定です。');
+}
+
+async function saveName(){
+  const name=document.getElementById('display-name').value;
+  if(!name||!currentUser)return;
+  await sb.from('profiles').upsert({id:currentUser.id,display_name:name});
+  alert('保存しました');
+}
+
+async function saveSocialProof(val){
+  if(!currentUser)return;
+  await sb.from('profiles').upsert({id:currentUser.id,social_proof_consent:val});
+}
+
+function startCancellation(){
+  document.getElementById('cancel-modal').style.display='flex';
+}
+
+function goToCancelStep2(){
+  document.getElementById('cancel-step-1').style.display='none';
+  document.getElementById('cancel-step-2').style.display='block';
+}
+
+function goToCancelStep3(){
+  document.getElementById('cancel-step-2').style.display='none';
+  document.getElementById('cancel-step-3').style.display='block';
+  document.getElementById('cancel-confirm-check').addEventListener('change',function(){
+    document.getElementById('final-cancel-btn').disabled=!this.checked;
+    document.getElementById('final-cancel-btn').style.cssText=this.checked?'background:var(--gold);color:#000;border:none;padding:10px;border-radius:8px;cursor:pointer;font-size:13px;':'background:#333;color:#666;border:none;padding:10px;border-radius:8px;cursor:not-allowed;font-size:12px;';
+  });
+}
+
+async function submitCancellation(){
+  const reason=document.querySelector('input[name="cancel-reason"]:checked')?.value||'unspecified';
+  const feedback=document.getElementById('cancel-feedback').value;
+  try{
+    await fetch(ELEVA.SUPABASE_URL+'/rest/v1/cancellation_requests',{
+      method:'POST',headers:{'Content-Type':'application/json','apikey':ELEVA.SUPABASE_ANON_KEY,'Authorization':'Bearer '+ELEVA.SUPABASE_ANON_KEY},
+      body:JSON.stringify({user_id:currentUser?.id,reason,feedback,created_at:new Date().toISOString()})
+    });
+    if(currentUser){const sb2=ELEVA.getSupabase();await sb2.auth.signOut();}
+  }catch(e){}
+  document.getElementById('cancel-step-3').style.display='none';
+  document.getElementById('cancel-step-4').style.display='block';
+}
+
+function updateCharCount(el){
+  const count=el.value.length;
+  const counter=document.getElementById('char-counter');
+  counter.textContent=count+' / 500';
+  counter.className='char-counter'+(count>=50?' active':'');
+  if(count>500)el.value=el.value.slice(0,500);
+}
+
+document.addEventListener('DOMContentLoaded',async()=>{
+  currentUser=await ELEVA.initElevaPage({page:'settings',onUser:u=>{currentUser=u;}});
+  ELEVA.applyLanguage(localStorage.getItem('eleva_lang')||'ja');
+  if(currentUser){
+    document.getElementById('user-email').textContent=currentUser.email;
+    document.getElementById('user-id').textContent=currentUser.id.slice(0,8)+'...';
+    const {data:prof}=await sb.from('profiles').select('*').eq('id',currentUser.id).single();
+    if(prof){
+      document.getElementById('current-plan').textContent=prof.plan_type?.toUpperCase()||'FREE';
+      document.getElementById('credits-left').textContent=prof.credits_remaining||0;
+      if(prof.display_name)document.getElementById('display-name').value=prof.display_name;
+      if(prof.social_proof_consent)document.getElementById('social-proof-toggle').checked=true;
+    }
+    // Load SNS accounts
+    const {data:sns}=await sb.from('user_sns_accounts').select('*').eq('user_id',currentUser.id).eq('is_active',true);
+    (sns||[]).forEach(acc=>{
+      const statusEl=document.getElementById(acc.platform+'-status');
+      const btnEl=document.getElementById(acc.platform+'-btn');
+      if(statusEl){statusEl.innerHTML='<span class="connected-dot"></span>連携済み @'+acc.username;}
+      if(btnEl){btnEl.textContent='解除';btnEl.style.color='#ff4444';btnEl.style.borderColor='#ff4444';}
+    });
+  }
+});
+</script>
+</body>
+</html>

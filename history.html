@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ELEVA — 生成履歴</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--gold:#c9a84c;--gold-light:#f0d070;--black:#0a0a0a;--black-card:#111111;--black-border:#1a1a1a;--border-gold:rgba(201,168,76,0.2);--text-primary:#fff;--text-secondary:#aaa;--text-muted:#666;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--black);color:var(--text-primary);min-height:100vh;padding-top:56px;}
+::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-thumb{background:rgba(201,168,76,0.3);}
+.top-bar{position:fixed;top:0;left:0;right:0;height:56px;background:rgba(10,10,10,0.95);border-bottom:1px solid var(--border-gold);display:flex;align-items:center;justify-content:flex-end;padding:0 20px;z-index:100;}
+.top-bar-center{position:absolute;left:50%;transform:translateX(-50%);font-size:16px;font-weight:800;color:var(--gold-light);}
+.btn-top{background:none;border:1px solid var(--border-gold);color:var(--gold);padding:6px 12px;border-radius:16px;cursor:pointer;font-size:12px;}
+.page-wrap{max-width:800px;margin:0 auto;padding:24px 16px 80px;}
+.page-title{color:var(--gold-light);font-size:24px;font-weight:800;margin-bottom:24px;}
+.history-card{background:var(--black-card);border:1px solid var(--border-gold);border-radius:16px;overflow:hidden;margin-bottom:16px;transition:border-color 0.2s;}
+.history-card:hover{border-color:var(--gold);}
+.history-card.highlighted{border-color:var(--gold);box-shadow:0 0 20px rgba(201,168,76,0.15);}
+.card-media{background:#000;position:relative;}
+.card-media video,.card-media img{width:100%;max-height:300px;object-fit:cover;display:block;}
+.card-status{position:absolute;top:12px;right:12px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.status-completed{background:rgba(68,255,136,0.2);color:#44ff88;border:1px solid rgba(68,255,136,0.4);}
+.status-generating{background:rgba(201,168,76,0.2);color:var(--gold);border:1px solid rgba(201,168,76,0.4);}
+.status-failed{background:rgba(255,68,68,0.2);color:#ff4444;border:1px solid rgba(255,68,68,0.4);}
+.card-body{padding:16px 20px;}
+.card-prompt{color:#fff;font-size:14px;margin-bottom:10px;line-height:1.5;}
+.card-meta{color:var(--text-muted);font-size:11px;margin-bottom:12px;display:flex;gap:12px;flex-wrap:wrap;}
+.card-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.tag{background:var(--black-border);border:1px solid var(--border-gold);color:var(--text-secondary);padding:3px 10px;border-radius:10px;font-size:11px;}
+.card-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.btn-s-gold{background:var(--gold);color:#000;border:none;padding:8px 16px;border-radius:8px;font-weight:600;cursor:pointer;font-size:13px;transition:all 0.2s;}
+.btn-s-gold:hover{background:var(--gold-light);}
+.btn-s-outline{background:transparent;border:1px solid var(--gold);color:var(--gold);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:13px;transition:all 0.2s;}
+.btn-s-outline:hover{background:rgba(201,168,76,0.1);}
+.empty-state{text-align:center;padding:60px 20px;}
+.empty-icon{font-size:48px;margin-bottom:16px;}
+.empty-title{color:var(--gold-light);font-size:18px;font-weight:700;margin-bottom:10px;}
+.empty-sub{color:var(--text-secondary);font-size:14px;margin-bottom:24px;}
+.skeleton{background:linear-gradient(90deg,#1a1a1a 25%,#222 50%,#1a1a1a 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:4px;}
+@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+.split-suggestion{background:rgba(201,168,76,0.05);border:1px solid var(--gold);border-radius:12px;padding:16px;margin-top:12px;}
+.split-suggestion-title{color:var(--gold-light);font-size:13px;font-weight:700;margin-bottom:8px;}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div class="top-bar-center" data-i18n="history">履歴</div>
+  <button class="btn-top" onclick="ELEVA.showLanguageModal()">🌐</button>
+</div>
+
+<div class="page-wrap">
+  <h1 class="page-title" data-i18n="history">生成履歴</h1>
+  <div id="history-list">
+    <!-- Loading skeletons -->
+    <div style="background:var(--black-card);border:1px solid var(--border-gold);border-radius:16px;overflow:hidden;margin-bottom:16px;">
+      <div class="skeleton" style="height:200px;"></div>
+      <div style="padding:16px;"><div class="skeleton" style="height:14px;width:80%;margin-bottom:10px;"></div><div class="skeleton" style="height:11px;width:50%;"></div></div>
+    </div>
+    <div style="background:var(--black-card);border:1px solid var(--border-gold);border-radius:16px;overflow:hidden;margin-bottom:16px;">
+      <div class="skeleton" style="height:180px;"></div>
+      <div style="padding:16px;"><div class="skeleton" style="height:14px;width:70%;margin-bottom:10px;"></div><div class="skeleton" style="height:11px;width:45%;"></div></div>
+    </div>
+  </div>
+</div>
+
+<script src="/eleva-i18n.js"></script>
+<script src="/eleva-shared.js"></script>
+<script>
+const sb=ELEVA.getSupabase();
+let currentUser=null;
+
+function relativeTime(dt){
+  const sec=Math.floor((Date.now()-new Date(dt).getTime())/1000);
+  if(sec<60)return '今';
+  if(sec<3600)return Math.floor(sec/60)+'分前';
+  if(sec<86400)return Math.floor(sec/3600)+'時間前';
+  return Math.floor(sec/86400)+'日前';
+}
+
+function renderHistory(items){
+  const el=document.getElementById('history-list');
+  if(!items.length){
+    el.innerHTML=`<div class="empty-state"><div class="empty-icon">🎬</div><div class="empty-title">まだ動画がありません</div><div class="empty-sub">最初の動画を生成してみましょう！</div><a href="/dashboard.html#generate" style="background:var(--gold);color:#000;padding:12px 28px;border-radius:50px;text-decoration:none;font-weight:700;">動画を作る</a></div>`;
+    return;
+  }
+  const highlightId=new URLSearchParams(window.location.search).get('id');
+  el.innerHTML=items.map(item=>{
+    const isHighlight=item.id===highlightId;
+    const status=item.status||'completed';
+    const statusClass=status==='completed'?'status-completed':status==='generating'?'status-generating':'status-failed';
+    const statusLabel=status==='completed'?'完成':status==='generating'?'生成中':'失敗';
+    return `<div class="history-card${isHighlight?' highlighted':''}" id="gen-${item.id}">
+      <div class="card-media">
+        ${item.video_url?`<video src="${item.video_url}" controls preload="none" poster="${item.thumbnail_url||''}"></video>`
+          :item.thumbnail_url?`<img src="${item.thumbnail_url}" alt="thumbnail"/>`
+          :'<div style="height:160px;background:#0d0d0d;display:flex;align-items:center;justify-content:center;font-size:48px;">🎬</div>'}
+        <span class="card-status ${statusClass}">${statusLabel}</span>
+      </div>
+      <div class="card-body">
+        <div class="card-prompt">${item.prompt||'(プロンプトなし)'}</div>
+        <div class="card-meta">
+          <span>🕐 ${relativeTime(item.created_at)}</span>
+          ${item.platform?`<span>📱 ${item.platform}`:''}
+          ${item.duration_sec?`<span>⏱ ${item.duration_sec}秒</span>`:''}
+          ${item.genre?`<span>🎭 ${item.genre}</span>`:''}
+        </div>
+        <div class="card-tags">
+          ${item.platform?`<span class="tag">${item.platform}</span>`:''}
+          ${item.genre?`<span class="tag">${item.genre}</span>`:''}
+        </div>
+        ${status==='completed'?`<div class="card-actions">
+          <button class="btn-s-gold" onclick="downloadVideo('${item.video_url}')">ダウンロード</button>
+          <button class="btn-s-outline" onclick="shareVideo('${item.video_url}')">シェア</button>
+          <button class="btn-s-outline" onclick="reuse('${(item.prompt||'').replace(/'/g,"\\'")}')" style="font-size:12px;">再利用</button>
+        </div>`:''}
+        ${item.should_split?`<div class="split-suggestion">
+          <div class="split-suggestion-title">💡 分割投稿の提案</div>
+          <p style="color:#fff;font-size:13px;margin-bottom:10px;">${item.split_reason||item.split_clips+'本に分割することをおすすめします'}</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn-s-gold" style="font-size:12px;" onclick="addSplitToSchedule('${item.id}')">投稿スケジュールに追加</button>
+            <button class="btn-s-outline" style="font-size:12px;">このまま投稿</button>
+          </div>
+        </div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+
+  // Scroll to highlighted
+  if(highlightId){
+    setTimeout(()=>{
+      const el=document.getElementById('gen-'+highlightId);
+      if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+    },300);
+  }
+}
+
+function downloadVideo(url){
+  if(!url)return;
+  const a=document.createElement('a');a.href=url;a.download='eleva_video.mp4';a.click();
+}
+function shareVideo(url){
+  if(navigator.share)navigator.share({title:'ELEVA生成動画',url});
+  else{navigator.clipboard.writeText(url);alert('URLをコピーしました');}
+}
+function reuse(prompt){
+  localStorage.setItem('eleva_reuse_prompt',prompt);
+  window.location.href='/dashboard.html#generate';
+}
+async function addSplitToSchedule(id){
+  alert('投稿スケジュールに追加しました');
+}
+
+document.addEventListener('DOMContentLoaded',async()=>{
+  currentUser=await ELEVA.initElevaPage({page:'history',onUser:u=>{currentUser=u;}});
+  ELEVA.applyLanguage(localStorage.getItem('eleva_lang')||'ja');
+  if(!currentUser)return;
+  try{
+    const {data,error}=await sb.from('video_generations').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false}).limit(50);
+    renderHistory(data||[]);
+  }catch(e){
+    document.getElementById('history-list').innerHTML='<div style="color:#ff4444;text-align:center;padding:40px;">履歴の読み込みに失敗しました。</div>';
+  }
+});
+</script>
+</body>
+</html>

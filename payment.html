@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ELEVA — お支払い</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://js.stripe.com/v3/"></script>
+<style>
+:root{--gold:#c9a84c;--gold-light:#f0d070;--black:#0a0a0a;--black-card:#111111;--black-border:#1a1a1a;--border-gold:rgba(201,168,76,0.2);--text-primary:#fff;--text-secondary:#aaa;--text-muted:#666;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--black);color:var(--text-primary);min-height:100vh;padding-top:56px;}
+.top-bar{position:fixed;top:0;left:0;right:0;height:56px;background:rgba(10,10,10,0.95);border-bottom:1px solid var(--border-gold);display:flex;align-items:center;padding:0 20px;z-index:100;}
+.top-bar-center{flex:1;text-align:center;font-size:16px;font-weight:800;color:var(--gold-light);}
+.back-btn{background:none;border:none;color:var(--gold);cursor:pointer;font-size:14px;}
+.page-wrap{max-width:560px;margin:0 auto;padding:28px 16px 80px;}
+.plan-summary{background:linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.05));border:1px solid var(--gold);border-radius:16px;padding:24px;margin-bottom:24px;text-align:center;}
+.plan-name-badge{display:inline-block;background:var(--gold);color:#000;padding:4px 14px;border-radius:12px;font-size:12px;font-weight:700;letter-spacing:0.1em;margin-bottom:12px;}
+.plan-price-big{color:#fff;font-size:36px;font-weight:800;margin-bottom:6px;}
+.plan-price-big span{font-size:16px;color:var(--text-secondary);font-weight:400;}
+.plan-trial{color:var(--gold);font-size:14px;font-weight:600;}
+.card{background:var(--black-card);border:1px solid var(--border-gold);border-radius:16px;padding:24px;margin-bottom:20px;}
+.card-title{color:var(--gold-light);font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+/* Stripe element */
+.stripe-wrap{background:var(--black-border);border:1px solid var(--gold);border-radius:10px;padding:14px 16px;color:#fff;}
+/* Payment method buttons */
+.payment-methods{display:flex;flex-direction:column;gap:12px;margin-bottom:20px;}
+.pay-method{display:flex;align-items:center;gap:14px;background:var(--black-border);border:2px solid var(--border-gold);border-radius:12px;padding:16px;cursor:pointer;transition:all 0.2s;}
+.pay-method:hover{border-color:var(--gold);}
+.pay-method.active{border-color:var(--gold);background:rgba(201,168,76,0.05);}
+.pay-method-icon{font-size:24px;width:40px;text-align:center;}
+.pay-method-label{color:#fff;font-size:14px;font-weight:600;}
+.pay-method-sub{color:var(--text-muted);font-size:12px;}
+.radio-circle{width:20px;height:20px;border-radius:50%;border:2px solid var(--border-gold);margin-left:auto;flex-shrink:0;transition:all 0.2s;display:flex;align-items:center;justify-content:center;}
+.pay-method.active .radio-circle{border-color:var(--gold);background:var(--gold);}
+.pay-method.active .radio-circle::after{content:'';width:8px;height:8px;background:#000;border-radius:50%;}
+/* Card form */
+#card-form{display:block;}
+.form-row{margin-bottom:14px;}
+.form-label{color:var(--text-secondary);font-size:12px;margin-bottom:6px;display:block;}
+#card-number-el,#card-expiry-el,#card-cvc-el{background:var(--black-border);border:1px solid var(--gold);border-radius:8px;padding:14px 16px;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+/* Google Pay / Apple Pay */
+#gpay-btn,#apay-btn{width:100%;padding:14px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;border:none;margin-top:12px;display:none;}
+#gpay-btn{background:#fff;color:#000;}
+#apay-btn{background:#000;color:#fff;border:1px solid #444;}
+/* Submit */
+.btn-submit{width:100%;background:var(--gold);color:#000;border:none;padding:16px;border-radius:12px;font-weight:700;font-size:16px;cursor:pointer;transition:all 0.2s;margin-top:8px;}
+.btn-submit:hover{background:var(--gold-light);}
+.btn-submit:disabled{background:#333;color:#666;cursor:not-allowed;}
+/* Consent modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-box{background:var(--black-card);border:1px solid var(--gold);border-radius:20px;padding:32px;max-width:480px;width:90%;max-height:80vh;overflow-y:auto;}
+.modal-title{color:var(--gold-light);font-size:18px;font-weight:700;margin-bottom:16px;}
+.consent-body{color:#fff;font-size:14px;line-height:1.7;margin-bottom:16px;}
+.consent-bullets{list-style:none;padding:0;margin-bottom:20px;}
+.consent-bullets li{color:var(--text-secondary);font-size:13px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;gap:8px;}
+.consent-bullets li::before{content:'•';color:var(--gold);}
+.consent-check{display:flex;align-items:flex-start;gap:10px;margin-bottom:20px;cursor:pointer;}
+.consent-check input{width:18px;height:18px;flex-shrink:0;margin-top:2px;accent-color:var(--gold);}
+.consent-check label{color:#fff;font-size:14px;cursor:pointer;}
+.consent-actions{display:flex;gap:10px;}
+.btn-consent-cancel{flex:1;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:12px;}
+.btn-consent-agree{flex:2;background:var(--gold);color:#000;border:none;padding:14px;border-radius:10px;font-weight:700;cursor:pointer;font-size:15px;}
+.btn-consent-agree:disabled{background:#333;color:#666;cursor:not-allowed;}
+.secure-note{text-align:center;color:var(--text-muted);font-size:11px;margin-top:12px;display:flex;align-items:center;justify-content:center;gap:6px;}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <button class="back-btn" onclick="history.back()">←</button>
+  <div class="top-bar-center" data-i18n="payment">お支払い</div>
+</div>
+
+<div class="page-wrap">
+  <!-- Plan Summary -->
+  <div class="plan-summary">
+    <div class="plan-name-badge" id="plan-badge">PRO</div>
+    <div class="plan-price-big" id="plan-price">¥2,980<span>/月</span></div>
+    <div class="plan-trial">✓ 2週間無料トライアル付き</div>
+  </div>
+
+  <!-- Payment Method -->
+  <div class="card">
+    <div class="card-title">💳 <span data-i18n="payment_method">お支払い方法</span></div>
+
+    <div class="payment-methods">
+      <div class="pay-method active" id="method-card" onclick="selectMethod('card')">
+        <span class="pay-method-icon">💳</span>
+        <div><div class="pay-method-label">クレジット / デビットカード</div><div class="pay-method-sub">Visa, Mastercard, JCB, Amex</div></div>
+        <div class="radio-circle"></div>
+      </div>
+      <div class="pay-method" id="method-gpay" onclick="selectMethod('gpay')" style="display:none;">
+        <span class="pay-method-icon">G</span>
+        <div><div class="pay-method-label">Google Pay</div><div class="pay-method-sub">Googleアカウントで支払い</div></div>
+        <div class="radio-circle"></div>
+      </div>
+      <div class="pay-method" id="method-apay" onclick="selectMethod('apay')" style="display:none;">
+        <span class="pay-method-icon">🍎</span>
+        <div><div class="pay-method-label">Apple Pay</div><div class="pay-method-sub">Touch ID / Face IDで支払い</div></div>
+        <div class="radio-circle"></div>
+      </div>
+    </div>
+
+    <!-- Card form -->
+    <div id="card-form">
+      <div class="form-row">
+        <label class="form-label">カード番号</label>
+        <div id="card-number-el" class="stripe-wrap"></div>
+      </div>
+      <div class="two-col">
+        <div class="form-row">
+          <label class="form-label">有効期限</label>
+          <div id="card-expiry-el" class="stripe-wrap"></div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">CVC</label>
+          <div id="card-cvc-el" class="stripe-wrap"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alternative pay buttons -->
+    <div id="gpay-container" style="display:none;"><button id="gpay-btn">Google Pay で支払う</button></div>
+    <div id="apay-container" style="display:none;"><button id="apay-btn">Apple Pay で支払う</button></div>
+
+    <button class="btn-submit" id="submit-btn" onclick="showConsentModal()" data-i18n="subscribe">決済へ進む</button>
+    <div class="secure-note">🔒 SSL/TLS暗号化 • Stripe powered • PCI DSS準拠</div>
+  </div>
+
+  <!-- Plan features -->
+  <div class="card" style="padding:20px;">
+    <div class="card-title" style="margin-bottom:12px;">含まれる機能</div>
+    <ul style="list-style:none;padding:0;display:flex;flex-direction:column;gap:8px;">
+      <li style="color:#fff;font-size:13px;display:flex;gap:8px;"><span style="color:var(--gold);">✓</span> 月30回まで4K動画生成</li>
+      <li style="color:#fff;font-size:13px;display:flex;gap:8px;"><span style="color:var(--gold);">✓</span> SNSトレンド分析</li>
+      <li style="color:#fff;font-size:13px;display:flex;gap:8px;"><span style="color:var(--gold);">✓</span> プロンプト最適化AI</li>
+      <li style="color:#fff;font-size:13px;display:flex;gap:8px;"><span style="color:var(--gold);">✓</span> ウォーターマークなし</li>
+      <li style="color:#fff;font-size:13px;display:flex;gap:8px;"><span style="color:var(--gold);">✓</span> いつでもキャンセル可能</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Consent Modal -->
+<div class="modal-overlay" id="consent-modal" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-title" data-i18n="consent_title">定期購読について</div>
+    <div class="consent-body">以下の内容をご確認の上、同意してお進みください。</div>
+    <ul class="consent-bullets">
+      <li>2週間の無料トライアル終了後、自動的に月額料金が請求されます</li>
+      <li>いつでもマイページからキャンセルできます</li>
+      <li>キャンセルは次回請求日の24時間前までに行う必要があります</li>
+      <li>返金はトライアル期間内のキャンセルのみ対応しています</li>
+      <li>請求は毎月同日に自動更新されます</li>
+    </ul>
+    <label class="consent-check">
+      <input type="checkbox" id="consent-cb" onchange="document.getElementById('agree-btn').disabled=!this.checked"/>
+      <label for="consent-cb">上記の内容をすべて理解し、同意します</label>
+    </label>
+    <div class="consent-actions">
+      <button class="btn-consent-cancel" onclick="document.getElementById('consent-modal').style.display='none'" data-i18n="cancel">キャンセル</button>
+      <button class="btn-consent-agree" id="agree-btn" onclick="processPayment()" disabled data-i18n="consent_agree">同意して支払いへ進む</button>
+    </div>
+  </div>
+</div>
+
+<script src="/eleva-i18n.js"></script>
+<script src="/eleva-shared.js"></script>
+<script>
+let stripe,cardNumber,cardExpiry,cardCvc;
+let selectedMethod='card';
+
+// Init Stripe
+try{
+  stripe=Stripe('pk_test_placeholder'); // Replace with actual publishable key
+  const elements=stripe.elements({
+    appearance:{theme:'night',variables:{colorPrimary:'#c9a84c',colorBackground:'#1a1a1a',colorText:'#ffffff',colorDanger:'#ff4444',fontFamily:'Inter,sans-serif',borderRadius:'8px'}}
+  });
+  cardNumber=elements.create('cardNumber',{style:{base:{color:'#fff',fontSize:'15px','::placeholder':{color:'#666'}}}});
+  cardExpiry=elements.create('cardExpiry',{style:{base:{color:'#fff',fontSize:'15px'}}});
+  cardCvc=elements.create('cardCvc',{style:{base:{color:'#fff',fontSize:'15px'}}});
+  cardNumber.mount('#card-number-el');
+  cardExpiry.mount('#card-expiry-el');
+  cardCvc.mount('#card-cvc-el');
+
+  // Show Google Pay / Apple Pay if available
+  const pr=stripe.paymentRequest({country:'JP',currency:'jpy',total:{label:'ELEVA PRO',amount:298000},requestPayerEmail:true});
+  pr.canMakePayment().then(result=>{
+    if(result?.googlePay){document.getElementById('method-gpay').style.display='flex';}
+    if(result?.applePay){document.getElementById('method-apay').style.display='flex';}
+  });
+}catch(e){console.warn('Stripe init error (test mode):',e);}
+
+function selectMethod(method){
+  selectedMethod=method;
+  document.querySelectorAll('.pay-method').forEach(el=>{
+    const elMethod=el.id.replace('method-','');
+    el.classList.toggle('active',elMethod===method);
+  });
+  document.getElementById('card-form').style.display=method==='card'?'block':'none';
+  document.getElementById('gpay-container').style.display=method==='gpay'?'block':'none';
+  document.getElementById('apay-container').style.display=method==='apay'?'block':'none';
+}
+
+function showConsentModal(){
+  document.getElementById('consent-modal').style.display='flex';
+  document.getElementById('consent-cb').checked=false;
+  document.getElementById('agree-btn').disabled=true;
+}
+
+async function processPayment(){
+  document.getElementById('consent-modal').style.display='none';
+  const btn=document.getElementById('submit-btn');
+  btn.disabled=true;btn.textContent='処理中...';
+  // In production: call your backend to create a payment intent, then confirm with Stripe
+  setTimeout(()=>{
+    alert('お支払いが完了しました！ELEVAへようこそ。');
+    window.location.href='/dashboard.html';
+  },1500);
+}
+
+// Read plan from URL params
+document.addEventListener('DOMContentLoaded',()=>{
+  ELEVA.initElevaPage({page:'payment'});
+  ELEVA.applyLanguage(localStorage.getItem('eleva_lang')||'ja');
+  const params=new URLSearchParams(window.location.search);
+  const plan=params.get('plan')||'pro';
+  const plans={free:{name:'FREE',price:'¥0',amount:'0'},pro:{name:'PRO',price:'¥2,980',amount:'2,980'},business:{name:'BUSINESS',price:'¥9,800',amount:'9,800'}};
+  const p=plans[plan]||plans.pro;
+  document.getElementById('plan-badge').textContent=p.name;
+  document.getElementById('plan-price').innerHTML=p.price+'<span>/月</span>';
+});
+</script>
+</body>
+</html>
