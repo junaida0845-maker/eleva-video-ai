@@ -2,7 +2,7 @@
 (function(win){
 'use strict';
 const SUPABASE_URL='https://syxctolgqhdtcoaothwi.supabase.co';
-const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5eGN0b2xncWhkdGNvYW90aHdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4ODIwNjYsImV4cCI6MjA5MDQ1ODA2Nn0.eEgmuBMfIzgfpAHH8EXqRTBTMXRfKe_HGEtaFm1XPFA';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5eGN0b2xncWhkdGNvYW90aHdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MDk5NjksImV4cCI6MjA5MDM4NTk2OX0.h38gOPGOcdIw_w8p4AEYVLHCaWuC8k2XRrjLPcFAtUw';
 const STORAGE_URL=SUPABASE_URL+'/storage/v1/object/media-uploads/';
 let _sb=null;
 

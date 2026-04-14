@@ -1,6 +1,6 @@
 import { sendEmail, templates } from './_lib/email.mjs';
 
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://syxctolgqhdtcosothwi.supabase.co';
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://syxctolgqhdtcoaothwi.supabase.co';
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 async function fetchFailures(hoursMin, hoursMax, flagColumn) {

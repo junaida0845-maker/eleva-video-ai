@@ -1,5 +1,5 @@
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://syxctolgqhdtcosothwi.supabase.co';
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://syxctolgqhdtcoaothwi.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 const CLAUDE_MODEL = 'claude-opus-4-6';
