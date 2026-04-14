@@ -124,6 +124,7 @@ async function doSignup(){
   btn.disabled=true;btn.textContent='登録中...';err.style.display='none';suc.style.display='none';
   const {error}=await sb.auth.signUp({email,password});
   if(error){showError(err,error.message);btn.disabled=false;btn.textContent='新規登録';return;}
+  fetch('/api/send-welcome-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})}).catch(()=>{});
   suc.textContent='確認メールを送信しました。メールをご確認ください。';suc.style.display='block';
   btn.disabled=false;btn.textContent='新規登録';
 }
