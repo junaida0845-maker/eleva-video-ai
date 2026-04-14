@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ELEVA — ログイン</title>
+<meta name="description" content="ELEVAにログインしてAI動画生成を始めましょう。"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--gold:#c9a84c;--gold-light:#f0d070;--gold-dark:#a07830;--black:#0a0a0a;--black-card:#111111;--black-border:#1a1a1a;--border-gold:rgba(201,168,76,0.2);--text-primary:#fff;--text-secondary:#aaa;--text-muted:#666;--text-gold:#c9a84c;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--black);color:var(--text-primary);min-height:100vh;display:flex;align-items:center;justify-content:center;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(201,168,76,0.08) 0%,transparent 70%);pointer-events:none;}
+.auth-wrap{width:100%;max-width:420px;padding:20px;}
+.auth-logo{text-align:center;margin-bottom:32px;}
+.auth-logo a{font-size:28px;font-weight:900;color:var(--gold-light);letter-spacing:0.1em;text-decoration:none;}
+.auth-logo p{color:var(--text-secondary);font-size:13px;margin-top:8px;line-height:1.5;}
+.auth-card{background:var(--black-card);border:1px solid var(--border-gold);border-radius:20px;padding:36px 32px;}
+.auth-tabs{display:flex;margin-bottom:28px;border-bottom:1px solid rgba(255,255,255,0.08);}
+.auth-tab{flex:1;padding:12px;text-align:center;cursor:pointer;color:var(--text-muted);font-size:14px;font-weight:500;transition:all 0.2s;border-bottom:2px solid transparent;margin-bottom:-1px;}
+.auth-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.form-group{margin-bottom:18px;}
+label{display:block;color:var(--text-secondary);font-size:13px;margin-bottom:6px;}
+input{width:100%;background:var(--black-border);border:1px solid rgba(201,168,76,0.3);color:#fff;padding:12px 16px;border-radius:10px;font-size:15px;outline:none;transition:border-color 0.2s;font-family:'Inter',sans-serif;}
+input:focus{border-color:var(--gold);}
+input::placeholder{color:var(--text-muted);}
+.btn-primary{width:100%;background:var(--gold);color:#000;border:none;padding:14px;border-radius:10px;font-weight:700;font-size:15px;cursor:pointer;transition:all 0.2s;margin-top:8px;}
+.btn-primary:hover{background:var(--gold-light);}
+.btn-primary:disabled{background:#333;color:#666;cursor:not-allowed;}
+.error-msg{background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.3);color:#ff4444;padding:12px 16px;border-radius:8px;font-size:13px;margin-top:12px;display:none;}
+.success-msg{background:rgba(68,255,136,0.1);border:1px solid rgba(68,255,136,0.3);color:#44ff88;padding:12px 16px;border-radius:8px;font-size:13px;margin-top:12px;display:none;}
+.auth-footer{text-align:center;margin-top:24px;color:var(--text-muted);font-size:13px;}
+.auth-footer a{color:var(--gold);text-decoration:none;}
+.lang-bar{position:fixed;top:16px;right:16px;z-index:10;}
+.lang-bar button{background:rgba(17,17,17,0.9);border:1px solid var(--border-gold);color:var(--gold);padding:8px 14px;border-radius:20px;cursor:pointer;font-size:13px;}
+</style>
+</head>
+<body>
+
+<div class="lang-bar">
+  <button onclick="ELEVA.showLanguageModal()">🌐</button>
+</div>
+
+<div class="auth-wrap">
+  <div class="auth-logo">
+    <a href="/">ELEVA</a>
+    <p data-i18n="hero_sub">SNS投稿を、もっと賢く、もっとお手軽に。</p>
+  </div>
+
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tab-login" onclick="switchTab('login')" data-i18n="login">ログイン</div>
+      <div class="auth-tab" id="tab-signup" onclick="switchTab('signup')" data-i18n="signup">新規登録</div>
+    </div>
+
+    <!-- Login Form -->
+    <div id="form-login">
+      <div class="form-group">
+        <label for="login-email" data-i18n="email">メールアドレス</label>
+        <input type="email" id="login-email" data-i18n-ph="email" placeholder="メールアドレス" autocomplete="email"/>
+      </div>
+      <div class="form-group">
+        <label for="login-password" data-i18n="password">パスワード</label>
+        <input type="password" id="login-password" data-i18n-ph="password" placeholder="パスワード" autocomplete="current-password"/>
+      </div>
+      <button class="btn-primary" id="btn-login" onclick="doLogin()" data-i18n="login">ログイン</button>
+      <div class="error-msg" id="login-error"></div>
+    </div>
+
+    <!-- Signup Form -->
+    <div id="form-signup" style="display:none;">
+      <div class="form-group">
+        <label for="signup-email" data-i18n="email">メールアドレス</label>
+        <input type="email" id="signup-email" data-i18n-ph="email" placeholder="メールアドレス" autocomplete="email"/>
+      </div>
+      <div class="form-group">
+        <label for="signup-password" data-i18n="password">パスワード</label>
+        <input type="password" id="signup-password" data-i18n-ph="password" placeholder="パスワード（8文字以上）" autocomplete="new-password"/>
+      </div>
+      <button class="btn-primary" id="btn-signup" onclick="doSignup()" data-i18n="signup">新規登録</button>
+      <div class="error-msg" id="signup-error"></div>
+      <div class="success-msg" id="signup-success"></div>
+    </div>
+  </div>
+
+  <div class="auth-footer">
+    <a href="/">← トップページに戻る</a>
+  </div>
+</div>
+
+<script src="/eleva-i18n.js"></script>
+<script src="/eleva-shared.js"></script>
+<script>
+const sb=ELEVA.getSupabase();
+
+function switchTab(tab){
+  document.getElementById('tab-login').classList.toggle('active',tab==='login');
+  document.getElementById('tab-signup').classList.toggle('active',tab==='signup');
+  document.getElementById('form-login').style.display=tab==='login'?'block':'none';
+  document.getElementById('form-signup').style.display=tab==='signup'?'block':'none';
+}
+
+async function doLogin(){
+  const email=document.getElementById('login-email').value;
+  const password=document.getElementById('login-password').value;
+  const btn=document.getElementById('btn-login');
+  const err=document.getElementById('login-error');
+  if(!email||!password){showError(err,'メールとパスワードを入力してください');return;}
+  btn.disabled=true;btn.textContent='ログイン中...';err.style.display='none';
+  const {error,data}=await sb.auth.signInWithPassword({email,password});
+  if(error){showError(err,error.message);btn.disabled=false;btn.textContent='ログイン';return;}
+  window.location.href='/dashboard.html';
+}
+
+async function doSignup(){
+  const email=document.getElementById('signup-email').value;
+  const password=document.getElementById('signup-password').value;
+  const btn=document.getElementById('btn-signup');
+  const err=document.getElementById('signup-error');
+  const suc=document.getElementById('signup-success');
+  if(!email||!password||password.length<8){showError(err,'メールと8文字以上のパスワードを入力してください');return;}
+  btn.disabled=true;btn.textContent='登録中...';err.style.display='none';suc.style.display='none';
+  const {error}=await sb.auth.signUp({email,password});
+  if(error){showError(err,error.message);btn.disabled=false;btn.textContent='新規登録';return;}
+  fetch('/api/send-welcome-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})}).catch(()=>{});
+  suc.textContent='確認メールを送信しました。メールをご確認ください。';suc.style.display='block';
+  btn.disabled=false;btn.textContent='新規登録';
+}
+
+function showError(el,msg){el.textContent=msg;el.style.display='block';}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  ELEVA.initElevaPage({page:'login',requireAuth:false,redirectIfAuth:true});
+  ELEVA.applyLanguage(localStorage.getItem('eleva_lang')||'ja');
+  if(window.location.hash==='#signup')switchTab('signup');
+  document.getElementById('login-password').addEventListener('keypress',e=>{if(e.key==='Enter')doLogin();});
+  document.getElementById('signup-password').addEventListener('keypress',e=>{if(e.key==='Enter')doSignup();});
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ELEVA Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--gold:#c9a84c;--gold-light:#f0d070;--black:#0a0a0a;--black-card:#111111;--black-border:#1a1a1a;--border-gold:rgba(201,168,76,0.2);--text-primary:#fff;--text-secondary:#aaa;--text-muted:#666;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--black);color:var(--text-primary);min-height:100vh;display:flex;}
+::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-thumb{background:rgba(201,168,76,0.3);}
+/* Sidebar */
+.sidebar{width:220px;min-height:100vh;background:#0d0d0d;border-right:1px solid var(--border-gold);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100;}
+.sidebar-logo{padding:20px 24px;border-bottom:1px solid var(--border-gold);}
+.sidebar-logo span{color:var(--gold-light);font-size:18px;font-weight:900;letter-spacing:0.1em;}
+.sidebar-logo .admin-tag{display:block;color:var(--text-muted);font-size:10px;letter-spacing:0.15em;margin-top:2px;}
+.sidebar-nav{padding:12px 0;flex:1;overflow-y:auto;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:12px 20px;color:var(--text-secondary);cursor:pointer;font-size:13px;transition:all 0.2s;text-decoration:none;}
+.nav-item:hover{color:#fff;background:rgba(255,255,255,0.03);}
+.nav-item.active{color:var(--gold);background:rgba(201,168,76,0.08);}
+.nav-item .icon{width:16px;text-align:center;}
+/* Main */
+.main{margin-left:220px;flex:1;padding:28px;min-height:100vh;}
+.page-title{color:var(--gold-light);font-size:22px;font-weight:800;margin-bottom:24px;}
+.section-title{color:var(--gold);font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:16px;}
+/* KPI Cards */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:32px;}
+.kpi-card{background:var(--black-card);border:1px solid var(--border-gold);border-radius:14px;padding:20px;display:flex;align-items:flex-start;gap:14px;}
+.kpi-icon{font-size:28px;width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:rgba(201,168,76,0.1);border-radius:10px;color:var(--gold);flex-shrink:0;}
+.kpi-body {}
+.kpi-label{color:var(--text-secondary);font-size:11px;margin-bottom:4px;letter-spacing:0.05em;}
+.kpi-value{color:#fff;font-size:26px;font-weight:800;line-height:1;}
+.kpi-sub{color:var(--text-muted);font-size:11px;margin-top:4px;}
+.kpi-up{color:#44ff88;}
+.kpi-down{color:#ff4444;}
+/* Table */
+.table-wrap{background:var(--black-card);border:1px solid var(--border-gold);border-radius:16px;overflow:hidden;margin-bottom:28px;}
+.table-header{padding:16px 20px;border-bottom:1px solid var(--border-gold);display:flex;justify-content:space-between;align-items:center;}
+.table-header-title{color:var(--gold-light);font-size:15px;font-weight:700;}
+table{width:100%;border-collapse:collapse;}
+thead th{color:var(--gold);font-size:11px;font-weight:600;letter-spacing:0.05em;padding:10px 16px;text-align:left;background:#0d0d0d;border-bottom:1px solid rgba(201,168,76,0.2);}
+tbody tr{background:var(--black-card);}
+tbody tr:nth-child(even){background:#131313;}
+tbody tr:hover{background:rgba(201,168,76,0.04);}
+td{color:#fff;font-size:13px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.03);}
+td.secondary{color:var(--text-secondary);}
+.badge{display:inline-block;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;}
+.badge-active{background:rgba(68,255,136,0.15);color:#44ff88;border:1px solid rgba(68,255,136,0.3);}
+.badge-banned{background:rgba(255,68,68,0.15);color:#ff4444;border:1px solid rgba(255,68,68,0.3);}
+.badge-plan{background:var(--gold);color:#000;}
+.badge-free{background:#333;color:#aaa;}
+.action-btn{background:transparent;border:1px solid var(--gold);color:var(--gold);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;transition:all 0.2s;margin-right:4px;}
+.action-btn:hover{background:rgba(201,168,76,0.1);}
+.action-btn.danger{border-color:#ff4444;color:#ff4444;}
+.action-btn.danger:hover{background:rgba(255,68,68,0.1);}
+/* Search & Filter */
+.table-controls{padding:12px 16px;border-bottom:1px solid var(--border-gold);display:flex;gap:10px;flex-wrap:wrap;}
+input.search{background:#1a1a1a;border:1px solid rgba(201,168,76,0.3);color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;outline:none;min-width:200px;}
+input.search:focus{border-color:var(--gold);}
+input.search::placeholder{color:var(--text-muted);}
+/* Section pages */
+.section-page{display:none;}
+.section-page.active{display:block;}
+/* Notice form */
+.notice-form{background:var(--black-card);border:1px solid var(--border-gold);border-radius:16px;padding:24px;margin-bottom:20px;}
+textarea.notice-ta{width:100%;background:#1a1a1a;border:1px solid rgba(201,168,76,0.3);color:#fff;padding:12px;border-radius:8px;font-family:'Inter',sans-serif;font-size:14px;resize:vertical;outline:none;min-height:80px;}
+textarea:focus{border-color:var(--gold);}
+.btn-gold{background:var(--gold);color:#000;border:none;padding:10px 20px;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px;}
+.btn-gold:hover{background:var(--gold-light);}
+/* Responsive */
+@media(max-width:768px){
+  .sidebar{width:60px;}
+  .sidebar .nav-item span:last-child,.sidebar-logo span:last-child,.admin-tag{display:none;}
+  .main{margin-left:60px;padding:16px;}
+}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <span>ELEVA</span>
+    <span class="admin-tag">ADMIN PANEL</span>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="nav-item active" onclick="showSection('dashboard')" href="#"><span class="icon">📊</span><span>ダッシュボード</span></a>
+    <a class="nav-item" onclick="showSection('users')" href="#"><span class="icon">👥</span><span>ユーザー管理</span></a>
+    <a class="nav-item" onclick="showSection('generations')" href="#"><span class="icon">🎬</span><span>動画生成ログ</span></a>
+    <a class="nav-item" onclick="showSection('notices')" href="#"><span class="icon">📢</span><span>お知らせ</span></a>
+    <a class="nav-item" onclick="showSection('codes')" href="#"><span class="icon">🎁</span><span>紹介コード</span></a>
+    <a class="nav-item" onclick="showSection('logs')" href="#"><span class="icon">📋</span><span>操作ログ</span></a>
+    <a class="nav-item" onclick="showSection('cancellations')" href="#"><span class="icon">⚠️</span><span>解約申請</span></a>
+  </nav>
+</aside>
+
+<!-- Main -->
+<main class="main">
+  <!-- Access check -->
+  <div id="access-denied" style="display:none;text-align:center;padding:80px;">
+    <div style="font-size:48px;margin-bottom:20px;">🚫</div>
+    <h2 style="color:var(--gold-light);margin-bottom:12px;">アクセス拒否</h2>
+    <p style="color:var(--text-secondary);">このページは管理者のみアクセスできます。</p>
+    <a href="/" style="color:var(--gold);margin-top:16px;display:inline-block;">ホームへ戻る</a>
+  </div>
+
+  <!-- Dashboard -->
+  <div class="section-page active" id="section-dashboard">
+    <div class="page-title">管理者ダッシュボード</div>
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-icon">👥</div><div class="kpi-body"><div class="kpi-label">TOTAL USERS</div><div class="kpi-value" id="kpi-users">—</div><div class="kpi-sub kpi-up" id="kpi-users-sub">↑ —</div></div></div>
+      <div class="kpi-card"><div class="kpi-icon">🎬</div><div class="kpi-body"><div class="kpi-label">GENERATIONS TODAY</div><div class="kpi-value" id="kpi-gens">—</div><div class="kpi-sub">本日</div></div></div>
+      <div class="kpi-card"><div class="kpi-icon">💰</div><div class="kpi-body"><div class="kpi-label">MONTHLY REVENUE</div><div class="kpi-value" id="kpi-rev">—</div><div class="kpi-sub">今月</div></div></div>
+      <div class="kpi-card"><div class="kpi-icon">📈</div><div class="kpi-body"><div class="kpi-label">ACTIVE PRO USERS</div><div class="kpi-value" id="kpi-pro">—</div><div class="kpi-sub">有料会員</div></div></div>
+      <div class="kpi-card"><div class="kpi-icon">⚠️</div><div class="kpi-body"><div class="kpi-label">CANCELLATION REQUESTS</div><div class="kpi-value" id="kpi-cancel">—</div><div class="kpi-sub">未対応</div></div></div>
+      <div class="kpi-card"><div class="kpi-icon">🌐</div><div class="kpi-body"><div class="kpi-label">TOP LANGUAGE</div><div class="kpi-value" id="kpi-lang" style="font-size:18px;">—</div><div class="kpi-sub">最多使用言語</div></div></div>
+    </div>
+
+    <div class="section-title">プラン分布</div>
+    <div style="display:flex;gap:16px;margin-bottom:32px;flex-wrap:wrap;" id="plan-dist"></div>
+  </div>
+
+  <!-- Users -->
+  <div class="section-page" id="section-users">
+    <div class="page-title">ユーザー管理</div>
+    <div class="table-wrap">
+      <div class="table-header">
+        <span class="table-header-title">ユーザー一覧</span>
+        <span style="color:var(--text-muted);font-size:12px;" id="user-count">—</span>
+      </div>
+      <div class="table-controls">
+        <input class="search" type="text" placeholder="メール・IDで検索..." oninput="filterUsers(this.value)"/>
+        <select style="background:#1a1a1a;border:1px solid rgba(201,168,76,0.3);color:#fff;padding:8px 12px;border-radius:8px;font-size:13px;outline:none;" onchange="filterByPlan(this.value)">
+          <option value="">全プラン</option>
+          <option value="free">FREE</option>
+          <option value="pro">PRO</option>
+          <option value="business">BUSINESS</option>
+        </select>
+      </div>
+      <table>
+        <thead><tr><th>EMAIL</th><th>PLAN</th><th>CREDITS</th><th>STATUS</th><th>JOINED</th><th>ACTIONS</th></tr></thead>
+        <tbody id="users-tbody"><tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:32px;">読み込み中...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Generations -->
+  <div class="section-page" id="section-generations">
+    <div class="page-title">動画生成ログ</div>
+    <div class="table-wrap">
+      <div class="table-header"><span class="table-header-title">生成履歴</span></div>
+      <table>
+        <thead><tr><th>USER</th><th>PROMPT</th><th>PLATFORM</th><th>DURATION</th><th>STATUS</th><th>DATE</th></tr></thead>
+        <tbody id="gens-tbody"><tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:32px;">読み込み中...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Notices -->
+  <div class="section-page" id="section-notices">
+    <div class="page-title">お知らせ管理</div>
+    <div class="notice-form">
+      <div class="section-title">新しいお知らせを投稿</div>
+      <input type="text" id="notice-title" placeholder="タイトル" style="width:100%;background:#1a1a1a;border:1px solid rgba(201,168,76,0.3);color:#fff;padding:10px 14px;border-radius:8px;font-size:14px;outline:none;margin-bottom:12px;"/>
+      <textarea class="notice-ta" id="notice-body" placeholder="本文を入力..."></textarea>
+      <div style="display:flex;justify-content:flex-end;margin-top:12px;">
+        <button class="btn-gold" onclick="postNotice()">投稿する</button>
+      </div>
+    </div>
+    <div id="notices-list"></div>
+  </div>
+
+  <!-- Referral Codes -->
+  <div class="section-page" id="section-codes">
+    <div class="page-title">紹介コード</div>
+    <div class="notice-form">
+      <div class="section-title">新しいコードを作成</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+        <div>
+          <label style="color:var(--text-secondary);font-size:12px;display:block;margin-bottom:6px;">コード</label>
+          <input type="text" id="code-input" placeholder="ELEVA2025" style="background:#1a1a1a;border:1px solid rgba(201,168,76,0.3);color:#fff;padding:10px 14px;border-radius:8px;font-size:14px;outline:none;"/>
+        </div>
+        <div>
+          <label style="color:var(--text-secondary);font-size:12px;display:block;margin-bottom:6px;">割引率 (%)</label>
+          <input type="number" id="code-discount" value="20" min="0" max="100" style="background:#1a1a1a;border:1px solid rgba(201,168,76,0.3);color:#fff;padding:10px 14px;border-radius:8px;font-size:14px;outline:none;width:100px;"/>
+        </div>
+        <button class="btn-gold" onclick="createCode()">作成</button>
+      </div>
+    </div>
+    <div id="codes-list"></div>
+  </div>
+
+  <!-- Logs -->
+  <div class="section-page" id="section-logs">
+    <div class="page-title">操作ログ</div>
+    <div class="table-wrap">
+      <div class="table-header"><span class="table-header-title">管理者操作履歴</span></div>
+      <table>
+        <thead><tr><th>ADMIN</th><th>ACTION</th><th>TARGET</th><th>DATE</th></tr></thead>
+        <tbody id="logs-tbody"><tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:32px;">読み込み中...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Cancellations -->
+  <div class="section-page" id="section-cancellations">
+    <div class="page-title">解約申請</div>
+    <div class="table-wrap">
+      <div class="table-header"><span class="table-header-title">解約申請一覧</span></div>
+      <table>
+        <thead><tr><th>USER</th><th>REASON</th><th>FEEDBACK</th><th>DATE</th><th>ACTION</th></tr></thead>
+        <tbody id="cancel-tbody"><tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:32px;">読み込み中...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<script src="/eleva-i18n.js"></script>
+<script src="/eleva-shared.js"></script>
+<script>
+const sb=ELEVA.getSupabase();
+const ADMIN_TOKEN=ELEVA.SUPABASE_ANON_KEY;
+let allUsers=[];
+
+function showSection(id){
+  document.querySelectorAll('.section-page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  document.getElementById('section-'+id).classList.add('active');
+  event.currentTarget?.classList.add('active');
+  if(id==='users')loadUsers();
+  if(id==='generations')loadGenerations();
+  if(id==='cancellations')loadCancellations();
+  if(id==='logs')loadLogs();
+}
+
+async function callAdmin(action,params={}){
+  const {data:{session}}=await sb.auth.getSession();
+  const token=session?.access_token||ADMIN_TOKEN;
+  const res=await fetch(ELEVA.SUPABASE_URL+'/functions/v1/admin-api-v2',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','apikey':ELEVA.SUPABASE_ANON_KEY,'Authorization':'Bearer '+token},
+    body:JSON.stringify({action,...params})
+  });
+  return res.json();
+}
+
+async function loadDashboard(){
+  try{
+    const [usersRes,gensRes,planRes]=await Promise.all([
+      sb.from('profiles').select('id,plan_type',{count:'exact'}),
+      sb.from('video_generations').select('id',{count:'exact'}).gte('created_at',new Date(Date.now()-86400000).toISOString()),
+      sb.from('profiles').select('plan_type')
+    ]);
+    document.getElementById('kpi-users').textContent=usersRes.count||0;
+    document.getElementById('kpi-gens').textContent=gensRes.count||0;
+
+    // Plan distribution
+    const plans=planRes.data||[];
+    const dist={free:0,pro:0,business:0};
+    plans.forEach(p=>{dist[p.plan_type||'free']=(dist[p.plan_type||'free']||0)+1;});
+    document.getElementById('kpi-pro').textContent=(dist.pro||0)+(dist.business||0);
+    const distEl=document.getElementById('plan-dist');
+    distEl.innerHTML=Object.entries(dist).map(([plan,count])=>`
+      <div style="background:var(--black-card);border:1px solid var(--border-gold);border-radius:12px;padding:20px 28px;text-align:center;">
+        <div style="color:var(--gold-light);font-size:28px;font-weight:800;">${count}</div>
+        <div style="color:var(--text-muted);font-size:12px;margin-top:4px;">${plan.toUpperCase()}</div>
+      </div>`).join('');
+
+    // Cancellations
+    const {count:cancelCount}=await sb.from('cancellation_requests').select('id',{count:'exact'}).eq('resolved',false);
+    document.getElementById('kpi-cancel').textContent=cancelCount||0;
+
+    // Revenue estimate
+    const rev=(dist.pro||0)*2980+(dist.business||0)*9800;
+    document.getElementById('kpi-rev').textContent='¥'+rev.toLocaleString();
+  }catch(e){console.error('Dashboard load error:',e);}
+}
+
+async function loadUsers(){
+  const {data,error}=await sb.from('profiles').select('id,email:id,plan_type,credits_remaining,is_banned,created_at').order('created_at',{ascending:false}).limit(100);
+  allUsers=data||[];
+  renderUsers(allUsers);
+  document.getElementById('user-count').textContent=allUsers.length+' 件';
+}
+
+function renderUsers(users){
+  const tbody=document.getElementById('users-tbody');
+  if(!users.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:32px;">ユーザーなし</td></tr>';return;}
+  tbody.innerHTML=users.map(u=>`<tr>
+    <td><a style="color:var(--gold);text-decoration:none;">${u.id}</a></td>
+    <td><span class="badge ${u.plan_type&&u.plan_type!=='free'?'badge-plan':'badge-free'}">${(u.plan_type||'free').toUpperCase()}</span></td>
+    <td class="secondary">${u.credits_remaining||0}</td>
+    <td><span class="badge ${u.is_banned?'badge-banned':'badge-active'}">${u.is_banned?'BAN':'Active'}</span></td>
+    <td class="secondary">${u.created_at?new Date(u.created_at).toLocaleDateString('ja-JP'):'-'}</td>
+    <td>
+      <button class="action-btn" onclick="viewUser('${u.id}')">詳細</button>
+      <button class="action-btn danger" onclick="banUser('${u.id}',${!u.is_banned})">${u.is_banned?'解除':'BAN'}</button>
+    </td>
+  </tr>`).join('');
+}
+
+function filterUsers(q){renderUsers(allUsers.filter(u=>(u.id||'').includes(q)));}
+function filterByPlan(plan){renderUsers(plan?allUsers.filter(u=>(u.plan_type||'free')===plan):allUsers);}
+
+async function banUser(userId,ban){
+  if(!confirm((ban?'BANしますか？':'BANを解除しますか？')))return;
+  await sb.from('profiles').update({is_banned:ban}).eq('id',userId);
+  await loadUsers();
+}
+
+function viewUser(id){alert('ユーザーID: '+id);}
+
+async function loadGenerations(){
+  const {data}=await sb.from('video_generations').select('*').order('created_at',{ascending:false}).limit(50);
+  const tbody=document.getElementById('gens-tbody');
+  if(!data?.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:32px;">データなし</td></tr>';return;}
+  tbody.innerHTML=(data||[]).map(g=>`<tr>
+    <td class="secondary" style="font-size:11px;">${g.user_id?.slice(0,8)}...</td>
+    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${g.prompt||'-'}</td>
+    <td class="secondary">${g.platform||'-'}</td>
+    <td class="secondary">${g.duration_sec||'-'}秒</td>
+    <td><span class="badge ${g.status==='completed'?'badge-active':g.status==='failed'?'badge-banned':'badge-free'}">${g.status||'?'}</span></td>
+    <td class="secondary" style="font-size:11px;">${g.created_at?new Date(g.created_at).toLocaleString('ja-JP'):'-'}</td>
+  </tr>`).join('');
+}
+
+async function loadCancellations(){
+  const {data}=await sb.from('cancellation_requests').select('*').order('created_at',{ascending:false}).limit(50);
+  const tbody=document.getElementById('cancel-tbody');
+  if(!data?.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:32px;">解約申請なし</td></tr>';return;}
+  tbody.innerHTML=(data||[]).map(c=>`<tr>
+    <td class="secondary" style="font-size:11px;">${c.user_id?.slice(0,8)}...</td>
+    <td>${c.reason||'-'}</td>
+    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-secondary);">${c.feedback||'(なし)'}</td>
+    <td class="secondary" style="font-size:11px;">${c.created_at?new Date(c.created_at).toLocaleDateString('ja-JP'):'-'}</td>
+    <td><button class="action-btn" onclick="resolveCancel('${c.id}')">完了</button></td>
+  </tr>`).join('');
+}
+
+async function resolveCancel(id){
+  await sb.from('cancellation_requests').update({resolved:true}).eq('id',id);
+  loadCancellations();
+}
+
+async function loadLogs(){
+  const tbody=document.getElementById('logs-tbody');
+  tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:32px;">操作ログなし</td></tr>';
+}
+
+async function postNotice(){
+  const title=document.getElementById('notice-title').value;
+  const body=document.getElementById('notice-body').value;
+  if(!title||!body){alert('タイトルと本文を入力してください');return;}
+  await sb.from('notices').insert({title,body,created_at:new Date().toISOString()});
+  document.getElementById('notice-title').value='';
+  document.getElementById('notice-body').value='';
+  alert('投稿しました');
+}
+
+async function createCode(){
+  const code=document.getElementById('code-input').value;
+  const discount=parseInt(document.getElementById('code-discount').value);
+  if(!code){alert('コードを入力してください');return;}
+  await sb.from('referral_codes').insert({code,discount_percent:discount,is_active:true,created_at:new Date().toISOString()});
+  alert('コードを作成しました: '+code);
+}
+
+document.addEventListener('DOMContentLoaded',async()=>{
+  const {data:{session}}=await ELEVA.getSupabase().auth.getSession();
+  if(!session){document.getElementById('access-denied').style.display='block';document.querySelector('.main').querySelectorAll('.section-page').forEach(el=>el.style.display='none');return;}
+  // Check admin
+  const {data:prof}=await sb.from('profiles').select('is_admin').eq('id',session.user.id).single();
+  if(!prof?.is_admin){document.getElementById('access-denied').style.display='block';document.querySelector('.section-dashboard').style.display='none';return;}
+  loadDashboard();
+});
+</script>
+</body>
+</html>

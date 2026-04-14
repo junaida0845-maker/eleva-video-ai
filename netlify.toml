@@ -1,0 +1,31 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/api/generate-video"
+  to = "/.netlify/functions/generate-video"
+  status = 200
+
+[[redirects]]
+  from = "/api/video-status"
+  to = "/.netlify/functions/video-status"
+  status = 200
+
+[[redirects]]
+  from = "/api/send-welcome-email"
+  to = "/.netlify/functions/send-welcome-email"
+  status = 200
+
+[[redirects]]
+  from = "/api/stripe-webhook"
+  to = "/.netlify/functions/stripe-webhook"
+  status = 200
+
+[[redirects]]
+  from = "/api/youtube-search"
+  to = "/.netlify/functions/youtube-search"
+  status = 200
+
+[functions."payment-reminders"]
+  schedule = "0 9 * * *"

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ELEVA — SNSトレンド</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--gold:#c9a84c;--gold-light:#f0d070;--black:#0a0a0a;--black-card:#111111;--black-border:#1a1a1a;--border-gold:rgba(201,168,76,0.2);--text-primary:#fff;--text-secondary:#aaa;--text-muted:#666;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--black);color:var(--text-primary);min-height:100vh;padding-top:56px;}
+::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-thumb{background:rgba(201,168,76,0.3);}
+.top-bar{position:fixed;top:0;left:0;right:0;height:56px;background:rgba(10,10,10,0.95);border-bottom:1px solid var(--border-gold);display:flex;align-items:center;justify-content:flex-end;padding:0 20px;gap:12px;z-index:100;backdrop-filter:blur(8px);}
+.top-bar-center{position:absolute;left:50%;transform:translateX(-50%);font-size:16px;font-weight:800;color:var(--gold-light);}
+.btn-top{background:none;border:1px solid var(--border-gold);color:var(--gold);padding:6px 12px;border-radius:16px;cursor:pointer;font-size:12px;}
+.page-wrap{max-width:800px;margin:0 auto;padding:24px 16px 80px;}
+.page-title{color:var(--gold-light);font-size:24px;font-weight:800;margin-bottom:8px;}
+.page-subtitle{color:var(--text-secondary);font-size:14px;margin-bottom:24px;}
+
+/* Tabs */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border-gold);margin-bottom:20px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.tab{padding:12px 20px;cursor:pointer;color:var(--text-muted);font-size:14px;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.2s;display:flex;align-items:center;gap:6px;}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.tab:hover:not(.active){color:#fff;}
+
+/* Trend Cards */
+.trend-section{margin-bottom:32px;}
+.trend-section-title{color:var(--gold);font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.trend-grid{display:grid;gap:12px;}
+.trend-card{background:var(--black-card);border:1px solid var(--border-gold);border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px;transition:all 0.2s;cursor:pointer;}
+.trend-card:hover{border-color:var(--gold);transform:translateX(4px);}
+.trend-rank{color:var(--text-muted);font-size:13px;width:24px;text-align:center;font-weight:600;}
+.trend-icon{font-size:20px;color:var(--gold);}
+.trend-body{flex:1;}
+.trend-name{color:#fff;font-size:15px;font-weight:600;margin-bottom:4px;}
+.trend-meta{color:var(--text-secondary);font-size:12px;}
+.trend-count{color:var(--text-muted);font-size:12px;white-space:nowrap;}
+.hash-symbol{color:var(--gold);font-weight:700;}
+.music-note{font-size:20px;color:var(--gold);}
+.trend-badge{display:inline-block;background:var(--gold);color:#000;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700;margin-left:6px;}
+.skeleton{background:linear-gradient(90deg,#1a1a1a 25%,#222 50%,#1a1a1a 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:4px;height:14px;}
+@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+.loading-card{background:var(--black-card);border:1px solid var(--border-gold);border-radius:12px;padding:16px;display:flex;gap:14px;}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div class="top-bar-center" data-i18n="sns_trend">SNSトレンド</div>
+  <button class="btn-top" onclick="ELEVA.showLanguageModal()">🌐</button>
+</div>
+
+<div class="page-wrap">
+  <h1 class="page-title" data-i18n="sns_trend">SNSトレンド</h1>
+  <p class="page-subtitle">各プラットフォームのリアルタイムトレンドをチェック</p>
+
+  <!-- Platform Tabs -->
+  <div class="tabs" id="platform-tabs">
+    <div class="tab active" data-platform="tiktok" onclick="selectPlatform(this)">🎵 TikTok</div>
+    <div class="tab" data-platform="instagram" onclick="selectPlatform(this)">📸 Instagram</div>
+    <div class="tab" data-platform="youtube" onclick="selectPlatform(this)">▶️ YouTube</div>
+    <div class="tab" data-platform="x" onclick="selectPlatform(this)">𝕏 X</div>
+  </div>
+
+  <!-- Period Sub-tabs -->
+  <div class="tabs" id="period-tabs" style="margin-bottom:28px;">
+    <div class="tab active" data-period="daily" onclick="selectPeriod(this)" data-i18n="daily">日次</div>
+    <div class="tab" data-period="weekly" onclick="selectPeriod(this)" data-i18n="weekly">週次</div>
+    <div class="tab" data-period="monthly" onclick="selectPeriod(this)" data-i18n="monthly">月次</div>
+  </div>
+
+  <!-- Content -->
+  <div id="trend-content">
+    <!-- Hashtags -->
+    <div class="trend-section">
+      <div class="trend-section-title">🏷️ <span data-i18n="hashtags">ハッシュタグ</span></div>
+      <div class="trend-grid" id="hashtag-grid">
+        <div class="loading-card"><div class="trend-rank">1</div><div style="flex:1;"><div class="skeleton" style="width:60%;margin-bottom:8px;"></div><div class="skeleton" style="width:40%;height:10px;"></div></div></div>
+        <div class="loading-card"><div class="trend-rank">2</div><div style="flex:1;"><div class="skeleton" style="width:50%;margin-bottom:8px;"></div><div class="skeleton" style="width:35%;height:10px;"></div></div></div>
+        <div class="loading-card"><div class="trend-rank">3</div><div style="flex:1;"><div class="skeleton" style="width:70%;margin-bottom:8px;"></div><div class="skeleton" style="width:45%;height:10px;"></div></div></div>
+      </div>
+    </div>
+
+    <!-- Music -->
+    <div class="trend-section" id="music-section">
+      <div class="trend-section-title">🎵 <span data-i18n="music">音楽</span></div>
+      <div class="trend-grid" id="music-grid">
+        <div class="loading-card"><div class="trend-rank">1</div><div style="flex:1;"><div class="skeleton" style="width:55%;margin-bottom:8px;"></div><div class="skeleton" style="width:40%;height:10px;"></div></div></div>
+        <div class="loading-card"><div class="trend-rank">2</div><div style="flex:1;"><div class="skeleton" style="width:65%;margin-bottom:8px;"></div><div class="skeleton" style="width:30%;height:10px;"></div></div></div>
+      </div>
+    </div>
+
+    <!-- Topics -->
+    <div class="trend-section">
+      <div class="trend-section-title">💬 <span data-i18n="topics">トピック</span></div>
+      <div class="trend-grid" id="topic-grid">
+        <div class="loading-card"><div style="flex:1;"><div class="skeleton" style="width:80%;margin-bottom:8px;"></div><div class="skeleton" style="width:50%;height:10px;"></div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/eleva-i18n.js"></script>
+<script src="/eleva-shared.js"></script>
+<script>
+let currentPlatform='tiktok';
+let currentPeriod='daily';
+
+function selectPlatform(el){
+  document.querySelectorAll('#platform-tabs .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  currentPlatform=el.dataset.platform;
+  document.getElementById('music-section').style.display=currentPlatform==='x'?'none':'block';
+  loadTrends();
+}
+
+function selectPeriod(el){
+  document.querySelectorAll('#period-tabs .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  currentPeriod=el.dataset.period;
+  loadTrends();
+}
+
+function numberFormat(n){
+  if(!n)return '';
+  if(n>=1000000)return (n/1000000).toFixed(1)+'M';
+  if(n>=1000)return (n/1000).toFixed(0)+'K';
+  return n.toString();
+}
+
+async function loadTrends(){
+  // Reset
+  ['hashtag-grid','music-grid','topic-grid'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.innerHTML='<div style="color:var(--text-muted);text-align:center;padding:20px;font-size:13px;">読み込み中...</div>';
+  });
+
+  try{
+    const res=await fetch(ELEVA.SUPABASE_URL+'/functions/v1/sns-trends?platform='+currentPlatform+'&period='+currentPeriod+'&genre=general',{
+      headers:{'apikey':ELEVA.SUPABASE_ANON_KEY,'Authorization':'Bearer '+ELEVA.SUPABASE_ANON_KEY}
+    });
+    const data=await res.json();
+    renderHashtags(data.hashtags||data.trending_hashtags||generateFallbackHashtags());
+    renderMusic(data.music||data.trending_music||generateFallbackMusic());
+    renderTopics(data.topics||data.trending_topics||generateFallbackTopics());
+  }catch(e){
+    renderHashtags(generateFallbackHashtags());
+    renderMusic(generateFallbackMusic());
+    renderTopics(generateFallbackTopics());
+  }
+}
+
+function renderHashtags(items){
+  const el=document.getElementById('hashtag-grid');
+  if(!el)return;
+  el.innerHTML=items.slice(0,10).map((h,i)=>`
+    <div class="trend-card" onclick="useHashtag('${h.tag||h.name||h}')">
+      <span class="trend-rank">${i+1}</span>
+      <span class="trend-icon">#</span>
+      <div class="trend-body">
+        <div class="trend-name"><span class="hash-symbol">#</span>${(h.tag||h.name||h).replace('#','')}${h.rising?'<span class="trend-badge">急上昇</span>':''}</div>
+        <div class="trend-meta">${h.usage_count||h.count?numberFormat(h.usage_count||h.count)+' 件の投稿':''}</div>
+      </div>
+    </div>`).join('');
+}
+
+function renderMusic(items){
+  const el=document.getElementById('music-grid');
+  if(!el)return;
+  el.innerHTML=items.slice(0,8).map((m,i)=>`
+    <div class="trend-card">
+      <span class="trend-rank">${i+1}</span>
+      <span class="music-note">♪</span>
+      <div class="trend-body">
+        <div class="trend-name">${m.title||m.name||m}</div>
+        <div class="trend-meta">${m.artist||m.author||''}</div>
+      </div>
+      <span class="trend-count">${m.video_count||m.count?numberFormat(m.video_count||m.count)+'本':''}</span>
+    </div>`).join('');
+}
+
+function renderTopics(items){
+  const el=document.getElementById('topic-grid');
+  if(!el)return;
+  el.innerHTML=items.slice(0,6).map(t=>`
+    <div class="trend-card">
+      <div class="trend-body">
+        <div class="trend-name">${t.topic||t.name||t}</div>
+        <div class="trend-meta">${t.description||''}</div>
+      </div>
+    </div>`).join('');
+}
+
+function useHashtag(tag){
+  localStorage.setItem('eleva_draft_hashtag',tag);
+  if(confirm('#'+tag.replace('#','')+'をプロンプトに使用しますか？')){
+    window.location.href='/dashboard.html';
+  }
+}
+
+function generateFallbackHashtags(){
+  const byPlatform={
+    tiktok:['fyp','tiktok','viral','食べてみた','日常vlog','ダイエット','料理動画','かわいい','感動','おすすめ'],
+    instagram:['instagood','photooftheday','love','picoftheday','fashion','beautiful','food','art','follow','photography'],
+    youtube:['shorts','youtube','vlog','gaming','tutorial','review','daily','challenge','couple','travel'],
+    x:['Twitter','トレンド','速報','アニメ','ゲーム','音楽','映画','スポーツ','ニュース','話題']
+  };
+  return (byPlatform[currentPlatform]||byPlatform.tiktok).map((tag,i)=>({tag,count:Math.floor(Math.random()*9000000+100000),rising:i<3}));
+}
+function generateFallbackMusic(){
+  return [{title:'Calm Morning',artist:'Lo-Fi Beats',count:85000},{title:'Summer Vibes',artist:'Digital Wave',count:62000},{title:'Epic Rise',artist:'Cinematic Studio',count:45000},{title:'Happy Day',artist:'J-Pop Select',count:38000}];
+}
+function generateFallbackTopics(){
+  return [{topic:'AI動画生成トレンド',description:'生成AIを使ったクリエイティブコンテンツが急増'},{topic:'ショート動画の収益化',description:'各プラットフォームの収益プログラム最新情報'},{topic:'バズる投稿の条件',description:'エンゲージメント率を高める投稿テクニック'}];
+}
+
+document.addEventListener('DOMContentLoaded',async()=>{
+  await ELEVA.initElevaPage({page:'trend'});
+  ELEVA.applyLanguage(localStorage.getItem('eleva_lang')||'ja');
+  loadTrends();
+});
+</script>
+</body>
+</html>

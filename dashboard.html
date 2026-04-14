@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ELEVA — Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--gold:#c9a84c;--gold-light:#f0d070;--gold-dark:#a07830;--black:#0a0a0a;--black-card:#111111;--black-border:#1a1a1a;--border-gold:rgba(201,168,76,0.2);--text-primary:#fff;--text-secondary:#aaa;--text-muted:#666;--text-gold:#c9a84c;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--black);color:var(--text-primary);min-height:100vh;padding-top:56px;}
+::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-thumb{background:rgba(201,168,76,0.3);}
+
+.top-bar{position:fixed;top:0;left:0;right:0;height:56px;background:rgba(10,10,10,0.95);border-bottom:1px solid var(--border-gold);display:flex;align-items:center;justify-content:flex-end;padding:0 20px;gap:12px;z-index:100;backdrop-filter:blur(8px);}
+.top-bar-center{position:absolute;left:50%;transform:translateX(-50%);font-size:16px;font-weight:800;color:var(--gold-light);letter-spacing:0.1em;}
+.top-badge{background:rgba(201,168,76,0.15);border:1px solid var(--border-gold);color:var(--gold);padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;}
+.lang-btn-top{background:none;border:1px solid var(--border-gold);color:var(--gold);padding:6px 12px;border-radius:16px;cursor:pointer;font-size:12px;}
+
+.page-wrap{max-width:800px;margin:0 auto;padding:24px 16px 100px;}
+.page-title{color:var(--gold-light);font-size:24px;font-weight:800;margin-bottom:24px;}
+
+/* Cards */
+.card{background:var(--black-card);border:1px solid var(--border-gold);border-radius:16px;padding:24px;margin-bottom:20px;}
+.card-title{color:var(--gold);font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+
+/* SNS Selector */
+.sns-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;}
+.sns-item{background:var(--black-border);border:2px solid var(--border-gold);border-radius:10px;padding:12px;cursor:pointer;text-align:center;transition:all 0.2s;user-select:none;}
+.sns-item:hover{border-color:var(--gold);}
+.sns-item.selected{border-color:var(--gold);background:rgba(201,168,76,0.1);}
+.sns-item .plat-icon{font-size:22px;display:block;margin-bottom:6px;}
+.sns-item .plat-name{color:#fff;font-size:12px;font-weight:600;}
+.sns-item .genre-badge{display:inline-block;background:var(--gold);color:#000;font-size:10px;padding:2px 6px;border-radius:10px;margin-top:4px;}
+
+/* Media Upload */
+.upload-area{border:2px dashed rgba(201,168,76,0.3);border-radius:12px;padding:20px;}
+.upload-btns{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+.upload-btn{background:var(--black-border);border:1px solid var(--border-gold);color:var(--gold);padding:10px 18px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;transition:all 0.2s;display:flex;align-items:center;gap:6px;}
+.upload-btn:hover{background:rgba(201,168,76,0.1);border-color:var(--gold);}
+.media-preview{display:none;background:var(--black-border);border-radius:8px;overflow:hidden;max-height:200px;margin-bottom:12px;position:relative;}
+.media-preview img,.media-preview video{width:100%;max-height:200px;object-fit:cover;}
+.preview-remove{position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.6);border:none;color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px;}
+.url-input-wrap{display:none;margin-bottom:12px;}
+.url-input-wrap input{width:100%;background:var(--black-border);border:1px solid rgba(201,168,76,0.3);color:#fff;padding:10px 14px;border-radius:8px;font-size:14px;outline:none;}
+.url-input-wrap input:focus{border-color:var(--gold);}
+.divider{display:flex;align-items:center;gap:12px;margin:12px 0;color:var(--text-muted);font-size:12px;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.08);}
+textarea{width:100%;background:var(--black-border);border:1px solid rgba(201,168,76,0.3);color:#fff;padding:14px;border-radius:10px;font-size:14px;font-family:'Inter',sans-serif;resize:vertical;min-height:100px;outline:none;transition:border-color 0.2s;line-height:1.6;}
+textarea:focus{border-color:var(--gold);}
+textarea::placeholder{color:var(--text-muted);}
+
+/* Duration */
+.duration-grid{display:flex;flex-wrap:wrap;gap:8px;}
+.dur-btn{background:var(--black-border);border:1px solid var(--border-gold);color:#aaa;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:13px;transition:all 0.2s;}
+.dur-btn:hover{border-color:var(--gold);color:#fff;}
+.dur-btn.active{background:var(--gold);color:#000;border-color:var(--gold);font-weight:600;}
+
+/* Genre Buttons */
+.genre-grid{display:flex;flex-wrap:wrap;gap:8px;}
+.genre-btn{background:var(--black-border);border:1px solid var(--border-gold);color:#fff;padding:8px 14px;border-radius:20px;cursor:pointer;font-size:13px;transition:all 0.2s;}
+.genre-btn:hover{border-color:var(--gold);}
+.genre-btn.active{background:var(--gold);color:#000;border-color:var(--gold);font-weight:600;}
+
+/* Action buttons */
+.btn-gold{background:var(--gold);color:#000;border:none;padding:12px 24px;border-radius:10px;font-weight:700;cursor:pointer;transition:all 0.2s;font-size:14px;}
+.btn-gold:hover{background:var(--gold-light);}
+.btn-gold:disabled{background:#333;color:#666;cursor:not-allowed;}
+.btn-outline{background:transparent;border:1px solid var(--gold);color:var(--gold);padding:10px 20px;border-radius:10px;cursor:pointer;font-size:14px;transition:all 0.2s;}
+.btn-outline:hover{background:rgba(201,168,76,0.1);}
+
+/* Smart Suggestion */
+.suggestion-panel{position:fixed;bottom:0;left:0;right:0;background:#111111;border-top:2px solid var(--gold);border-radius:20px 20px 0 0;padding:24px 20px;z-index:200;transform:translateY(100%);transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);max-height:80vh;overflow-y:auto;}
+.suggestion-panel.open{transform:translateY(0);}
+.sugg-title{color:var(--gold-light);font-size:18px;font-weight:700;margin-bottom:16px;}
+.sugg-card{background:#1a1a1a;border:1px solid var(--border-gold);border-radius:12px;padding:16px;margin-bottom:12px;cursor:pointer;transition:border-color 0.2s;}
+.sugg-card:hover{border-color:var(--gold);}
+.sugg-card-title{color:var(--gold-light);font-size:14px;font-weight:600;margin-bottom:6px;}
+.sugg-reason{color:var(--text-secondary);font-size:12px;margin-bottom:10px;line-height:1.5;}
+.badge-high{background:var(--gold);color:#000;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;}
+.badge-med{background:#666;color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;}
+.badge-low{background:#333;color:#aaa;font-size:10px;padding:2px 8px;border-radius:10px;}
+.dur-badge{background:var(--black);border:1px solid var(--gold);color:var(--gold);font-size:10px;padding:2px 8px;border-radius:10px;}
+
+/* Optimize panel */
+.optimize-panel{background:#111111;border:1px solid var(--gold);border-radius:16px;padding:24px;margin-top:16px;display:none;}
+.opt-summary{color:var(--gold-light);font-size:20px;font-weight:700;margin-bottom:16px;}
+.opt-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.opt-label{color:var(--text-secondary);font-size:13px;}
+.opt-value{color:#fff;font-size:13px;font-weight:500;text-align:right;max-width:60%;}
+
+/* Generate result */
+.result-area{display:none;margin-top:20px;text-align:center;}
+.result-video{width:100%;border-radius:12px;border:1px solid var(--gold);background:#000;}
+.result-actions{display:flex;gap:12px;justify-content:center;margin-top:16px;flex-wrap:wrap;}
+
+/* Split Suggestion */
+.split-card{background:rgba(201,168,76,0.05);border:2px solid var(--gold);border-radius:12px;padding:20px;margin-top:16px;display:none;}
+.split-title{color:var(--gold-light);font-size:15px;font-weight:700;margin-bottom:8px;}
+.split-body{color:#fff;font-size:13px;margin-bottom:14px;line-height:1.6;}
+.split-actions{display:flex;gap:10px;flex-wrap:wrap;}
+
+/* Posting schedule */
+.schedule-table{width:100%;border-collapse:collapse;margin-top:12px;}
+.schedule-table th{color:var(--gold);font-size:12px;text-align:left;padding:8px 12px;background:#0d0d0d;border-bottom:1px solid rgba(201,168,76,0.2);}
+.schedule-table td{color:#fff;font-size:13px;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.04);}
+.schedule-table tr:nth-child(even) td{background:rgba(255,255,255,0.02);}
+.schedule-table td:nth-child(2){color:var(--text-secondary);}
+
+/* Camera modal */
+.camera-modal{position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:10000;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+.camera-modal.open{display:flex;}
+#camera-preview{width:100%;max-width:400px;border-radius:12px;border:2px solid var(--gold);}
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="top-bar">
+  <div class="top-bar-center">ELEVA Studio</div>
+  <div class="top-badge" id="credits-badge">⚡ --</div>
+  <button class="lang-btn-top" onclick="ELEVA.showLanguageModal()">🌐</button>
+</div>
+
+<!-- Camera Modal -->
+<div class="camera-modal" id="camera-modal">
+  <video id="camera-preview" autoplay muted playsinline></video>
+  <div style="display:flex;gap:12px;">
+    <button onclick="capturePhoto()" style="background:var(--gold);color:#000;border:none;padding:14px 28px;border-radius:50px;font-weight:700;cursor:pointer;font-size:16px;">📸 撮影</button>
+    <button onclick="closeCamera()" style="background:#333;color:#666;border:none;padding:14px 28px;border-radius:50px;cursor:pointer;">閉じる</button>
+  </div>
+</div>
+
+<div class="page-wrap">
+  <h1 class="page-title">動画を生成</h1>
+
+  <!-- SNS Selector -->
+  <div class="card" id="sns-section">
+    <div class="card-title">📱 投稿先SNS</div>
+    <div class="sns-grid" id="sns-grid">
+      <div class="sns-item" onclick="toggleSNS(this,'tiktok')">
+        <span class="plat-icon">🎵</span>
+        <span class="plat-name">TikTok</span>
+      </div>
+      <div class="sns-item selected" onclick="toggleSNS(this,'instagram')">
+        <span class="plat-icon">📸</span>
+        <span class="plat-name">Instagram</span>
+      </div>
+      <div class="sns-item" onclick="toggleSNS(this,'youtube')">
+        <span class="plat-icon">▶️</span>
+        <span class="plat-name">YouTube</span>
+      </div>
+      <div class="sns-item" onclick="toggleSNS(this,'x')">
+        <span class="plat-icon">𝕏</span>
+        <span class="plat-name">X</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Media Upload + Text -->
+  <div class="card" id="generate-section">
+    <div class="card-title">🎬 <span data-i18n="upload_material">動画素材を選択（任意）</span></div>
+
+    <!-- Upload Buttons -->
+    <div class="upload-area">
+      <div class="upload-btns">
+        <button class="upload-btn" onclick="openCamera()">📷 <span data-i18n="camera">カメラ</span></button>
+        <button class="upload-btn" onclick="document.getElementById('photo-input').click()">🖼️ <span data-i18n="photo">写真</span></button>
+        <button class="upload-btn" onclick="document.getElementById('video-input').click()">🎥 <span data-i18n="video">動画</span></button>
+        <button class="upload-btn" onclick="toggleUrlInput()">🔗 <span data-i18n="url">URL</span></button>
+      </div>
+      <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(this)"/>
+      <input type="file" id="video-input" accept="video/*" style="display:none" onchange="handleVideoUpload(this)"/>
+
+      <!-- URL Input -->
+      <div class="url-input-wrap" id="url-input-wrap">
+        <input type="url" id="source-url" data-i18n-ph="url_placeholder" placeholder="動画・画像のURLを貼り付け" onchange="handleUrlInput(this.value)"/>
+      </div>
+
+      <!-- Media Preview -->
+      <div class="media-preview" id="media-preview">
+        <img id="preview-img" style="display:none"/>
+        <video id="preview-video" controls style="display:none"></video>
+        <button class="preview-remove" onclick="clearMedia()">×</button>
+      </div>
+
+      <div class="divider" data-i18n="or_describe">またはテキストで説明</div>
+      <textarea id="prompt-input" placeholder="投稿内容や動画のイメージを入力してください..." rows="4"></textarea>
+    </div>
+
+    <!-- Smart Suggestion -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;flex-wrap:wrap;gap:8px;">
+      <button class="btn-outline" onclick="loadSuggestions()">🔥 次の投稿を提案</button>
+      <button class="btn-outline" onclick="optimizePrompt()" data-i18n="optimize_prompt">プロンプトを最適化</button>
+    </div>
+  </div>
+
+  <!-- Prompt Optimization Result -->
+  <div class="optimize-panel" id="optimize-panel">
+    <div class="opt-summary" id="opt-summary">最適化されたプロンプト</div>
+    <div id="opt-rows"></div>
+    <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;">
+      <button class="btn-gold" onclick="useOptimized()" data-i18n="generate_btn">この内容で動画生成</button>
+      <button class="btn-outline" onclick="document.getElementById('optimize-panel').style.display='none'">再編集する</button>
+    </div>
+  </div>
+
+  <!-- Duration -->
+  <div class="card">
+    <div class="card-title">⏱️ 動画尺</div>
+    <div class="duration-grid" id="dur-grid">
+      <button class="dur-btn active" onclick="selectDur(this,5)">5秒</button>
+      <button class="dur-btn" onclick="selectDur(this,15)">15秒</button>
+      <button class="dur-btn" onclick="selectDur(this,30)">30秒</button>
+      <button class="dur-btn" onclick="selectDur(this,60)">60秒</button>
+      <button class="dur-btn" onclick="selectDur(this,180)">3分</button>
+      <button class="dur-btn" onclick="selectDur(this,0)">AIにお任せ</button>
+    </div>
+  </div>
+
+  <!-- Genre -->
+  <div class="card">
+    <div class="card-title">🎭 ジャンル</div>
+    <div class="genre-grid" id="genre-grid">
+      <button class="genre-btn" onclick="toggleGenre(this,'beauty')">💄 美容</button>
+      <button class="genre-btn active" onclick="toggleGenre(this,'food')">🍜 グルメ</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'travel')">✈️ 旅行</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'fashion')">👗 ファッション</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'fitness')">💪 フィットネス</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'pet')">🐾 ペット</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'tech')">💻 テック</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'shop')">🛍️ 商品PR</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'restaurant')">🏪 店舗PR</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'edu')">📚 教育</button>
+    </div>
+  </div>
+
+  <!-- Generate Button -->
+  <div style="text-align:center;margin:24px 0;">
+    <button class="btn-gold" id="gen-btn" onclick="generateVideo()" style="font-size:18px;padding:16px 48px;border-radius:50px;" data-i18n="generate_btn">動画を生成</button>
+    <div id="gen-status" style="color:var(--text-secondary);font-size:13px;margin-top:10px;display:none;"></div>
+  </div>
+
+  <!-- Result -->
+  <div class="result-area" id="result-area">
+    <video class="result-video" id="result-video" controls></video>
+    <p style="color:var(--text-muted);font-size:12px;margin-top:8px;">📸 各シーンをスクリーンショットしてInstagramカルーセルにも使えます</p>
+    <div class="result-actions">
+      <button class="btn-gold" onclick="downloadVideo()" data-i18n="download">ダウンロード</button>
+      <button class="btn-outline" onclick="shareVideo()" data-i18n="share">シェア</button>
+    </div>
+    <!-- Split Suggestion -->
+    <div class="split-card" id="split-card">
+      <div class="split-title">💡 <span data-i18n="split_title">分割投稿の提案</span></div>
+      <div class="split-body" id="split-body"></div>
+      <div class="split-actions">
+        <button class="btn-gold" onclick="addToSchedule()" style="font-size:13px;padding:10px 18px;">分割して投稿スケジュールに追加</button>
+        <button class="btn-outline" style="font-size:13px;padding:10px 18px;" onclick="document.getElementById('split-card').style.display='none'">このまま1本で投稿</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Posting Schedule -->
+  <div class="card" style="margin-top:20px;">
+    <div class="card-title">📅 <span data-i18n="best_post_times">最適投稿時間</span></div>
+    <div id="schedule-wrap">
+      <table class="schedule-table" id="schedule-table">
+        <thead>
+          <tr>
+            <th data-i18n="platform">プラットフォーム</th>
+            <th data-i18n="genre">ジャンル</th>
+            <th data-i18n="best_days">最適曜日</th>
+            <th data-i18n="best_time">最適時間</th>
+          </tr>
+        </thead>
+        <tbody id="schedule-body">
+          <tr><td colspan="4" style="color:var(--text-muted);text-align:center;padding:20px;">読み込み中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Smart Suggestion Panel -->
+<div class="suggestion-panel" id="sugg-panel">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <div class="sugg-title">🔥 次の投稿提案</div>
+    <button onclick="closeSuggestions()" style="background:none;border:none;color:#666;font-size:20px;cursor:pointer;">×</button>
+  </div>
+  <div id="sugg-list"></div>
+</div>
+
+<script src="/eleva-i18n.js"></script>
+<script src="/eleva-shared.js"></script>
+<script>
+const SUPABASE_URL=ELEVA.SUPABASE_URL;
+const SUPABASE_ANON_KEY=ELEVA.SUPABASE_ANON_KEY;
+const sb=ELEVA.getSupabase();
+let currentUser=null;
+let selectedDuration=5;
+let selectedGenres=['food'];
+let selectedSNS=['instagram'];
+let inputImageUrl=null;
+let inputVideoUrl=null;
+let sourceUrl=null;
+let optimizedData=null;
+let currentTaskId=null;
+let currentGenId=null;
+let cameraStream=null;
+
+// ─ SNS ───────────────────────────────────────────────────
+function toggleSNS(el,platform){
+  el.classList.toggle('selected');
+  updateSelectedSNS();
+}
+function updateSelectedSNS(){
+  selectedSNS=Array.from(document.querySelectorAll('.sns-item.selected')).map(el=>el.dataset?.plat||el.querySelector('.plat-name')?.textContent?.toLowerCase()||'');
+}
+
+// ─ Duration ──────────────────────────────────────────────
+function selectDur(btn,sec){
+  document.querySelectorAll('.dur-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedDuration=sec;
+}
+
+// ─ Genre ─────────────────────────────────────────────────
+function toggleGenre(btn,genre){
+  btn.classList.toggle('active');
+  selectedGenres=Array.from(document.querySelectorAll('.genre-btn.active')).map(b=>b.dataset.genre||genre);
+}
+
+// ─ Media Upload ───────────────────────────────────────────
+async function handlePhotoUpload(input){
+  if(!input.files[0])return;
+  const file=input.files[0];
+  showMediaPreview('img',URL.createObjectURL(file));
+  try{
+    const url=await ELEVA.uploadToStorage(file,currentUser?.id||'anon');
+    inputImageUrl=url;
+  }catch(e){console.error('Upload error:',e);}
+}
+
+async function handleVideoUpload(input){
+  if(!input.files[0])return;
+  const file=input.files[0];
+  if(file.size>100*1024*1024){alert('動画は100MB以下にしてください');return;}
+  showMediaPreview('video',URL.createObjectURL(file));
+  try{
+    const url=await ELEVA.uploadToStorage(file,currentUser?.id||'anon');
+    inputVideoUrl=url;
+  }catch(e){console.error('Upload error:',e);}
+}
+
+function handleUrlInput(url){
+  sourceUrl=url;
+  if(url.match(/\.(jpg|jpeg|png|gif|webp)$/i))inputImageUrl=url;
+  else inputVideoUrl=url;
+}
+
+function toggleUrlInput(){
+  const wrap=document.getElementById('url-input-wrap');
+  wrap.style.display=wrap.style.display==='none'||!wrap.style.display?'block':'none';
+}
+
+function showMediaPreview(type,src){
+  const preview=document.getElementById('media-preview');
+  const img=document.getElementById('preview-img');
+  const video=document.getElementById('preview-video');
+  preview.style.display='block';
+  if(type==='img'){img.src=src;img.style.display='block';video.style.display='none';}
+  else{video.src=src;video.style.display='block';img.style.display='none';}
+}
+
+function clearMedia(){
+  document.getElementById('media-preview').style.display='none';
+  document.getElementById('preview-img').src='';
+  document.getElementById('preview-video').src='';
+  document.getElementById('photo-input').value='';
+  document.getElementById('video-input').value='';
+  document.getElementById('source-url').value='';
+  inputImageUrl=null;inputVideoUrl=null;sourceUrl=null;
+}
+
+// ─ Camera ────────────────────────────────────────────────
+async function openCamera(){
+  try{
+    cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    document.getElementById('camera-preview').srcObject=cameraStream;
+    document.getElementById('camera-modal').classList.add('open');
+  }catch(e){alert('カメラへのアクセスが拒否されました');}
+}
+
+function closeCamera(){
+  if(cameraStream)cameraStream.getTracks().forEach(t=>t.stop());
+  document.getElementById('camera-modal').classList.remove('open');
+}
+
+function capturePhoto(){
+  const video=document.getElementById('camera-preview');
+  const canvas=document.createElement('canvas');
+  canvas.width=video.videoWidth;canvas.height=video.videoHeight;
+  canvas.getContext('2d').drawImage(video,0,0);
+  canvas.toBlob(async blob=>{
+    const file=new File([blob],'camera_capture.jpg',{type:'image/jpeg'});
+    showMediaPreview('img',URL.createObjectURL(blob));
+    closeCamera();
+    try{inputImageUrl=await ELEVA.uploadToStorage(file,currentUser?.id||'anon');}catch(e){}
+  },'image/jpeg',0.9);
+}
+
+// ─ Smart Suggestions ─────────────────────────────────────
+async function loadSuggestions(){
+  document.getElementById('sugg-panel').classList.add('open');
+  document.getElementById('sugg-list').innerHTML='<div style="color:var(--text-muted);text-align:center;padding:20px;">読み込み中...</div>';
+  try{
+    const res=await fetch(SUPABASE_URL+'/functions/v1/suggest-next-video',{
+      method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY},
+      body:JSON.stringify({userId:currentUser?.id,platform:selectedSNS[0]||'instagram',genre:selectedGenres[0]||'general'})
+    });
+    const data=await res.json();
+    const suggestions=data.suggestions||data||[];
+    if(!suggestions.length){document.getElementById('sugg-list').innerHTML='<div style="color:var(--text-muted);text-align:center;padding:20px;">提案がありません</div>';return;}
+    document.getElementById('sugg-list').innerHTML=suggestions.map((s,i)=>`
+      <div class="sugg-card" onclick="useSuggestion('${(s.prompt||'').replace(/'/g,"\\'")}')">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+          <div class="sugg-card-title">${s.title||s.prompt?.slice(0,40)||'提案 '+(i+1)}</div>
+          <div style="display:flex;gap:4px;flex-shrink:0;">
+            ${s.score==='HIGH'||s.priority==='high'?'<span class="badge-high">HIGH</span>':s.score==='LOW'?'<span class="badge-low">LOW</span>':'<span class="badge-med">MED</span>'}
+            ${s.duration?`<span class="dur-badge">${s.duration}秒</span>`:''}
+          </div>
+        </div>
+        <div class="sugg-reason">${s.reason||s.description||''}</div>
+        ${s.trends?.map(t=>`<span class="badge-high" style="margin-right:4px;font-size:9px;">#${t}</span>`).join('')||''}
+        <div style="margin-top:10px;"><button class="btn-gold" style="font-size:12px;padding:7px 14px;" onclick="event.stopPropagation();useSuggestion('${(s.prompt||'').replace(/'/g,"\\'")}')">このプロンプトを使う</button></div>
+      </div>`).join('');
+  }catch(e){document.getElementById('sugg-list').innerHTML='<div style="color:#ff4444;text-align:center;padding:20px;">読み込みエラー</div>';}
+}
+
+function useSuggestion(prompt){
+  document.getElementById('prompt-input').value=prompt;
+  closeSuggestions();
+}
+function closeSuggestions(){document.getElementById('sugg-panel').classList.remove('open');}
+
+// ─ Prompt Optimization ────────────────────────────────────
+async function optimizePrompt(){
+  const prompt=document.getElementById('prompt-input').value;
+  if(!prompt.trim()){alert('プロンプトを入力してください');return;}
+  const panel=document.getElementById('optimize-panel');
+  panel.style.display='block';
+  document.getElementById('opt-summary').textContent='最適化中...';
+  document.getElementById('opt-rows').innerHTML='<div style="color:var(--text-muted);padding:20px;text-align:center;">⚡ 分析中...</div>';
+  try{
+    const res=await fetch(SUPABASE_URL+'/functions/v1/optimize-prompt',{
+      method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY},
+      body:JSON.stringify({prompt,platform:selectedSNS[0]||'instagram',genre:selectedGenres[0]||'general',duration:selectedDuration,userId:currentUser?.id,lang:localStorage.getItem('eleva_lang')||'ja'})
+    });
+    const data=await res.json();
+    optimizedData=data;
+    document.getElementById('opt-summary').textContent=data.summary||data.optimized_prompt||prompt;
+    const rows=[
+      {label:'BGM',value:data.bgm||data.music||'-'},
+      {label:'テロップ',value:data.caption||data.text||'-'},
+      {label:'エフェクト',value:data.effect||'-'},
+      {label:'投稿文',value:data.post_text||'-'},
+      {label:'ハッシュタグ',value:data.hashtags?.join(' ')||'-'}
+    ];
+    document.getElementById('opt-rows').innerHTML=rows.map(r=>`<div class="opt-row"><span class="opt-label">${r.label}</span><span class="opt-value">${r.value}</span></div>`).join('');
+  }catch(e){document.getElementById('opt-rows').innerHTML='<div style="color:#ff4444;">最適化エラー</div>';}
+}
+
+function useOptimized(){
+  if(optimizedData?.optimized_prompt)document.getElementById('prompt-input').value=optimizedData.optimized_prompt;
+  document.getElementById('optimize-panel').style.display='none';
+  generateVideo();
+}
+
+// ─ Generate Video ─────────────────────────────────────────
+async function generateVideo(){
+  const prompt=document.getElementById('prompt-input').value.trim();
+  if(!prompt&&!inputImageUrl&&!inputVideoUrl){alert('プロンプトを入力するか素材をアップロードしてください');return;}
+  const btn=document.getElementById('gen-btn');
+  const status=document.getElementById('gen-status');
+  btn.disabled=true;btn.textContent=elevaT('generating');status.style.display='block';
+
+  const pollStatus=async(taskId,genId)=>{
+    status.textContent='🔄 生成中... しばらくお待ちください（通常1〜3分）';
+    // Store in localStorage for background tracking
+    const genData={taskId,generationId:genId,startedAt:Date.now(),platform:selectedSNS[0]||'instagram',genre:selectedGenres[0]||'general'};
+    localStorage.setItem('eleva_generating',JSON.stringify(genData));
+    ELEVA.showGenBanner(taskId,genId,selectedSNS[0]);
+
+    let attempts=0;
+    const interval=setInterval(async()=>{
+      attempts++;
+      if(attempts>60){clearInterval(interval);status.textContent='タイムアウトしました。履歴から確認してください。';btn.disabled=false;btn.textContent=elevaT('generate_btn');return;}
+      try{
+        const res=await fetch('/api/video-status?taskId='+taskId);
+        const data=await res.json();
+        if(data.status==='completed'||data.videoUrl){
+          clearInterval(interval);
+          localStorage.removeItem('eleva_generating');
+          document.getElementById('gen-banner')?.remove();
+          showResult(data.videoUrl||data.video_url||'',genId);
+          btn.disabled=false;btn.textContent=elevaT('generate_btn');status.style.display='none';
+          // Check split suggestion
+          checkSplitSuggestion(genId);
+        }else if(data.status==='failed'){
+          clearInterval(interval);status.textContent='生成に失敗しました。再度お試しください。';
+          btn.disabled=false;btn.textContent=elevaT('generate_btn');
+          localStorage.removeItem('eleva_generating');
+        }
+      }catch(e){console.error('Poll error:',e);}
+    },8000);
+  };
+
+  try{
+    const body={
+      prompt,userId:currentUser?.id,platform:selectedSNS[0]||'instagram',
+      genre:selectedGenres[0]||'general',duration:parseInt(selectedDuration)||5,
+      ...(inputImageUrl&&{input_image_url:inputImageUrl}),
+      ...(inputVideoUrl&&{input_video_url:inputVideoUrl}),
+      ...(sourceUrl&&{source_url:sourceUrl})
+    };
+    status.textContent='⚡ 生成リクエストを送信中...';
+    const res=await fetch('/api/generate-video',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    });
+    const data=await res.json();
+    if(data.error)throw new Error(data.error);
+    currentTaskId=data.taskId||data.task_id;
+    currentGenId=data.generationId||data.generation_id||data.id;
+    await pollStatus(currentTaskId,currentGenId);
+  }catch(e){
+    status.textContent='エラー: '+e.message;
+    btn.disabled=false;btn.textContent=elevaT('generate_btn');
+  }
+}
+
+function showResult(videoUrl,genId){
+  const area=document.getElementById('result-area');
+  document.getElementById('result-video').src=videoUrl;
+  area.style.display='block';
+  area.scrollIntoView({behavior:'smooth'});
+  if(Notification.permission==='granted'){
+    new Notification('ELEVA',{body:elevaT('push_completed'),icon:'/icon.png'});
+  }
+}
+
+async function checkSplitSuggestion(genId){
+  try{
+    const res=await fetch(SUPABASE_URL+'/functions/v1/video-split-suggest',{
+      method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY},
+      body:JSON.stringify({action:'suggest_split',generationId:genId,userId:currentUser?.id,durationSec:selectedDuration,platform:selectedSNS[0]||'instagram',lang:localStorage.getItem('eleva_lang')||'ja'})
+    });
+    const data=await res.json();
+    if(data.should_split){
+      const card=document.getElementById('split-card');
+      document.getElementById('split-body').innerHTML=`
+        <strong>${data.reason||'この動画は分割して投稿することで効果が高まります'}</strong><br/>
+        <span style="color:var(--gold);">${data.clips||2}本に分割 × 各${data.clip_duration||30}秒</span>
+      `;
+      card.style.display='block';
+    }
+  }catch(e){}
+}
+
+async function addToSchedule(){
+  try{
+    const entries=parseInt(document.getElementById('split-body').querySelector('span')?.textContent)||2;
+    for(let i=0;i<entries;i++){
+      await sb.from('content_calendar').insert({user_id:currentUser?.id,generation_id:currentGenId,platform:selectedSNS[0],clip_index:i});
+    }
+    alert('投稿スケジュールに追加しました！');
+    document.getElementById('split-card').style.display='none';
+  }catch(e){alert('スケジュールへの追加に失敗しました');}
+}
+
+function downloadVideo(){
+  const url=document.getElementById('result-video').src;
+  if(!url)return;
+  const a=document.createElement('a');a.href=url;a.download='eleva_video.mp4';a.click();
+}
+
+function shareVideo(){
+  const url=document.getElementById('result-video').src;
+  if(navigator.share){navigator.share({title:'ELEVA生成動画',url});}
+  else{navigator.clipboard.writeText(url).then(()=>alert('URLをコピーしました'));}
+}
+
+// ─ Posting Schedule ───────────────────────────────────────
+async function loadPostingSchedule(){
+  try{
+    const res=await fetch(SUPABASE_URL+'/functions/v1/video-insights',{
+      method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY},
+      body:JSON.stringify({action:'best_times',userId:currentUser?.id})
+    });
+    const data=await res.json();
+    const times=data.best_times||[];
+    if(!times.length){
+      // Default schedule
+      document.getElementById('schedule-body').innerHTML=`
+        <tr><td>TikTok</td><td style="color:var(--text-secondary);">エンタメ</td><td>火・木・土</td><td>19:00-21:00</td></tr>
+        <tr><td>Instagram</td><td style="color:var(--text-secondary);">ライフスタイル</td><td>水・金</td><td>12:00-13:00</td></tr>
+        <tr><td>YouTube</td><td style="color:var(--text-secondary);">教育</td><td>土・日</td><td>20:00-22:00</td></tr>
+      `;
+      return;
+    }
+    document.getElementById('schedule-body').innerHTML=times.map(t=>`<tr><td>${t.platform}</td><td style="color:var(--text-secondary);">${t.genre||'-'}</td><td>${t.best_days||'-'}</td><td>${t.best_time||'-'}</td></tr>`).join('');
+  }catch(e){
+    document.getElementById('schedule-body').innerHTML=`
+      <tr><td>TikTok</td><td style="color:var(--text-secondary);">全般</td><td>火・木・土</td><td>19:00-21:00</td></tr>
+      <tr><td>Instagram</td><td style="color:var(--text-secondary);">全般</td><td>水・金</td><td>12:00-13:00</td></tr>
+    `;
+  }
+}
+
+document.addEventListener('DOMContentLoaded',async()=>{
+  currentUser=await ELEVA.initElevaPage({page:'generate',onUser:u=>{currentUser=u;}});
+  ELEVA.applyLanguage(localStorage.getItem('eleva_lang')||'ja');
+  if(currentUser){
+    const {data:prof}=await sb.from('profiles').select('credits_remaining').eq('id',currentUser.id).single();
+    if(prof)document.getElementById('credits-badge').textContent='⚡ '+prof.credits_remaining;
+    loadPostingSchedule();
+  }
+  if(window.location.hash==='#generate'){
+    document.getElementById('generate-section').scrollIntoView({behavior:'smooth'});
+  }
+});
+</script>
+</body>
+</html>
