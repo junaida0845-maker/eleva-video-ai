@@ -27,5 +27,13 @@
   to = "/.netlify/functions/youtube-search"
   status = 200
 
+[[redirects]]
+  from = "/api/generate-scenario"
+  to = "/.netlify/functions/generate-scenario"
+  status = 200
+
 [functions."payment-reminders"]
   schedule = "0 9 * * *"
+
+[functions."refresh-trends"]
+  schedule = "0 0 * * 1"

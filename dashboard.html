@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/eleva-icons.js"></script>
 <style>
 :root{--gold:#c9a84c;--gold-light:#f0d070;--gold-dark:#a07830;--black:#0a0a0a;--black-card:#111111;--black-border:#1a1a1a;--border-gold:rgba(201,168,76,0.2);--text-primary:#fff;--text-secondary:#aaa;--text-muted:#666;--text-gold:#c9a84c;}
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -119,15 +120,15 @@ textarea::placeholder{color:var(--text-muted);}
 <!-- Top Bar -->
 <div class="top-bar">
   <div class="top-bar-center">ELEVA Studio</div>
-  <div class="top-badge" id="credits-badge">⚡ --</div>
-  <button class="lang-btn-top" onclick="ELEVA.showLanguageModal()">🌐</button>
+  <div class="top-badge" id="credits-badge"><span data-icon="lightning"></span> --</div>
+  <button class="lang-btn-top" onclick="ELEVA.showLanguageModal()"><span data-icon="globe"></span></button>
 </div>
 
 <!-- Camera Modal -->
 <div class="camera-modal" id="camera-modal">
   <video id="camera-preview" autoplay muted playsinline></video>
   <div style="display:flex;gap:12px;">
-    <button onclick="capturePhoto()" style="background:var(--gold);color:#000;border:none;padding:14px 28px;border-radius:50px;font-weight:700;cursor:pointer;font-size:16px;">📸 撮影</button>
+    <button onclick="capturePhoto()" style="background:var(--gold);color:#000;border:none;padding:14px 28px;border-radius:50px;font-weight:700;cursor:pointer;font-size:16px;display:flex;align-items:center;gap:8px;"><span data-icon="camera"></span> 撮影</button>
     <button onclick="closeCamera()" style="background:#333;color:#666;border:none;padding:14px 28px;border-radius:50px;cursor:pointer;">閉じる</button>
   </div>
 </div>
@@ -137,22 +138,22 @@ textarea::placeholder{color:var(--text-muted);}
 
   <!-- SNS Selector -->
   <div class="card" id="sns-section">
-    <div class="card-title">📱 投稿先SNS</div>
+    <div class="card-title"><span data-icon="platform"></span> 投稿先SNS</div>
     <div class="sns-grid" id="sns-grid">
       <div class="sns-item" onclick="toggleSNS(this,'tiktok')">
-        <span class="plat-icon">🎵</span>
+        <span class="plat-icon" data-icon="tiktok"></span>
         <span class="plat-name">TikTok</span>
       </div>
       <div class="sns-item selected" onclick="toggleSNS(this,'instagram')">
-        <span class="plat-icon">📸</span>
+        <span class="plat-icon" data-icon="instagram"></span>
         <span class="plat-name">Instagram</span>
       </div>
       <div class="sns-item" onclick="toggleSNS(this,'youtube')">
-        <span class="plat-icon">▶️</span>
+        <span class="plat-icon" data-icon="youtube"></span>
         <span class="plat-name">YouTube</span>
       </div>
       <div class="sns-item" onclick="toggleSNS(this,'x')">
-        <span class="plat-icon">𝕏</span>
+        <span class="plat-icon" data-icon="x_twitter"></span>
         <span class="plat-name">X</span>
       </div>
     </div>
@@ -160,15 +161,15 @@ textarea::placeholder{color:var(--text-muted);}
 
   <!-- Media Upload + Text -->
   <div class="card" id="generate-section">
-    <div class="card-title">🎬 <span data-i18n="upload_material">動画素材を選択（任意）</span></div>
+    <div class="card-title"><span data-icon="video"></span> <span data-i18n="upload_material">動画素材を選択（任意）</span></div>
 
     <!-- Upload Buttons -->
     <div class="upload-area">
       <div class="upload-btns">
-        <button class="upload-btn" onclick="openCamera()">📷 <span data-i18n="camera">カメラ</span></button>
-        <button class="upload-btn" onclick="document.getElementById('photo-input').click()">🖼️ <span data-i18n="photo">写真</span></button>
-        <button class="upload-btn" onclick="document.getElementById('video-input').click()">🎥 <span data-i18n="video">動画</span></button>
-        <button class="upload-btn" onclick="toggleUrlInput()">🔗 <span data-i18n="url">URL</span></button>
+        <button class="upload-btn" onclick="openCamera()"><span data-icon="camera"></span> <span data-i18n="camera">カメラ</span></button>
+        <button class="upload-btn" onclick="document.getElementById('photo-input').click()"><span data-icon="photo"></span> <span data-i18n="photo">写真</span></button>
+        <button class="upload-btn" onclick="document.getElementById('video-input').click()"><span data-icon="video"></span> <span data-i18n="video">動画</span></button>
+        <button class="upload-btn" onclick="toggleUrlInput()"><span data-icon="link"></span> <span data-i18n="url">URL</span></button>
       </div>
       <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(this)"/>
       <input type="file" id="video-input" accept="video/*" style="display:none" onchange="handleVideoUpload(this)"/>
@@ -191,8 +192,40 @@ textarea::placeholder{color:var(--text-muted);}
 
     <!-- Smart Suggestion -->
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;flex-wrap:wrap;gap:8px;">
-      <button class="btn-outline" onclick="loadSuggestions()">🔥 次の投稿を提案</button>
-      <button class="btn-outline" onclick="optimizePrompt()" data-i18n="optimize_prompt">プロンプトを最適化</button>
+      <button class="btn-outline" onclick="loadSuggestions()" style="display:flex;align-items:center;gap:6px;"><span data-icon="fire"></span> 次の投稿を提案</button>
+      <button class="btn-outline" onclick="optimizePrompt()" data-i18n="optimize_prompt" style="display:flex;align-items:center;gap:6px;"><span data-icon="sparkle"></span> プロンプトを最適化</button>
+      <button class="btn-outline" onclick="openScenarioModal()" style="display:flex;align-items:center;gap:6px;"><span data-icon="star"></span> シナリオ作成</button>
+    </div>
+  </div>
+
+  <!-- Scenario Modal -->
+  <div id="scenario-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:1000;overflow-y:auto;padding:24px 12px;">
+    <div style="max-width:720px;margin:0 auto;background:var(--black-card);border:1px solid var(--border-gold);border-radius:16px;padding:24px;color:#fff;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="font-size:18px;font-weight:700;color:var(--gold);">シナリオ作成</div>
+        <button onclick="closeScenarioModal()" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer;">×</button>
+      </div>
+      <div id="scenario-step-1">
+        <div style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">カテゴリを選択してください。バズ分析データを元にClaudeが3パターンのシナリオを生成します。</div>
+        <div id="scenario-cat-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
+          <button class="genre-btn" onclick="pickScenarioCategory('料理')">料理</button>
+          <button class="genre-btn" onclick="pickScenarioCategory('美容')">美容</button>
+          <button class="genre-btn" onclick="pickScenarioCategory('フィットネス')">フィットネス</button>
+          <button class="genre-btn" onclick="pickScenarioCategory('旅行')">旅行</button>
+          <button class="genre-btn" onclick="pickScenarioCategory('ビジネス')">ビジネス</button>
+          <button class="genre-btn" onclick="pickScenarioCategory('エンタメ')">エンタメ</button>
+        </div>
+      </div>
+      <div id="scenario-step-2" style="display:none;">
+        <div id="scenario-loading" style="text-align:center;color:var(--text-secondary);padding:40px 0;">
+          <div style="font-size:14px;">シナリオを生成中...</div>
+        </div>
+        <div id="scenario-error" style="display:none;color:#ff6b6b;font-size:13px;padding:16px;border-radius:8px;background:rgba(255,107,107,0.08);margin-bottom:12px;"></div>
+        <div id="scenario-patterns" style="display:none;"></div>
+        <div style="text-align:center;margin-top:16px;">
+          <button class="btn-outline" onclick="resetScenarioModal()" style="font-size:13px;">カテゴリ選択に戻る</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -208,7 +241,7 @@ textarea::placeholder{color:var(--text-muted);}
 
   <!-- Duration -->
   <div class="card">
-    <div class="card-title">⏱️ 動画尺</div>
+    <div class="card-title"><span data-icon="history"></span> 動画尺</div>
     <div class="duration-grid" id="dur-grid">
       <button class="dur-btn active" onclick="selectDur(this,5)">5秒</button>
       <button class="dur-btn" onclick="selectDur(this,15)">15秒</button>
@@ -221,18 +254,18 @@ textarea::placeholder{color:var(--text-muted);}
 
   <!-- Genre -->
   <div class="card">
-    <div class="card-title">🎭 ジャンル</div>
+    <div class="card-title"><span data-icon="star"></span> ジャンル</div>
     <div class="genre-grid" id="genre-grid">
-      <button class="genre-btn" onclick="toggleGenre(this,'beauty')">💄 美容</button>
-      <button class="genre-btn active" onclick="toggleGenre(this,'food')">🍜 グルメ</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'travel')">✈️ 旅行</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'fashion')">👗 ファッション</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'fitness')">💪 フィットネス</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'pet')">🐾 ペット</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'tech')">💻 テック</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'shop')">🛍️ 商品PR</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'restaurant')">🏪 店舗PR</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'edu')">📚 教育</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'beauty')">美容</button>
+      <button class="genre-btn active" onclick="toggleGenre(this,'food')">グルメ</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'travel')">旅行</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'fashion')">ファッション</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'fitness')">フィットネス</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'pet')">ペット</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'tech')">テック</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'shop')">商品PR</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'restaurant')">店舗PR</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'edu')">教育</button>
     </div>
   </div>
 
@@ -245,14 +278,14 @@ textarea::placeholder{color:var(--text-muted);}
   <!-- Result -->
   <div class="result-area" id="result-area">
     <video class="result-video" id="result-video" controls></video>
-    <p style="color:var(--text-muted);font-size:12px;margin-top:8px;">📸 各シーンをスクリーンショットしてInstagramカルーセルにも使えます</p>
+    <p style="color:var(--text-muted);font-size:12px;margin-top:8px;display:flex;align-items:center;gap:6px;"><span data-icon="photo"></span> 各シーンをスクリーンショットしてInstagramカルーセルにも使えます</p>
     <div class="result-actions">
-      <button class="btn-gold" onclick="downloadVideo()" data-i18n="download">ダウンロード</button>
-      <button class="btn-outline" onclick="shareVideo()" data-i18n="share">シェア</button>
+      <button class="btn-gold" onclick="downloadVideo()" data-i18n="download" style="display:flex;align-items:center;gap:6px;"><span data-icon="download"></span> ダウンロード</button>
+      <button class="btn-outline" onclick="shareVideo()" data-i18n="share" style="display:flex;align-items:center;gap:6px;"><span data-icon="share"></span> シェア</button>
     </div>
     <!-- Split Suggestion -->
     <div class="split-card" id="split-card">
-      <div class="split-title">💡 <span data-i18n="split_title">分割投稿の提案</span></div>
+      <div class="split-title"><span data-icon="scissors"></span> <span data-i18n="split_title">分割投稿の提案</span></div>
       <div class="split-body" id="split-body"></div>
       <div class="split-actions">
         <button class="btn-gold" onclick="addToSchedule()" style="font-size:13px;padding:10px 18px;">分割して投稿スケジュールに追加</button>
@@ -263,7 +296,7 @@ textarea::placeholder{color:var(--text-muted);}
 
   <!-- Posting Schedule -->
   <div class="card" style="margin-top:20px;">
-    <div class="card-title">📅 <span data-i18n="best_post_times">最適投稿時間</span></div>
+    <div class="card-title"><span data-icon="calendar"></span> <span data-i18n="best_post_times">最適投稿時間</span></div>
     <div id="schedule-wrap">
       <table class="schedule-table" id="schedule-table">
         <thead>
@@ -285,7 +318,7 @@ textarea::placeholder{color:var(--text-muted);}
 <!-- Smart Suggestion Panel -->
 <div class="suggestion-panel" id="sugg-panel">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-    <div class="sugg-title">🔥 次の投稿提案</div>
+    <div class="sugg-title" style="display:flex;align-items:center;gap:8px;"><span data-icon="fire"></span> 次の投稿提案</div>
     <button onclick="closeSuggestions()" style="background:none;border:none;color:#666;font-size:20px;cursor:pointer;">×</button>
   </div>
   <div id="sugg-list"></div>
@@ -293,6 +326,7 @@ textarea::placeholder{color:var(--text-muted);}
 
 <script src="/eleva-i18n.js"></script>
 <script src="/eleva-shared.js"></script>
+<script>document.addEventListener('DOMContentLoaded',()=>{if(window.ELEVA_applyIcons)window.ELEVA_applyIcons();});</script>
 <script>
 const SUPABASE_URL=ELEVA.SUPABASE_URL;
 const SUPABASE_ANON_KEY=ELEVA.SUPABASE_ANON_KEY;
@@ -618,12 +652,98 @@ async function loadPostingSchedule(){
   }
 }
 
+// ─ Scenario Generator ────────────────────────────────────
+function openScenarioModal(){
+  document.getElementById('scenario-modal').style.display='block';
+  resetScenarioModal();
+}
+function closeScenarioModal(){
+  document.getElementById('scenario-modal').style.display='none';
+}
+function resetScenarioModal(){
+  document.getElementById('scenario-step-1').style.display='block';
+  document.getElementById('scenario-step-2').style.display='none';
+  document.getElementById('scenario-loading').style.display='block';
+  document.getElementById('scenario-error').style.display='none';
+  document.getElementById('scenario-patterns').style.display='none';
+  document.getElementById('scenario-patterns').innerHTML='';
+}
+async function pickScenarioCategory(category){
+  document.getElementById('scenario-step-1').style.display='none';
+  document.getElementById('scenario-step-2').style.display='block';
+  document.getElementById('scenario-loading').style.display='block';
+  document.getElementById('scenario-error').style.display='none';
+  document.getElementById('scenario-patterns').style.display='none';
+  try{
+    const res=await fetch('/api/generate-scenario',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({category}),
+    });
+    const data=await res.json();
+    if(!res.ok){throw new Error(data.error||'シナリオ生成に失敗しました');}
+    renderScenarioPatterns(data);
+  }catch(err){
+    document.getElementById('scenario-loading').style.display='none';
+    const errEl=document.getElementById('scenario-error');
+    errEl.textContent=err.message;
+    errEl.style.display='block';
+  }
+}
+function renderScenarioPatterns(data){
+  document.getElementById('scenario-loading').style.display='none';
+  const wrap=document.getElementById('scenario-patterns');
+  const patterns=data.patterns||[];
+  if(!patterns.length){
+    wrap.innerHTML='<div style="color:var(--text-muted);text-align:center;padding:20px;">パターンが生成されませんでした</div>';
+    wrap.style.display='block';
+    return;
+  }
+  const badge=data.trendsUsed>0?`<span style="font-size:11px;color:var(--text-muted);">参照トレンド: ${data.trendsUsed}件</span>`:'<span style="font-size:11px;color:var(--text-muted);">トレンドデータなし</span>';
+  wrap.innerHTML=`<div style="margin-bottom:12px;">${badge}</div>`+patterns.map((p,i)=>{
+    const scenes=(p.scenes||[]).map(s=>`
+      <div style="background:rgba(255,255,255,0.03);padding:10px 12px;border-radius:8px;margin-bottom:6px;">
+        <div style="font-size:12px;color:var(--gold);font-weight:600;margin-bottom:4px;">シーン${s.scene||'-'} (${s.duration||'-'}秒)</div>
+        <div style="font-size:13px;color:#fff;margin-bottom:2px;">${escapeHtml(s.direction||'')}</div>
+        ${s.caption?`<div style="font-size:12px;color:var(--text-secondary);">💬 ${escapeHtml(s.caption)}</div>`:''}
+      </div>
+    `).join('');
+    return `
+      <div style="border:1px solid var(--border-gold);border-radius:12px;padding:16px;margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-size:15px;font-weight:700;color:var(--gold);">パターン${p.id||(i+1)}</div>
+          <div style="font-size:12px;color:var(--text-secondary);">${p.duration||'-'}秒</div>
+        </div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;">🎥 アングル: <span style="color:#fff;">${escapeHtml(p.angle||'-')}</span></div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;">🖼️ 構図: <span style="color:#fff;">${escapeHtml(p.composition||'-')}</span></div>
+        ${p.hook?`<div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">⚡ フック: <span style="color:#fff;">${escapeHtml(p.hook)}</span></div>`:''}
+        <div style="margin-top:10px;">${scenes}</div>
+        <div style="margin-top:12px;text-align:right;">
+          <button class="btn-outline" style="font-size:12px;padding:6px 14px;" onclick="useScenarioPattern(${i})">このパターンを使う</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+  wrap.style.display='block';
+  window._scenarioPatterns=patterns;
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function useScenarioPattern(idx){
+  const p=(window._scenarioPatterns||[])[idx];
+  if(!p)return;
+  const scenesText=(p.scenes||[]).map(s=>`シーン${s.scene}(${s.duration}秒): ${s.direction}${s.caption?' / '+s.caption:''}`).join('\n');
+  const full=`【${p.angle||''}｜${p.composition||''}】\n${p.hook?'フック: '+p.hook+'\n':''}${scenesText}`;
+  const ta=document.getElementById('prompt-input');
+  if(ta){ta.value=full;ta.focus();}
+  closeScenarioModal();
+}
+
 document.addEventListener('DOMContentLoaded',async()=>{
   currentUser=await ELEVA.initElevaPage({page:'generate',onUser:u=>{currentUser=u;}});
   ELEVA.applyLanguage(localStorage.getItem('eleva_lang')||'ja');
   if(currentUser){
     const {data:prof}=await sb.from('profiles').select('credits_remaining').eq('id',currentUser.id).single();
-    if(prof)document.getElementById('credits-badge').textContent='⚡ '+prof.credits_remaining;
+    if(prof)document.getElementById('credits-badge').innerHTML=(window.ELEVA_ICONS?.lightning||'⚡')+' '+prof.credits_remaining;
     loadPostingSchedule();
   }
   if(window.location.hash==='#generate'){

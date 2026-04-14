@@ -100,16 +100,19 @@ function showLanguageModal(){
 
 // ── Hamburger Menu ────────────────────────────────────────
 function initHamburger(activePage){
+  const SVG=win.ELEVA_ICONS||{};
+  const iconSvg=k=>SVG[k]?`<span style="display:inline-flex;align-items:center;">${SVG[k]}</span>`:`<span data-icon="${k}"></span>`;
   const items=[
-    {icon:'🏠',key:'home',href:'/dashboard.html',id:'home'},
-    {icon:'⚡',key:'generate',href:'/dashboard.html#generate',id:'generate'},
-    {icon:'📈',key:'trend',href:'/trend.html',id:'trend'},
-    {icon:'📋',key:'history',href:'/history.html',id:'history'},
-    {icon:'➕',key:'add_video',href:'#add-video',id:'add-video'},
-    {icon:'⚙️',key:'settings',href:'/settings.html',id:'settings'},
+    {iconKey:'home',key:'home',href:'/dashboard.html',id:'home'},
+    {iconKey:'generate',key:'generate',href:'/dashboard.html#generate',id:'generate'},
+    {iconKey:'trend',key:'trend',href:'/trend.html',id:'trend'},
+    {iconKey:'history',key:'history',href:'/history.html',id:'history'},
+    {iconKey:'chart',key:'engagement',href:'/engagement.html',id:'engagement'},
+    {iconKey:'add',key:'add_video',href:'#add-video',id:'add-video'},
+    {iconKey:'settings',key:'settings',href:'/settings.html',id:'settings'},
   ];
   const btn=document.createElement('button');
-  btn.id='eleva-hamburger';btn.innerHTML='☰';
+  btn.id='eleva-hamburger';btn.innerHTML=SVG.settings?`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`:'☰';
   btn.style.cssText='position:fixed;top:16px;left:16px;z-index:1000;background:none;border:none;color:#c9a84c;font-size:24px;cursor:pointer;padding:8px;line-height:1;';
   const ov=document.createElement('div');
   ov.style.cssText='display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:998;backdrop-filter:blur(4px);';
@@ -121,10 +124,10 @@ function initHamburger(activePage){
     <button onclick="closeHamburger()" style="background:none;border:none;color:#666;font-size:20px;cursor:pointer;">×</button>
   </div>
   <div style="flex:1;padding:8px 0;">
-    ${items.map(it=>{const active=activePage===it.id;return`<a href="${it.href}" data-i18n="${it.key}" style="display:flex;align-items:center;gap:12px;padding:14px 20px;color:${active?'#f0d070':'#ffffff'};text-decoration:none;font-size:15px;${active?'background:rgba(201,168,76,0.1);border-right:3px solid #c9a84c;':''}transition:all 0.15s;" onmouseover="this.style.color='#c9a84c'" onmouseout="this.style.color='${active?'#f0d070':'#ffffff'}'">${it.icon} ${t(it.key)||it.key}</a>`;}).join('')}
+    ${items.map(it=>{const active=activePage===it.id;return`<a href="${it.href}" data-i18n="${it.key}" style="display:flex;align-items:center;gap:12px;padding:14px 20px;color:${active?'#f0d070':'#ffffff'};text-decoration:none;font-size:15px;${active?'background:rgba(201,168,76,0.1);border-right:3px solid #c9a84c;':''}transition:all 0.15s;" onmouseover="this.style.color='#c9a84c'" onmouseout="this.style.color='${active?'#f0d070':'#ffffff'}'"><span style="flex-shrink:0;display:inline-flex;align-items:center;">${iconSvg(it.iconKey)}</span>${t(it.key)||it.key}</a>`;}).join('')}
   </div>
   <div style="padding:16px 20px;border-top:1px solid rgba(201,168,76,0.15);">
-    <button onclick="window.ELEVA.showLanguageModal()" style="width:100%;background:none;border:1px solid rgba(201,168,76,0.3);color:#c9a84c;padding:10px;border-radius:8px;cursor:pointer;font-size:14px;">🌐 Language</button>
+    <button onclick="window.ELEVA.showLanguageModal()" style="width:100%;background:none;border:1px solid rgba(201,168,76,0.3);color:#c9a84c;padding:10px;border-radius:8px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;"><span style="display:inline-flex;align-items:center;">${iconSvg('globe')}</span> Language</button>
   </div>`;
 
   function openHamburger(){panel.style.left='0';ov.style.display='block';}
