@@ -695,6 +695,15 @@ function getDisclosureState(){
   const igAutoTagAI=!!document.getElementById('ig-ai-tag')?.checked;
   return {aiDisclosed,commercial,igAutoTagAI};
 }
+function hydrateDisclosureDefaults(user){
+  const meta=user?.user_metadata||{};
+  const commercial=meta.disclosure_commercial||localStorage.getItem('eleva_disclosure_commercial')||'none';
+  const igTagStored=meta.disclosure_ig_autotag;
+  const igTag=typeof igTagStored==='boolean'?igTagStored:(localStorage.getItem('eleva_disclosure_ig_autotag')!=='0');
+  document.querySelectorAll('input[name="commercial"]').forEach(r=>{r.checked=r.value===commercial;});
+  const tog=document.getElementById('ig-ai-tag');
+  if(tog)tog.checked=igTag;
+}
 
 // ─ Scenario Generator ────────────────────────────────────
 function openScenarioModal(){
@@ -784,6 +793,7 @@ function useScenarioPattern(idx){
 
 document.addEventListener('DOMContentLoaded',async()=>{
   currentUser=await ELEVA.initElevaPage({page:'generate',onUser:u=>{currentUser=u;}});
+  hydrateDisclosureDefaults(currentUser);
   ELEVA.applyLanguage(localStorage.getItem('eleva_lang')||'ja');
   if(currentUser){
     const {data:prof}=await sb.from('profiles').select('credits_remaining').eq('id',currentUser.id).single();
