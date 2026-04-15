@@ -32,6 +32,16 @@
   to = "/.netlify/functions/generate-scenario"
   status = 200
 
+[[redirects]]
+  from = "/api/tiktok-post"
+  to = "/.netlify/functions/tiktok-post"
+  status = 200
+
+[[redirects]]
+  from = "/api/instagram-post"
+  to = "/.netlify/functions/instagram-post"
+  status = 200
+
 [functions."payment-reminders"]
   schedule = "0 9 * * *"
 

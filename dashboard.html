@@ -269,6 +269,37 @@ textarea::placeholder{color:var(--text-muted);}
     </div>
   </div>
 
+  <!-- AI & Commercial Disclosure -->
+  <div class="card">
+    <div class="card-title"><span data-icon="sparkle"></span> AI開示・商業コンテンツ</div>
+    <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--border-gold);border-radius:10px;background:rgba(201,168,76,0.06);margin-bottom:12px;cursor:not-allowed;">
+      <input type="checkbox" id="ai-disclose" checked disabled style="width:18px;height:18px;accent-color:var(--gold);">
+      <div style="flex:1;">
+        <div style="color:#fff;font-size:14px;font-weight:600;">AI生成コンテンツとして開示</div>
+        <div style="color:var(--text-secondary);font-size:12px;margin-top:2px;">TikTok / Instagramの規約に基づき、ELEVAで生成した動画は常に開示されます（変更不可）</div>
+      </div>
+    </label>
+    <div style="color:var(--text-secondary);font-size:12px;margin-bottom:8px;">商業コンテンツ開示（TikTok）</div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--black-border);border-radius:8px;cursor:pointer;">
+        <input type="radio" name="commercial" value="none" checked style="accent-color:var(--gold);">
+        <span style="color:#fff;font-size:13px;">どちらでもない（個人投稿）</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--black-border);border-radius:8px;cursor:pointer;">
+        <input type="radio" name="commercial" value="brand_organic" style="accent-color:var(--gold);">
+        <span style="color:#fff;font-size:13px;">自分のブランド・ビジネスのPR</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--black-border);border-radius:8px;cursor:pointer;">
+        <input type="radio" name="commercial" value="brand_content" style="accent-color:var(--gold);">
+        <span style="color:#fff;font-size:13px;">第三者ブランドのPR（案件・タイアップ）</span>
+      </label>
+    </div>
+    <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;margin-top:12px;border:1px solid var(--black-border);border-radius:8px;cursor:pointer;">
+      <input type="checkbox" id="ig-ai-tag" checked style="width:16px;height:16px;accent-color:var(--gold);">
+      <span style="color:#fff;font-size:13px;">Instagram キャプションに <span style="color:var(--gold);">#AI生成</span> を自動追加</span>
+    </label>
+  </div>
+
   <!-- Generate Button -->
   <div style="text-align:center;margin:24px 0;">
     <button class="btn-gold" id="gen-btn" onclick="generateVideo()" style="font-size:18px;padding:16px 48px;border-radius:50px;" data-i18n="generate_btn">動画を生成</button>
@@ -551,9 +582,13 @@ async function generateVideo(){
   };
 
   try{
+    const disclosure=getDisclosureState();
     const body={
       prompt,userId:currentUser?.id,platform:selectedSNS[0]||'instagram',
       genre:selectedGenres[0]||'general',duration:parseInt(selectedDuration)||5,
+      ai_disclosed:disclosure.aiDisclosed,
+      commercial:disclosure.commercial,
+      ig_auto_tag_ai:disclosure.igAutoTagAI,
       ...(inputImageUrl&&{input_image_url:inputImageUrl}),
       ...(inputVideoUrl&&{input_video_url:inputVideoUrl}),
       ...(sourceUrl&&{source_url:sourceUrl})
@@ -650,6 +685,15 @@ async function loadPostingSchedule(){
       <tr><td>Instagram</td><td style="color:var(--text-secondary);">全般</td><td>水・金</td><td>12:00-13:00</td></tr>
     `;
   }
+}
+
+// ─ AI & Commercial Disclosure ────────────────────────────
+function getDisclosureState(){
+  const aiDisclosed=true; // Always true — UI checkbox is locked ON per TikTok/IG policy
+  const commercialEl=document.querySelector('input[name="commercial"]:checked');
+  const commercial=commercialEl?commercialEl.value:'none';
+  const igAutoTagAI=!!document.getElementById('ig-ai-tag')?.checked;
+  return {aiDisclosed,commercial,igAutoTagAI};
 }
 
 // ─ Scenario Generator ────────────────────────────────────
