@@ -65,16 +65,18 @@ function t(key){return win.elevaT?win.elevaT(key):key;}
 
 function applyLanguage(code){
   localStorage.setItem('eleva_lang',code);
-  if(win.elevaApplyDeep){
-    win.elevaApplyDeep(code);
-  } else {
-    document.querySelectorAll('[data-i18n]').forEach(el=>{
-      const v=t(el.dataset.i18n);
-      if(el.tagName==='INPUT'||el.tagName==='TEXTAREA')el.placeholder=v;
-      else el.textContent=v;
-    });
-    document.querySelectorAll('[data-i18n-ph]').forEach(el=>{el.placeholder=t(el.dataset.i18nPh);});
-  }
+  // Always update data-i18n elements first
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const v=win.elevaT?win.elevaT(el.dataset.i18n,code):t(el.dataset.i18n);
+    if(el.tagName==='INPUT'||el.tagName==='TEXTAREA')el.placeholder=v;
+    else el.textContent=v;
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
+    el.placeholder=win.elevaT?win.elevaT(el.dataset.i18nPh,code):t(el.dataset.i18nPh);
+  });
+  // Deep scan for non-tagged Japanese text (only for non-ja)
+  if(win.elevaApplyDeep&&code!=='ja')win.elevaApplyDeep(code);
+  // Save to DB
   const sb=getSupabase();
   if(sb){sb.auth.getUser().then(({data:{user}})=>{
     if(user)sb.from('profiles').update({ui_lang_code:code}).eq('id',user.id).then(()=>{});
@@ -95,7 +97,7 @@ function showLanguageModal(){
       <button onclick="document.getElementById('lang-modal').remove()" style="background:none;border:none;color:#666;font-size:20px;cursor:pointer;">×</button>
     </div>
     <div style="overflow-y:auto;padding:8px 0;">
-      ${langs.map(code=>`<button onclick="window.ELEVA.applyLanguage('${code}');document.getElementById('lang-modal').remove();setTimeout(()=>{if(window.elevaApplyDeep)window.elevaApplyDeep('${code}');},100);" style="width:100%;background:${code===lang?'rgba(201,168,76,0.1)':'none'};border:none;border-bottom:1px solid rgba(255,255,255,0.05);padding:14px 24px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='rgba(201,168,76,0.08)'" onmouseout="this.style.background='${code===lang?'rgba(201,168,76,0.1)':'none'}'">
+      ${langs.map(code=>`<button onclick="document.getElementById('lang-modal').remove();window.ELEVA.applyLanguage('${code}');" style="width:100%;background:${code===lang?'rgba(201,168,76,0.1)':'none'};border:none;border-bottom:1px solid rgba(255,255,255,0.05);padding:14px 24px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='rgba(201,168,76,0.08)'" onmouseout="this.style.background='${code===lang?'rgba(201,168,76,0.1)':'none'}'">
         <span style="font-size:22px;">${names[code]?.flag||'🌐'}</span>
         <span style="color:${code===lang?'#f0d070':'#ffffff'};font-size:15px;flex:1;text-align:left;">${names[code]?.native||code}</span>
         ${code===lang?'<span style="color:#c9a84c;">✓</span>':''}

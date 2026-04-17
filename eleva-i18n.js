@@ -34,7 +34,8 @@ window.ELEVA_T = {
   },
   'th':{home:'หน้าหลัก',generate:'สร้าง',trend:'เทรนด์',history:'ประวัติ',add_video:'เพิ่มวิดีโอ',settings:'การตั้งค่า',admin:'ผู้ดูแล',logout:'ออกจากระบบ',dashboard:'แดชบอร์ด',credits:'เครดิต',plan_upgrade:'อัปเกรดแผน',generate_btn:'สร้างวิดีโอ',generating:'AI กำลังสร้าง...',background_notice:'ไปหน้าอื่นได้ — การสร้างยังดำเนินต่อ',completed:'วิดีโอของคุณพร้อมแล้ว!',view_now:'ดูเดี๋ยวนี้',camera:'กล้อง',photo:'รูปภาพ',video:'วิดีโอ',url:'URL',login:'เข้าสู่ระบบ',signup:'ลงทะเบียน',save:'บันทึก',cancel:'ยกเลิก',confirm:'ยืนยัน',close:'ปิด',next:'ถัดไป',back:'ย้อนกลับ',loading:'กำลังโหลด...',error:'เกิดข้อผิดพลาด',success:'เสร็จสิ้น',chatbot_title:'ELEVA ซัพพอร์ต',chatbot_placeholder:'พิมพ์ข้อความ...',push_allow:'อนุญาต',push_later:'ภายหลัง',start_free:'เริ่มฟรี',start_now:'เริ่มเลย',select_lang:'เลือกภาษา',best_post_times:'เวลาโพสต์ที่ดีที่สุด',platform:'แพลตฟอร์ม',genre:'ประเภท',best_days:'วันที่ดีที่สุด',best_time:'เวลาที่ดีที่สุด',sns_trend:'เทรนด์ SNS',hashtags:'แฮชแท็ก',music:'เพลง',topics:'หัวข้อ',daily:'รายวัน',weekly:'รายสัปดาห์',monthly:'รายเดือน',download:'ดาวน์โหลด',share:'แชร์',delete:'ลบ',edit:'แก้ไข',preview:'ดูตัวอย่าง',no_history:'ยังไม่มีประวัติ',filter:'กรอง',date:'วันที่',status:'สถานะ',completed_status:'เสร็จสิ้น',processing:'กำลังประมวลผล',failed:'ล้มเหลว',profile:'โปรไฟล์',account:'บัญชี',language:'ภาษา',current_plan:'แผนปัจจุบัน',upgrade:'อัปเกรด',usage:'การใช้งาน',followers:'ผู้ติดตาม',help:'ช่วยเหลือ',privacy:'นโยบายความเป็นส่วนตัว',terms:'ข้อกำหนดการใช้งาน',yes:'ใช่',no:'ไม่',search:'ค้นหา',ai_disclosure:'เนื้อหาที่สร้างโดย AI',ai_disclosure_text:'วิดีโอนี้สร้างโดย AI'},
   'vi':{home:'Trang chủ',generate:'Tạo',trend:'Xu hướng',history:'Lịch sử',add_video:'Thêm video',settings:'Cài đặt',admin:'Quản trị',logout:'Đăng xuất',dashboard:'Bảng điều khiển',credits:'Tín dụng',plan_upgrade:'Nâng cấp gói',generate_btn:'Tạo video',generating:'AI đang tạo...',background_notice:'Bạn có thể chuyển trang — quá trình tạo tiếp tục',completed:'Video của bạn đã sẵn sàng!',view_now:'Xem ngay',camera:'Máy ảnh',photo:'Ảnh',video:'Video',url:'URL',login:'Đăng nhập',signup:'Đăng ký',save:'Lưu',cancel:'Hủy',confirm:'Xác nhận',close:'Đóng',next:'Tiếp',back:'Quay lại',loading:'Đang tải...',error:'Đã xảy ra lỗi',success:'Hoàn thành',chatbot_title:'Hỗ trợ ELEVA',chatbot_placeholder:'Nhập tin nhắn...',push_allow:'Cho phép',push_later:'Để sau',start_free:'Bắt đầu miễn phí',start_now:'Bắt đầu ngay',select_lang:'Chọn ngôn ngữ',best_post_times:'Thời gian đăng tốt nhất',platform:'Nền tảng',genre:'Thể loại',best_days:'Ngày tốt nhất',best_time:'Giờ tốt nhất',sns_trend:'Xu hướng SNS',hashtags:'Hashtag',music:'Âm nhạc',topics:'Chủ đề',daily:'Hàng ngày',weekly:'Hàng tuần',monthly:'Hàng tháng',download:'Tải xuống',share:'Chia sẻ',delete:'Xóa',edit:'Chỉnh sửa',preview:'Xem trước',no_history:'Chưa có lịch sử',filter:'Lọc',date:'Ngày',status:'Trạng thái',completed_status:'Hoàn thành',processing:'Đang xử lý',failed:'Thất bại',profile:'Hồ sơ',account:'Tài khoản',language:'Ngôn ngữ',current_plan:'Gói hiện tại',upgrade:'Nâng cấp',usage:'Sử dụng',followers:'Người theo dõi',help:'Trợ giúp',privacy:'Chính sách bảo mật',terms:'Điều khoản dịch vụ',yes:'Có',no:'Không',search:'Tìm kiếm',ai_disclosure:'Nội dung do AI tạo',ai_disclosure_text:'Video này được tạo bởi AI'},
-  'id':{home:'Beranda',generate:'Buat',trend:'Tren',history:'Riwayat',add_video:'Tambah Video',settings:'Pengaturan',admin:'Admin',logout:'Keluar',dashboard:'Dasbor',credits:'Kredit',plan_upgrade:'Tingkatkan Paket',generate_btn:'Buat Video',generating:'AI sedang membuat...',background_notice:'Anda dapat berpindah halaman — pembuatan terus berlanjut',completed:'Video Anda sudah siap!',view_now:'Lihat Sekarang',camera:'Kamera',photo:'Foto',video:'Video',url:'URL',login:'Masuk',signup:'Daftar',save:'Simpan',cancel:'Batal',confirm:'Konfirmasi',close:'Tutup',next:'Berikutnya',back:'Kembali',loading:'Memuat...',error:'Terjadi kesalahan',success:'Selesai',chatbot_title:'Dukungan ELEVA',chatbot_placeholder:'Ketik pesan...',push_allow:'Izinkan',push_later:'Nanti',start_free:'Mulai Gratis',start_now:'Mulai Sekarang',select_lang:'Pilih Bahasa',best_post_times:'Waktu Posting Terbaik',platform:'Platform',genre:'Genre',best_days:'Hari Terbaik',best_time:'Waktu Terbaik',sns_trend:'Tren SNS',hashtags:'Tagar',music:'Musik',topics:'Topik',daily:'Harian',weekly:'Mingguan',monthly:'Bulanan',download:'Unduh',share:'Bagikan',delete:'Hapus',edit:'Edit',preview:'Pratinjau',no_history:'Belum ada riwayat',filter:'Filter',date:'Tanggal',status:'Status',completed_status:'Selesai',processing:'Memproses',failed:'Gagal',profile:'Profil',account:'Akun',language:'Bahasa',current_plan:'Paket Saat Ini',upgrade:'Tingkatkan',usage:'Penggunaan',followers:'Pengikut',help:'Bantuan',privacy:'Kebijakan Privasi',terms:'Syarat Layanan',yes:'Ya',no:'Tidak',search:'Cari',ai_disclosure:'Konten yang Dibuat AI',ai_disclosure_text:'Video ini dibuat oleh AI'}
+  'id':{home:'Beranda',generate:'Buat',trend:'Tren',history:'Riwayat',add_video:'Tambah Video',settings:'Pengaturan',admin:'Admin',logout:'Keluar',dashboard:'Dasbor',credits:'Kredit',plan_upgrade:'Tingkatkan Paket',generate_btn:'Buat Video',generating:'AI sedang membuat...',background_notice:'Anda dapat berpindah halaman — pembuatan terus berlanjut',completed:'Video Anda sudah siap!',view_now:'Lihat Sekarang',camera:'Kamera',photo:'Foto',video:'Video',url:'URL',login:'Masuk',signup:'Daftar',save:'Simpan',cancel:'Batal',confirm:'Konfirmasi',close:'Tutup',next:'Berikutnya',back:'Kembali',loading:'Memuat...',error:'Terjadi kesalahan',success:'Selesai',chatbot_title:'Dukungan ELEVA',chatbot_placeholder:'Ketik pesan...',push_allow:'Izinkan',push_later:'Nanti',start_free:'Mulai Gratis',start_now:'Mulai Sekarang',select_lang:'Pilih Bahasa',best_post_times:'Waktu Posting Terbaik',platform:'Platform',genre:'Genre',best_days:'Hari Terbaik',best_time:'Waktu Terbaik',sns_trend:'Tren SNS',hashtags:'Tagar',music:'Musik',topics:'Topik',daily:'Harian',weekly:'Mingguan',monthly:'Bulanan',download:'Unduh',share:'Bagikan',delete:'Hapus',edit:'Edit',preview:'Pratinjau',no_history:'Belum ada riwayat',filter:'Filter',date:'Tanggal',status:'Status',completed_status:'Selesai',processing:'Memproses',failed:'Gagal',profile:'Profil',account:'Akun',language:'Bahasa',current_plan:'Paket Saat Ini',upgrade:'Tingkatkan',usage:'Penggunaan',followers:'Pengikut',help:'Bantuan',privacy:'Kebijakan Privasi',terms:'Syarat Layanan',yes:'Ya',no:'Tidak',search:'Cari',ai_disclosure:'Konten yang Dibuat AI',ai_disclosure_text:'Video ini dibuat oleh AI'},
+  'it':{home:'Home',generate:'Genera',trend:'Tendenze',history:'Cronologia',add_video:'Aggiungi Video',settings:'Impostazioni',admin:'Admin',logout:'Esci',dashboard:'Dashboard',credits:'Crediti',plan_upgrade:'Aggiorna Piano',generate_btn:'Genera Video',generating:'Generazione AI...',background_notice:'Puoi navigare altrove — la generazione continua',completed:'Il tuo video è pronto!',view_now:'Guarda Ora',camera:'Fotocamera',photo:'Foto',video:'Video',url:'URL',login:'Accedi',signup:'Registrati',save:'Salva',cancel:'Annulla',confirm:'Conferma',close:'Chiudi',next:'Avanti',back:'Indietro',loading:'Caricamento...',error:'Si è verificato un errore',success:'Completato',best_post_times:'Orari Migliori',platform:'Piattaforma',genre:'Genere',best_days:'Giorni Migliori',best_time:'Orario Migliore',sns_trend:'Tendenze SNS',hashtags:'Hashtag',music:'Musica',topics:'Argomenti',daily:'Giornaliero',weekly:'Settimanale',monthly:'Mensile',download:'Scarica',share:'Condividi',delete:'Elimina',edit:'Modifica',preview:'Anteprima',select_lang:'Seleziona Lingua',ai_disclosure:'Contenuto Generato da AI',ai_disclosure_text:'Questo video è stato generato da AI',disclosure_title:'Divulgazione AI e Contenuti Commerciali',commercial_none:'Nessuno (post personale)',commercial_organic:'Promozione del proprio brand',commercial_sponsored:'Promozione brand terzi (sponsorizzato)',ig_ai_autotag:'Aggiungi automaticamente #AIGenerated alla didascalia Instagram',duration_5s:'5s',duration_15s:'15s',duration_30s:'30s',duration_60s:'60s',duration_3m:'3min',duration_ai:'Lascia decidere all\'AI',genre_beauty:'Bellezza',genre_food:'Cibo',genre_travel:'Viaggi',genre_fashion:'Moda',genre_fitness:'Fitness',genre_pet:'Animali',genre_tech:'Tech',genre_product_pr:'Promo Prodotto',genre_store_pr:'Promo Negozio',genre_education:'Educazione',genre_entertainment:'Intrattenimento',genre_lifestyle:'Stile di Vita',genre_general:'Generale',video_duration:'Durata',genre_label:'Genere',suggest_next:'Suggerisci prossimo post',optimize:'Ottimizza prompt',create_scenario_btn:'Crea Scenario',select_sns:'SNS di destinazione',post_prep:'Prepara Post',copy_to_post:'Copia e pubblica nell\'app SNS',upgrade_plan:'Aggiorna Piano',enter_manually:'Inserisci manualmente',yes:'Sì',no:'No',search:'Cerca',followers:'Follower',help:'Aiuto',privacy:'Privacy',terms:'Termini di Servizio'}
 };
 
 window.ELEVA_LANG_NAMES = {
@@ -62,41 +63,9 @@ window.ELEVA_JA_MAP = (function(){
 })();
 
 window.elevaApplyDeep = function(lang) {
-  if (!lang || lang === 'ja') return;
-  const jaMap = window.ELEVA_JA_MAP;
-  const skipTags = new Set(['SCRIPT','STYLE','NOSCRIPT','TEXTAREA','INPUT','CODE','PRE']);
+  lang = lang || localStorage.getItem('eleva_lang') || 'ja';
 
-  function walkNode(node) {
-    if (node.nodeType === 3) { // テキストノード
-      const text = node.textContent.trim();
-      if (text && jaMap[text]) {
-        const translated = window.elevaT(jaMap[text], lang);
-        if (translated && translated !== text) {
-          node.textContent = node.textContent.replace(text, translated);
-        }
-      }
-    } else if (node.nodeType === 1 && !skipTags.has(node.tagName)) {
-      // placeholder属性
-      if (node.placeholder) {
-        const ph = node.placeholder.trim();
-        if (ph && jaMap[ph]) {
-          const translated = window.elevaT(jaMap[ph], lang);
-          if (translated && translated !== ph) node.placeholder = translated;
-        }
-      }
-      // title属性
-      if (node.title) {
-        const ti = node.title.trim();
-        if (ti && jaMap[ti]) {
-          const translated = window.elevaT(jaMap[ti], lang);
-          if (translated && translated !== ti) node.title = translated;
-        }
-      }
-      node.childNodes.forEach(walkNode);
-    }
-  }
-
-  // data-i18n属性の通常翻訳
+  // data-i18n属性の通常翻訳 — 全言語で必ず実行
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const v = window.elevaT(el.dataset.i18n, lang);
     if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.placeholder = v;
@@ -106,6 +75,30 @@ window.elevaApplyDeep = function(lang) {
     el.placeholder = window.elevaT(el.dataset.i18nPh, lang);
   });
 
-  // ディープスキャン（data-i18nなしの要素も翻訳）
-  walkNode(document.body);
+  // ディープスキャン（data-i18nなしの日本語テキストを翻訳）— ja以外のみ
+  if (lang !== 'ja') {
+    const jaMap = window.ELEVA_JA_MAP;
+    const skipTags = new Set(['SCRIPT','STYLE','NOSCRIPT','TEXTAREA','INPUT','CODE','PRE']);
+    function walkNode(node) {
+      if (node.nodeType === 3) {
+        const text = node.textContent.trim();
+        if (text && jaMap[text]) {
+          const translated = window.elevaT(jaMap[text], lang);
+          if (translated && translated !== text) {
+            node.textContent = node.textContent.replace(text, translated);
+          }
+        }
+      } else if (node.nodeType === 1 && !skipTags.has(node.tagName)) {
+        if (node.placeholder) {
+          const ph = node.placeholder.trim();
+          if (ph && jaMap[ph]) {
+            const translated = window.elevaT(jaMap[ph], lang);
+            if (translated && translated !== ph) node.placeholder = translated;
+          }
+        }
+        node.childNodes.forEach(walkNode);
+      }
+    }
+    walkNode(document.body);
+  }
 };
