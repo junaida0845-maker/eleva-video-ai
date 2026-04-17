@@ -24,6 +24,8 @@ export default async (req) => {
     const maxResults = Math.min(parseInt(url.searchParams.get('max') || '12', 10), 50);
     const duration = url.searchParams.get('duration') || 'short';
     const order = url.searchParams.get('order') || 'relevance';
+    const regionCode = url.searchParams.get('region') || '';
+    const hl = url.searchParams.get('hl') || '';
 
     if (!q) {
       return new Response(JSON.stringify({ error: 'q (query) is required' }), {
@@ -41,6 +43,8 @@ export default async (req) => {
     searchUrl.searchParams.set('videoEmbeddable', 'true');
     searchUrl.searchParams.set('safeSearch', 'moderate');
     searchUrl.searchParams.set('order', order);
+    if (regionCode) searchUrl.searchParams.set('regionCode', regionCode);
+    if (hl) searchUrl.searchParams.set('relevanceLanguage', hl);
     searchUrl.searchParams.set('key', YOUTUBE_API_KEY);
 
     const searchRes = await fetch(searchUrl);

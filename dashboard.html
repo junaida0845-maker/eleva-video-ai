@@ -482,7 +482,7 @@ async function loadSuggestions(){
   try{
     const res=await fetch(SUPABASE_URL+'/functions/v1/suggest-next-video',{
       method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY},
-      body:JSON.stringify({userId:currentUser?.id,platform:selectedSNS[0]||'instagram',genre:selectedGenres[0]||'general'})
+      body:JSON.stringify({userId:currentUser?.id,platform:selectedSNS[0]||'instagram',genre:selectedGenres[0]||'general',lang:localStorage.getItem('eleva_lang')||'ja'})
     });
     const data=await res.json();
     const suggestions=data.suggestions||data||[];
@@ -586,6 +586,7 @@ async function generateVideo(){
     const body={
       prompt,userId:currentUser?.id,platform:selectedSNS[0]||'instagram',
       genre:selectedGenres[0]||'general',duration:parseInt(selectedDuration)||5,
+      lang:localStorage.getItem('eleva_lang')||'ja',
       ai_disclosed:disclosure.aiDisclosed,
       commercial:disclosure.commercial,
       ig_auto_tag_ai:disclosure.igAutoTagAI,
@@ -731,7 +732,7 @@ async function pickScenarioCategory(category){
     const res=await fetch('/api/generate-scenario',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({category}),
+      body:JSON.stringify({category,lang:localStorage.getItem('eleva_lang')||'ja'}),
     });
     const data=await res.json();
     if(!res.ok){throw new Error(data.error||'シナリオ生成に失敗しました');}

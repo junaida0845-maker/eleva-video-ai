@@ -324,10 +324,30 @@ async function initElevaPage({page,requireAuth=true,redirectIfAuth=false,onUser,
   return user;
 }
 
+const LANG_TO_REGION={
+  'ja':{country:'JP',lang:'ja',hl:'ja',gl:'jp'},
+  'en-us':{country:'US',lang:'en',hl:'en',gl:'us'},
+  'ko':{country:'KR',lang:'ko',hl:'ko',gl:'kr'},
+  'zh-tw':{country:'TW',lang:'zh-TW',hl:'zh-TW',gl:'tw'},
+  'zh-cn':{country:'CN',lang:'zh-CN',hl:'zh-CN',gl:'cn'},
+  'th':{country:'TH',lang:'th',hl:'th',gl:'th'},
+  'vi':{country:'VN',lang:'vi',hl:'vi',gl:'vn'},
+  'id':{country:'ID',lang:'id',hl:'id',gl:'id'},
+  'de':{country:'DE',lang:'de',hl:'de',gl:'de'},
+  'fr':{country:'FR',lang:'fr',hl:'fr',gl:'fr'},
+  'es':{country:'ES',lang:'es',hl:'es',gl:'es'},
+  'pt-br':{country:'BR',lang:'pt',hl:'pt-BR',gl:'br'},
+};
+
+function getLangRegion(){
+  const code=localStorage.getItem('eleva_lang')||'ja';
+  return {code,...(LANG_TO_REGION[code]||LANG_TO_REGION['ja'])};
+}
+
 win.ELEVA={
   getSupabase,checkAuth,logout,applyLanguage,detectLanguage,showLanguageModal,
   initHamburger,initChatbot,initBackgroundGen,showGenBanner,requestPushPermission,
-  uploadToStorage,initElevaPage,t,
+  uploadToStorage,initElevaPage,t,getLangRegion,LANG_TO_REGION,
   SUPABASE_URL,SUPABASE_ANON_KEY,STORAGE_URL
 };
 })(window);

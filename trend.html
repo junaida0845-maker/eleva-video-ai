@@ -136,7 +136,8 @@ async function loadTrends(){
   });
 
   try{
-    const res=await fetch(ELEVA.SUPABASE_URL+'/functions/v1/sns-trends?platform='+currentPlatform+'&period='+currentPeriod+'&genre=general',{
+    const _lr=ELEVA.getLangRegion();
+    const res=await fetch(ELEVA.SUPABASE_URL+'/functions/v1/sns-trends?platform='+currentPlatform+'&period='+currentPeriod+'&genre=general&lang='+_lr.code+'&country='+_lr.country,{
       headers:{'apikey':ELEVA.SUPABASE_ANON_KEY,'Authorization':'Bearer '+ELEVA.SUPABASE_ANON_KEY}
     });
     const data=await res.json();

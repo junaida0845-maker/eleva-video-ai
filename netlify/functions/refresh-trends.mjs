@@ -11,7 +11,9 @@ const CATEGORIES = {
   'エンタメ': 'entertainment viral',
 };
 
-async function fetchYoutubeTop(query, n = 15) {
+const REGIONS = ['JP', 'US', 'KR', 'TW', 'TH', 'VN', 'ID', 'DE', 'FR', 'ES', 'BR'];
+
+async function fetchYoutubeTop(query, n = 15, regionCode = '') {
   const url = new URL('https://www.googleapis.com/youtube/v3/search');
   url.searchParams.set('part', 'snippet');
   url.searchParams.set('type', 'video');
@@ -20,6 +22,7 @@ async function fetchYoutubeTop(query, n = 15) {
   url.searchParams.set('videoDuration', 'short');
   url.searchParams.set('order', 'viewCount');
   url.searchParams.set('publishedAfter', new Date(Date.now() - 14 * 24 * 3600 * 1000).toISOString());
+  if (regionCode) url.searchParams.set('regionCode', regionCode);
   url.searchParams.set('key', YOUTUBE_API_KEY);
   const res = await fetch(url);
   if (!res.ok) return [];
@@ -71,19 +74,25 @@ export default async () => {
   const summary = {};
   for (const [category, query] of Object.entries(CATEGORIES)) {
     try {
-      const items = await fetchYoutubeTop(query);
       await clearCategory(category);
-      const rows = items.map((it) => ({
-        category,
-        source: 'youtube',
-        title: it.snippet?.title || '',
-        description: (it.snippet?.description || '').slice(0, 500),
-        metrics: {
-          channelTitle: it.snippet?.channelTitle || '',
-          publishedAt: it.snippet?.publishedAt || '',
-          videoId: it.id?.videoId || '',
-        },
-      }));
+      let allRows = [];
+      for (const region of ['JP', 'US']) {
+        const items = await fetchYoutubeTop(query, 10, region);
+        const rows = items.map((it) => ({
+          category,
+          source: 'youtube',
+          title: it.snippet?.title || '',
+          description: (it.snippet?.description || '').slice(0, 500),
+          metrics: {
+            channelTitle: it.snippet?.channelTitle || '',
+            publishedAt: it.snippet?.publishedAt || '',
+            videoId: it.id?.videoId || '',
+            region,
+          },
+        }));
+        allRows.push(...rows);
+      }
+      const rows = allRows;
       summary[category] = await upsertRows(rows);
     } catch (err) {
       summary[category] = `error: ${err.message}`;

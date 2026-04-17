@@ -47,12 +47,23 @@ async function fetchTrendContext(category) {
   return results;
 }
 
-function buildPrompt(category, trendRows) {
+const LANG_NAMES = {
+  ja: '日本語', 'en-us': 'English', ko: '한국어', 'zh-tw': '繁體中文', 'zh-cn': '简体中文',
+  th: 'ไทย', vi: 'Tiếng Việt', id: 'Bahasa Indonesia', de: 'Deutsch', fr: 'Français',
+  es: 'Español', 'pt-br': 'Português',
+};
+
+function buildPrompt(category, trendRows, lang) {
   const trendSummary = trendRows.length
     ? JSON.stringify(trendRows).slice(0, 4000)
     : '(トレンドデータなし — カテゴリの一般的なバズ要素から推定してください)';
 
-  return `あなたは縦型ショート動画のバズ戦略家です。以下のカテゴリとトレンドデータを元に、シナリオを3パターン提案してください。
+  const langName = LANG_NAMES[lang] || LANG_NAMES['ja'];
+  const langInstruction = lang && lang !== 'ja'
+    ? `\n\n# 言語指定\nすべてのテキスト出力（angle, composition, hook, direction, caption）は必ず${langName}で記述してください。JSONキー名は英語のままにしてください。`
+    : '';
+
+  return `あなたは縦型ショート動画のバズ戦略家です。以下のカテゴリとトレンドデータを元に、シナリオを3パターン提案してください。${langInstruction}
 
 # カテゴリ
 ${category}
@@ -140,7 +151,7 @@ export default async (req) => {
   }
 
   try {
-    const { category } = await req.json();
+    const { category, lang } = await req.json();
     if (!category || !CATEGORY_KEYS.has(category)) {
       return new Response(
         JSON.stringify({
@@ -151,7 +162,7 @@ export default async (req) => {
     }
 
     const trendRows = await fetchTrendContext(category);
-    const prompt = buildPrompt(category, trendRows);
+    const prompt = buildPrompt(category, trendRows, lang || 'ja');
     const raw = await callClaude(prompt);
     const parsed = extractJson(raw);
 
