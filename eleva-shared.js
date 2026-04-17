@@ -75,6 +75,10 @@ function applyLanguage(code){
     });
     document.querySelectorAll('[data-i18n-ph]').forEach(el=>{el.placeholder=t(el.dataset.i18nPh);});
   }
+  const sb=getSupabase();
+  if(sb){sb.auth.getUser().then(({data:{user}})=>{
+    if(user)sb.from('profiles').update({ui_lang_code:code}).eq('id',user.id).then(()=>{});
+  }).catch(()=>{});}
 }
 
 function showLanguageModal(){
