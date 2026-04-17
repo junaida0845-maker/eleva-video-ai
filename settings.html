@@ -89,20 +89,20 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
   <div class="card">
     <div class="card-title">連携済みアカウント</div>
     <div class="sns-row">
-      <div class="sns-info"><span class="sns-icon">🎵</span><div><div class="sns-name">TikTok</div><div class="sns-status" id="tiktok-status">未連携</div></div></div>
-      <button class="btn-outline" id="tiktok-btn" onclick="connectSNS('tiktok')">連携する</button>
+      <div class="sns-info"><span class="sns-icon">𝕏</span><div><div class="sns-name">X (Twitter)</div><div class="sns-status" id="x-status">未連携</div></div></div>
+      <button class="btn-outline" id="x-btn" onclick="connectX()">連携する</button>
     </div>
     <div class="sns-row">
       <div class="sns-info"><span class="sns-icon">📸</span><div><div class="sns-name">Instagram</div><div class="sns-status" id="instagram-status">未連携</div></div></div>
-      <button class="btn-outline" id="instagram-btn" onclick="connectSNS('instagram')">連携する</button>
+      <button class="btn-outline" id="instagram-btn" onclick="connectInstagram()">連携する</button>
     </div>
     <div class="sns-row">
       <div class="sns-info"><span class="sns-icon">▶️</span><div><div class="sns-name">YouTube</div><div class="sns-status" id="youtube-status">未連携</div></div></div>
-      <button class="btn-outline" id="youtube-btn" onclick="connectSNS('youtube')">連携する</button>
+      <button class="btn-outline" id="youtube-btn" onclick="connectYouTube()">連携する</button>
     </div>
     <div class="sns-row" style="border-bottom:none;">
-      <div class="sns-info"><span class="sns-icon">𝕏</span><div><div class="sns-name">X (Twitter)</div><div class="sns-status" id="x-status">未連携</div></div></div>
-      <button class="btn-outline" id="x-btn" onclick="connectSNS('x')">連携する</button>
+      <div class="sns-info"><span class="sns-icon">🎵</span><div><div class="sns-name">TikTok</div><div class="sns-status" id="tiktok-status" style="color:var(--text-muted);">近日公開予定</div></div></div>
+      <button class="btn-outline" id="tiktok-btn" disabled style="opacity:0.4;cursor:not-allowed;">近日公開</button>
     </div>
   </div>
 
@@ -320,8 +320,28 @@ function changeplan(){
   area.style.display=area.style.display==='none'?'block':'none';
 }
 
-function connectSNS(platform){
-  alert(platform+'の連携は近日公開予定です。');
+function connectX(){window.location.href='/api/x-auth-start';}
+function connectInstagram(){window.location.href='/api/instagram-auth-start';}
+function connectYouTube(){
+  const s=ELEVA.getSupabase();
+  s.auth.signInWithOAuth({provider:'google',options:{
+    scopes:'https://www.googleapis.com/auth/youtube.readonly',
+    redirectTo:window.location.origin+'/settings.html?connected=youtube'
+  }});
+}
+async function disconnectSNS(platform){
+  if(!confirm(platform.toUpperCase()+' の連携を解除しますか？'))return;
+  if(!currentUser)return;
+  await sb.from('user_sns_accounts').update({is_active:false}).eq('user_id',currentUser.id).eq('platform',platform);
+  const statusEl=document.getElementById(platform+'-status');
+  const btnEl=document.getElementById(platform+'-btn');
+  if(statusEl)statusEl.textContent='未連携';
+  if(btnEl){
+    btnEl.textContent='連携する';btnEl.style.color='';btnEl.style.borderColor='';
+    if(platform==='x')btnEl.onclick=()=>connectX();
+    else if(platform==='instagram')btnEl.onclick=()=>connectInstagram();
+    else if(platform==='youtube')btnEl.onclick=()=>connectYouTube();
+  }
 }
 
 async function saveName(){
@@ -417,14 +437,34 @@ document.addEventListener('DOMContentLoaded',async()=>{
       if(prof.display_name)document.getElementById('display-name').value=prof.display_name;
       if(prof.social_proof_consent)document.getElementById('social-proof-toggle').checked=true;
     }
+    // Handle OAuth callback
+    const urlParams=new URLSearchParams(window.location.search);
+    const connected=urlParams.get('connected');
+    if(connected){
+      window.history.replaceState({},'','/settings.html');
+    }
+
     // Load SNS accounts
     const {data:sns}=await sb.from('user_sns_accounts').select('*').eq('user_id',currentUser.id).eq('is_active',true);
     (sns||[]).forEach(acc=>{
-      const statusEl=document.getElementById(acc.platform+'-status');
-      const btnEl=document.getElementById(acc.platform+'-btn');
-      if(statusEl){statusEl.innerHTML='<span class="connected-dot"></span>連携済み @'+acc.username;}
-      if(btnEl){btnEl.textContent='解除';btnEl.style.color='#ff4444';btnEl.style.borderColor='#ff4444';}
+      const p=acc.platform;
+      const statusEl=document.getElementById(p+'-status');
+      const btnEl=document.getElementById(p+'-btn');
+      if(statusEl){statusEl.innerHTML='<span class="connected-dot"></span>連携済み'+(acc.account_name?' @'+acc.account_name:(acc.username?' @'+acc.username:''));}
+      if(btnEl){
+        btnEl.textContent='連携解除';btnEl.style.color='#ff4444';btnEl.style.borderColor='#ff4444';
+        btnEl.onclick=()=>disconnectSNS(p);
+      }
     });
+
+    // Show toast if just connected
+    if(connected){
+      const toast=document.createElement('div');
+      toast.style.cssText='position:fixed;bottom:24px;right:24px;padding:14px 24px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;background:#1a2a1a;border:1px solid rgba(68,255,136,0.4);color:#44ff88;';
+      toast.textContent=connected.toUpperCase()+' を連携しました';
+      document.body.appendChild(toast);
+      setTimeout(()=>toast.remove(),3000);
+    }
   }
 });
 </script>
