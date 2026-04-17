@@ -102,6 +102,7 @@ textarea:focus{border-color:var(--gold);}
     <a class="nav-item" onclick="showSection('generations')" href="#"><span class="icon">🎬</span><span>動画生成ログ</span></a>
     <a class="nav-item" onclick="showSection('notices')" href="#"><span class="icon">📢</span><span>お知らせ</span></a>
     <a class="nav-item" onclick="showSection('codes')" href="#"><span class="icon">🎁</span><span>紹介コード</span></a>
+    <a class="nav-item" onclick="showSection('invites')" href="#"><span class="icon">✉️</span><span>テスト招待</span></a>
     <a class="nav-item" onclick="showSection('logs')" href="#"><span class="icon">📋</span><span>操作ログ</span></a>
     <a class="nav-item" onclick="showSection('cancellations')" href="#"><span class="icon">⚠️</span><span>解約申請</span></a>
   </nav>
@@ -205,6 +206,24 @@ textarea:focus{border-color:var(--gold);}
     <div id="codes-list"></div>
   </div>
 
+  <!-- Invites -->
+  <div class="section-page" id="section-invites">
+    <div class="page-title">テストユーザー招待</div>
+    <div class="notice-form">
+      <div class="section-title">招待リンクを発行</div>
+      <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">招待リンクを踏んだユーザーが登録すると、自動的にテストユーザー（is_test_user=true）になります。1回限り・7日間有効。</p>
+      <button class="btn-gold" onclick="generateInviteCode()">✉️ 招待リンクを発行・コピー</button>
+      <div id="invite-result" style="display:none;margin-top:12px;padding:12px;background:rgba(68,255,136,0.08);border:1px solid rgba(68,255,136,0.3);border-radius:8px;color:#44ff88;font-size:13px;word-break:break-all;"></div>
+    </div>
+    <div class="section-title" style="margin-top:24px;">発行済み招待コード</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>CODE</th><th>STATUS</th><th>USED BY</th><th>EXPIRES</th><th>CREATED</th></tr></thead>
+        <tbody id="invites-tbody"><tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:32px;">読み込み中...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- Logs -->
   <div class="section-page" id="section-logs">
     <div class="page-title">操作ログ</div>
@@ -248,6 +267,7 @@ function showSection(id){
   if(id==='generations')loadGenerations();
   if(id==='cancellations')loadCancellations();
   if(id==='logs')loadLogs();
+  if(id==='invites')loadInvites();
 }
 
 async function callAdmin(action,params={}){
@@ -443,6 +463,39 @@ async function createCode(){
   if(!code){alert('コードを入力してください');return;}
   await sb.from('referral_codes').insert({code,discount_percent:discount,is_active:true,created_at:new Date().toISOString()});
   alert('コードを作成しました: '+code);
+}
+
+async function generateInviteCode(){
+  const {data:{user}}=await sb.auth.getUser();if(!user)return;
+  const code=Math.random().toString(36).substring(2,10).toUpperCase();
+  const {error}=await sb.from('invite_codes').insert({
+    code,created_by:user.id,
+    expires_at:new Date(Date.now()+7*24*60*60*1000).toISOString()
+  });
+  if(error){alert('発行失敗: '+error.message);return;}
+  const link=window.location.origin+'/register.html?invite='+code;
+  await navigator.clipboard.writeText(link).catch(()=>{});
+  const res=document.getElementById('invite-result');
+  res.textContent='✓ コピーしました: '+link;res.style.display='block';
+  loadInvites();
+}
+
+async function loadInvites(){
+  const {data}=await sb.from('invite_codes').select('*').order('created_at',{ascending:false}).limit(50);
+  const tbody=document.getElementById('invites-tbody');
+  if(!data?.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:32px;">招待コードなし</td></tr>';return;}
+  tbody.innerHTML=(data||[]).map(c=>{
+    const expired=new Date(c.expires_at)<new Date();
+    const status=c.is_used?'使用済み':expired?'期限切れ':'有効';
+    const color=c.is_used?'#44ff88':expired?'#ff4444':'var(--gold)';
+    return `<tr>
+      <td style="font-family:monospace;color:var(--gold);">${c.code}</td>
+      <td><span style="color:${color};font-size:12px;">${status}</span></td>
+      <td class="secondary" style="font-size:11px;">${c.used_by?.slice(0,8)||'—'}</td>
+      <td class="secondary" style="font-size:11px;">${c.expires_at?new Date(c.expires_at).toLocaleDateString('ja-JP'):'-'}</td>
+      <td class="secondary" style="font-size:11px;">${c.created_at?new Date(c.created_at).toLocaleDateString('ja-JP'):'-'}</td>
+    </tr>`;
+  }).join('');
 }
 
 document.addEventListener('DOMContentLoaded',async()=>{

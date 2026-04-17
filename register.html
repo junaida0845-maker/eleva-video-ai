@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ELEVA — 招待登録</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--gold:#c9a84c;--gold-light:#f0d070;--black:#0a0a0a;--black-card:#111111;--black-border:#1a1a1a;--border-gold:rgba(201,168,76,0.2);--text-primary:#fff;--text-secondary:#aaa;--text-muted:#666;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--black);color:var(--text-primary);min-height:100vh;display:flex;align-items:center;justify-content:center;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(201,168,76,0.08) 0%,transparent 70%);pointer-events:none;}
+.wrap{width:100%;max-width:420px;padding:20px;}
+.logo{text-align:center;margin-bottom:32px;}
+.logo a{font-size:28px;font-weight:900;color:var(--gold-light);letter-spacing:0.1em;text-decoration:none;}
+.logo p{color:var(--text-secondary);font-size:13px;margin-top:8px;}
+.card{background:var(--black-card);border:1px solid var(--border-gold);border-radius:20px;padding:36px 32px;}
+.card h2{color:var(--gold-light);font-size:18px;margin-bottom:8px;}
+.card p{color:var(--text-secondary);font-size:13px;margin-bottom:20px;line-height:1.6;}
+.invite-badge{display:inline-block;background:rgba(68,255,136,0.1);border:1px solid rgba(68,255,136,0.3);color:#44ff88;padding:6px 14px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:20px;}
+.form-group{margin-bottom:18px;}
+label{display:block;color:var(--text-secondary);font-size:13px;margin-bottom:6px;}
+input{width:100%;background:var(--black-border);border:1px solid rgba(201,168,76,0.3);color:#fff;padding:12px 16px;border-radius:10px;font-size:15px;outline:none;font-family:'Inter',sans-serif;}
+input:focus{border-color:var(--gold);}
+input::placeholder{color:var(--text-muted);}
+.btn{width:100%;background:var(--gold);color:#000;border:none;padding:14px;border-radius:10px;font-weight:700;font-size:15px;cursor:pointer;margin-top:8px;}
+.btn:hover{background:var(--gold-light);}
+.btn:disabled{background:#333;color:#666;cursor:not-allowed;}
+.error{background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.3);color:#ff4444;padding:12px;border-radius:8px;font-size:13px;margin-top:12px;display:none;}
+.success{background:rgba(68,255,136,0.1);border:1px solid rgba(68,255,136,0.3);color:#44ff88;padding:12px;border-radius:8px;font-size:13px;margin-top:12px;display:none;}
+.footer{text-align:center;margin-top:24px;color:var(--text-muted);font-size:13px;}
+.footer a{color:var(--gold);text-decoration:none;}
+.invalid{text-align:center;padding:60px 20px;}
+.invalid h2{color:var(--gold-light);margin-bottom:12px;}
+.invalid p{color:var(--text-secondary);font-size:14px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">
+    <a href="/">ELEVA</a>
+    <p>テストユーザー招待</p>
+  </div>
+
+  <div id="invalid-invite" class="card invalid" style="display:none;">
+    <h2>⚠️ 無効な招待リンク</h2>
+    <p>この招待リンクは無効か、期限切れです。<br>管理者に新しいリンクを依頼してください。</p>
+    <a href="/login.html" style="color:var(--gold);font-size:13px;">通常のログインページへ →</a>
+  </div>
+
+  <div id="register-form" class="card" style="display:none;">
+    <h2>🎉 招待登録</h2>
+    <div class="invite-badge" id="invite-badge"></div>
+    <p>テストユーザーとして招待されました。<br>アカウントを作成してELEVAの全機能をお試しください。</p>
+    <div class="form-group">
+      <label>メールアドレス</label>
+      <input type="email" id="reg-email" placeholder="you@example.com" autocomplete="email"/>
+    </div>
+    <div class="form-group">
+      <label>パスワード（8文字以上）</label>
+      <input type="password" id="reg-password" placeholder="パスワード" autocomplete="new-password"/>
+    </div>
+    <button class="btn" id="reg-btn" onclick="doRegister()">アカウントを作成</button>
+    <div class="error" id="reg-error"></div>
+    <div class="success" id="reg-success"></div>
+  </div>
+
+  <div class="footer">
+    <a href="/login.html">すでにアカウントをお持ちの方</a>
+  </div>
+</div>
+
+<script src="/eleva-i18n.js"></script>
+<script src="/eleva-shared.js"></script>
+<script>
+const sb=ELEVA.getSupabase();
+let inviteCode=null;
+
+async function init(){
+  const params=new URLSearchParams(window.location.search);
+  inviteCode=params.get('invite');
+  if(!inviteCode){
+    document.getElementById('invalid-invite').style.display='block';
+    return;
+  }
+  const {data:invite}=await sb.from('invite_codes').select('*').eq('code',inviteCode).eq('is_used',false).gt('expires_at',new Date().toISOString()).single();
+  if(!invite){
+    document.getElementById('invalid-invite').style.display='block';
+    return;
+  }
+  document.getElementById('invite-badge').textContent='招待コード: '+inviteCode;
+  document.getElementById('register-form').style.display='block';
+}
+
+async function doRegister(){
+  const email=document.getElementById('reg-email').value;
+  const password=document.getElementById('reg-password').value;
+  const btn=document.getElementById('reg-btn');
+  const err=document.getElementById('reg-error');
+  const suc=document.getElementById('reg-success');
+  err.style.display='none';suc.style.display='none';
+
+  if(!email||!password||password.length<8){
+    err.textContent='メールアドレスと8文字以上のパスワードを入力してください';
+    err.style.display='block';return;
+  }
+
+  btn.disabled=true;btn.textContent='登録中...';
+
+  try{
+    const {data,error}=await sb.auth.signUp({email,password});
+    if(error)throw error;
+
+    const userId=data.user?.id;
+    if(userId&&inviteCode){
+      await sb.from('profiles').update({
+        is_test_user:true,test_status:'active',
+        test_started_at:new Date().toISOString()
+      }).eq('id',userId);
+
+      await sb.from('invite_codes').update({
+        is_used:true,used_by:userId,
+        used_at:new Date().toISOString()
+      }).eq('code',inviteCode);
+    }
+
+    fetch('/api/send-welcome-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})}).catch(()=>{});
+    suc.textContent='✓ 登録完了！確認メールをご確認ください。テストユーザーとして設定されました。';
+    suc.style.display='block';
+    btn.textContent='登録完了';
+  }catch(e){
+    err.textContent=e.message;err.style.display='block';
+    btn.disabled=false;btn.textContent='アカウントを作成';
+  }
+}
+
+init();
+</script>
+</body>
+</html>
