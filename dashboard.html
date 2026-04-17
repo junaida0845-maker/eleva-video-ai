@@ -122,6 +122,7 @@ textarea::placeholder{color:var(--text-muted);}
   <div class="top-bar-center">ELEVA Studio</div>
   <div class="top-badge" id="credits-badge"><span data-icon="lightning"></span> --</div>
   <button class="lang-btn-top" onclick="ELEVA.showLanguageModal()"><span data-icon="globe"></span></button>
+  <button onclick="ELEVA.logout()" style="background:transparent;border:1px solid #333;border-radius:6px;color:#888;padding:6px 14px;font-size:12px;cursor:pointer;font-family:inherit;letter-spacing:.08em;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='#333';this.style.color='#888'" data-i18n="logout">LOGOUT</button>
 </div>
 
 <!-- Camera Modal -->
@@ -313,32 +314,32 @@ textarea::placeholder{color:var(--text-muted);}
 
   <!-- AI & Commercial Disclosure -->
   <div class="card">
-    <div class="card-title"><span data-icon="sparkle"></span> AI開示・商業コンテンツ</div>
+    <div class="card-title"><span data-icon="sparkle"></span> <span data-i18n="disclosure_title">AI開示・商業コンテンツ</span></div>
     <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--border-gold);border-radius:10px;background:rgba(201,168,76,0.06);margin-bottom:12px;cursor:not-allowed;">
       <input type="checkbox" id="ai-disclose" checked disabled style="width:18px;height:18px;accent-color:var(--gold);">
       <div style="flex:1;">
-        <div style="color:#fff;font-size:14px;font-weight:600;">AI生成コンテンツとして開示</div>
-        <div style="color:var(--text-secondary);font-size:12px;margin-top:2px;">TikTok / Instagramの規約に基づき、ELEVAで生成した動画は常に開示されます（変更不可）</div>
+        <div style="color:#fff;font-size:14px;font-weight:600;" data-i18n="ai_disclosure_label">AI生成コンテンツとして開示</div>
+        <div style="color:var(--text-secondary);font-size:12px;margin-top:2px;" data-i18n="ai_disclosure_required">TikTok / Instagramの規約に基づき、ELEVAで生成した動画は常に開示されます（変更不可）</div>
       </div>
     </label>
-    <div style="color:var(--text-secondary);font-size:12px;margin-bottom:8px;">商業コンテンツ開示（TikTok）</div>
+    <div style="color:var(--text-secondary);font-size:12px;margin-bottom:8px;" data-i18n="commercial_disclosure">商業コンテンツ開示（TikTok）</div>
     <div style="display:flex;flex-direction:column;gap:8px;">
       <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--black-border);border-radius:8px;cursor:pointer;">
         <input type="radio" name="commercial" value="none" checked style="accent-color:var(--gold);">
-        <span style="color:#fff;font-size:13px;">どちらでもない（個人投稿）</span>
+        <span style="color:#fff;font-size:13px;" data-i18n="commercial_none">どちらでもない（個人投稿）</span>
       </label>
       <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--black-border);border-radius:8px;cursor:pointer;">
         <input type="radio" name="commercial" value="brand_organic" style="accent-color:var(--gold);">
-        <span style="color:#fff;font-size:13px;">自分のブランド・ビジネスのPR</span>
+        <span style="color:#fff;font-size:13px;" data-i18n="commercial_organic">自分のブランド・ビジネスのPR</span>
       </label>
       <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--black-border);border-radius:8px;cursor:pointer;">
         <input type="radio" name="commercial" value="brand_content" style="accent-color:var(--gold);">
-        <span style="color:#fff;font-size:13px;">第三者ブランドのPR（案件・タイアップ）</span>
+        <span style="color:#fff;font-size:13px;" data-i18n="commercial_sponsored">第三者ブランドのPR（案件・タイアップ）</span>
       </label>
     </div>
     <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;margin-top:12px;border:1px solid var(--black-border);border-radius:8px;cursor:pointer;">
       <input type="checkbox" id="ig-ai-tag" checked style="width:16px;height:16px;accent-color:var(--gold);">
-      <span style="color:#fff;font-size:13px;">Instagram キャプションに <span style="color:var(--gold);">#AI生成</span> を自動追加</span>
+      <span style="color:#fff;font-size:13px;" data-i18n="ig_ai_autotag">Instagram キャプションに #AI生成 を自動追加</span>
     </label>
   </div>
 
@@ -714,18 +715,20 @@ async function loadPostingSchedule(){
     const times=data.best_times||[];
     if(!times.length){
       // Default schedule
+      const _t=window.elevaT||function(k){return k;};
       document.getElementById('schedule-body').innerHTML=`
-        <tr><td>TikTok</td><td style="color:var(--text-secondary);">エンタメ</td><td>火・木・土</td><td>19:00-21:00</td></tr>
-        <tr><td>Instagram</td><td style="color:var(--text-secondary);">ライフスタイル</td><td>水・金</td><td>12:00-13:00</td></tr>
-        <tr><td>YouTube</td><td style="color:var(--text-secondary);">教育</td><td>土・日</td><td>20:00-22:00</td></tr>
+        <tr><td>TikTok</td><td style="color:var(--text-secondary);">${_t('genre_entertainment')}</td><td>火・木・土</td><td>19:00-21:00</td></tr>
+        <tr><td>Instagram</td><td style="color:var(--text-secondary);">${_t('genre_lifestyle')}</td><td>水・金</td><td>12:00-13:00</td></tr>
+        <tr><td>YouTube</td><td style="color:var(--text-secondary);">${_t('genre_education')}</td><td>土・日</td><td>20:00-22:00</td></tr>
       `;
       return;
     }
     document.getElementById('schedule-body').innerHTML=times.map(t=>`<tr><td>${t.platform}</td><td style="color:var(--text-secondary);">${t.genre||'-'}</td><td>${t.best_days||'-'}</td><td>${t.best_time||'-'}</td></tr>`).join('');
   }catch(e){
+    const _t=window.elevaT||function(k){return k;};
     document.getElementById('schedule-body').innerHTML=`
-      <tr><td>TikTok</td><td style="color:var(--text-secondary);">全般</td><td>火・木・土</td><td>19:00-21:00</td></tr>
-      <tr><td>Instagram</td><td style="color:var(--text-secondary);">全般</td><td>水・金</td><td>12:00-13:00</td></tr>
+      <tr><td>TikTok</td><td style="color:var(--text-secondary);">${_t('genre_general')}</td><td>火・木・土</td><td>19:00-21:00</td></tr>
+      <tr><td>Instagram</td><td style="color:var(--text-secondary);">${_t('genre_general')}</td><td>水・金</td><td>12:00-13:00</td></tr>
     `;
   }
 }
