@@ -344,10 +344,53 @@ function getLangRegion(){
   return {code,...(LANG_TO_REGION[code]||LANG_TO_REGION['ja'])};
 }
 
+async function signInWithGoogle(){
+  const sb=getSupabase();if(!sb)return;
+  await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:win.location.origin+'/dashboard.html'}});
+}
+
+async function loginWithBiometrics(){
+  if(!win.PublicKeyCredential){alert('このブラウザは生体認証に���応していません');return;}
+  const emailEl=document.getElementById('login-email');
+  const email=emailEl?.value;
+  if(!email){alert('先にメールアドレスを入力してく���さい');return;}
+  try{
+    const challenge=new Uint8Array(32);crypto.getRandomValues(challenge);
+    const credential=await navigator.credentials.get({publicKey:{challenge,timeout:60000,userVerification:'required',rpId:win.location.hostname}});
+    if(credential){
+      const credId=btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
+      const sb=getSupabase();
+      const {data:profile}=await sb.from('profiles').select('id').eq('webauthn_credential_id',credId).single();
+      if(profile){await sb.auth.signInWithOtp({email});alert('確認メールを送信しました');}
+      else{alert('この端末は登録されていません。通常ログイン後に設定から登録してください');}
+    }
+  }catch(err){alert('生体認証に失敗しました');}
+}
+
+async function registerBiometrics(){
+  const sb=getSupabase();if(!sb)return;
+  const {data:{user}}=await sb.auth.getUser();if(!user)return;
+  try{
+    const challenge=new Uint8Array(32);crypto.getRandomValues(challenge);
+    const credential=await navigator.credentials.create({publicKey:{
+      challenge,rp:{name:'ELEVA',id:win.location.hostname},
+      user:{id:new TextEncoder().encode(user.id),name:user.email,displayName:user.email},
+      pubKeyCredParams:[{type:'public-key',alg:-7}],
+      authenticatorSelection:{userVerification:'required'},timeout:60000,
+    }});
+    if(credential){
+      const credId=btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
+      await sb.from('profiles').update({webauthn_credential_id:credId}).eq('id',user.id);
+      alert('生体認証を登録しました');
+    }
+  }catch(err){alert('生体認証の登録に失敗しました: '+err.message);}
+}
+
 win.ELEVA={
   getSupabase,checkAuth,logout,applyLanguage,detectLanguage,showLanguageModal,
   initHamburger,initChatbot,initBackgroundGen,showGenBanner,requestPushPermission,
   uploadToStorage,initElevaPage,t,getLangRegion,LANG_TO_REGION,
+  signInWithGoogle,loginWithBiometrics,registerBiometrics,
   SUPABASE_URL,SUPABASE_ANON_KEY,STORAGE_URL
 };
 })(window);

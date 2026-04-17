@@ -229,6 +229,48 @@ textarea::placeholder{color:var(--text-muted);}
     </div>
   </div>
 
+  <!-- Post Preparation Modal -->
+  <div id="post-prep-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:1000;overflow-y:auto;padding:24px 12px;">
+    <div style="max-width:640px;margin:0 auto;background:var(--black-card);border:1px solid var(--border-gold);border-radius:16px;padding:24px;color:#fff;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="font-size:18px;font-weight:700;color:var(--gold);">投稿準備</div>
+        <button onclick="closePostPrepModal()" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer;">×</button>
+      </div>
+      <div id="post-prep-upsell" style="display:none;background:rgba(201,168,76,0.06);border:1px solid var(--border-gold);border-radius:12px;padding:20px;text-align:center;margin-bottom:16px;">
+        <div style="font-size:14px;color:var(--gold);font-weight:600;margin-bottom:8px;">🔒 キャプション・ハッシュタグ自動生成はStarter以上で利用できます</div>
+        <div style="display:flex;gap:10px;justify-content:center;margin-top:12px;">
+          <a href="/payment.html" class="btn-gold" style="text-decoration:none;padding:10px 20px;border-radius:8px;font-size:13px;">プランをアップグレード</a>
+          <button class="btn-outline" onclick="document.getElementById('post-prep-upsell').style.display='none';document.getElementById('post-prep-content').style.display='block';" style="font-size:13px;">自分で入力する</button>
+        </div>
+      </div>
+      <div id="post-prep-content">
+        <div style="color:var(--text-secondary);font-size:12px;margin-bottom:12px;">どのSNSに投稿しますか？</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;" id="post-sns-btns">
+          <button class="btn-outline post-sns-btn active" data-platform="tiktok" onclick="selectPostSNS('tiktok',this)" style="font-size:12px;padding:8px 16px;">TikTok</button>
+          <button class="btn-outline post-sns-btn" data-platform="instagram" onclick="selectPostSNS('instagram',this)" style="font-size:12px;padding:8px 16px;">Instagram</button>
+          <button class="btn-outline post-sns-btn" data-platform="x" onclick="selectPostSNS('x',this)" style="font-size:12px;padding:8px 16px;">X</button>
+          <button class="btn-outline post-sns-btn" data-platform="youtube" onclick="selectPostSNS('youtube',this)" style="font-size:12px;padding:8px 16px;">YouTube</button>
+        </div>
+        <div style="margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <label style="color:var(--text-secondary);font-size:12px;">AIキャプション</label>
+            <button class="btn-outline" onclick="generateAICaption()" id="gen-cap-btn" style="font-size:11px;padding:4px 12px;">✨ AI生成</button>
+          </div>
+          <textarea id="post-caption" rows="4" placeholder="キャプションを入力..." style="width:100%;background:var(--black-border);border:1px solid rgba(201,168,76,0.3);color:#fff;padding:12px;border-radius:8px;font-family:'Inter',sans-serif;font-size:14px;resize:vertical;outline:none;"></textarea>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label style="color:var(--text-secondary);font-size:12px;display:block;margin-bottom:6px;">ハッシュタグ</label>
+          <textarea id="post-hashtags" rows="3" placeholder="#ハッシュタグ" style="width:100%;background:var(--black-border);border:1px solid rgba(201,168,76,0.3);color:#fff;padding:12px;border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;resize:vertical;outline:none;"></textarea>
+        </div>
+        <button class="btn-gold" onclick="copyPostContent()" style="width:100%;font-size:14px;padding:14px;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:8px;">📋 コピーしてSNSアプリで投稿する</button>
+        <div id="post-guide" style="display:none;margin-top:16px;background:rgba(255,255,255,0.03);border-radius:10px;padding:16px;">
+          <div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:10px;" id="guide-title"></div>
+          <div style="font-size:12px;color:var(--text-secondary);line-height:1.8;" id="guide-steps"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Prompt Optimization Result -->
   <div class="optimize-panel" id="optimize-panel">
     <div class="opt-summary" id="opt-summary">最適化されたプロンプト</div>
@@ -312,7 +354,7 @@ textarea::placeholder{color:var(--text-muted);}
     <p style="color:var(--text-muted);font-size:12px;margin-top:8px;display:flex;align-items:center;gap:6px;"><span data-icon="photo"></span> 各シーンをスクリーンショットしてInstagramカルーセルにも使えます</p>
     <div class="result-actions">
       <button class="btn-gold" onclick="downloadVideo()" data-i18n="download" style="display:flex;align-items:center;gap:6px;"><span data-icon="download"></span> ダウンロード</button>
-      <button class="btn-outline" onclick="shareVideo()" data-i18n="share" style="display:flex;align-items:center;gap:6px;"><span data-icon="share"></span> シェア</button>
+      <button class="btn-gold" id="btn-post-prep" onclick="openPostPrepModal()" style="display:flex;align-items:center;gap:6px;background:#1A1500;color:var(--gold);border:1px solid var(--gold);"><span data-icon="share"></span> 投稿準備</button>
     </div>
     <!-- Split Suggestion -->
     <div class="split-card" id="split-card">
@@ -686,6 +728,64 @@ async function loadPostingSchedule(){
       <tr><td>Instagram</td><td style="color:var(--text-secondary);">全般</td><td>水・金</td><td>12:00-13:00</td></tr>
     `;
   }
+}
+
+// ─ Post Preparation ─────────────────────────────────────
+let postSNS='tiktok';
+const POST_GUIDES={
+  tiktok:{title:'TikTokに投稿する手順',steps:'① TikTokアプリを開く → ② 下部の＋ボタン → ③ ライブラリから動画を選択 → ④ キャプションを貼り付け → ⑤ 投稿'},
+  instagram:{title:'Instagramに投稿する手順',steps:'① Instagramアプリを開く → ② 下部の＋→リール → ③ ライブラリから動画を選択 → ④ キャプションを貼り付け → ⑤ シェア'},
+  x:{title:'Xに投稿する手順',steps:'① Xアプリを開く → ② ツイート作成 → ③ 動画を添付 → ④ テキストを貼り付け → ⑤ 投稿'},
+  youtube:{title:'YouTubeに投稿する手順',steps:'① YouTubeアプリを開く → ② 下部の＋ → ③ 動画をアップロード → ④ 説明欄にテキストを貼り付け → ⑤ 公開'},
+};
+
+function openPostPrepModal(){
+  const modal=document.getElementById('post-prep-modal');
+  modal.style.display='block';
+  const plan=currentUser?.user_metadata?.plan||'free';
+  const isPaid=['starter','growth','scale','free_forever'].includes(plan);
+  document.getElementById('post-prep-upsell').style.display=isPaid?'none':'block';
+  document.getElementById('post-prep-content').style.display=isPaid?'block':'none';
+  document.getElementById('post-guide').style.display='none';
+}
+function closePostPrepModal(){document.getElementById('post-prep-modal').style.display='none';}
+function selectPostSNS(platform,btn){
+  postSNS=platform;
+  document.querySelectorAll('.post-sns-btn').forEach(b=>{b.classList.remove('active');b.style.borderColor='';b.style.color='';});
+  btn.classList.add('active');btn.style.borderColor='var(--gold)';btn.style.color='var(--gold)';
+}
+
+async function generateAICaption(){
+  const btn=document.getElementById('gen-cap-btn');
+  btn.disabled=true;btn.textContent='生成中...';
+  try{
+    const prompt=document.getElementById('prompt-input')?.value||'';
+    const lang=localStorage.getItem('eleva_lang')||'ja';
+    const res=await fetch('/api/generate-caption',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({title:prompt.slice(0,100),genre:selectedGenres[0]||'general',platform:postSNS,lang})
+    });
+    const data=await res.json();
+    if(data.error)throw new Error(data.error);
+    document.getElementById('post-caption').value=data.caption||'';
+    document.getElementById('post-hashtags').value=(data.hashtags||[]).join(' ');
+  }catch(e){
+    alert('キャプション生成に失敗しました: '+e.message);
+  }finally{btn.disabled=false;btn.textContent='✨ AI生成';}
+}
+
+function copyPostContent(){
+  const caption=document.getElementById('post-caption').value;
+  const tags=document.getElementById('post-hashtags').value;
+  const full=caption+(tags?'\n\n'+tags:'');
+  navigator.clipboard.writeText(full).then(()=>{
+    const guide=POST_GUIDES[postSNS]||POST_GUIDES.tiktok;
+    document.getElementById('guide-title').textContent=guide.title;
+    document.getElementById('guide-steps').textContent=guide.steps;
+    document.getElementById('post-guide').style.display='block';
+    const btn=event.target;btn.textContent='✓ コピーしました！';
+    setTimeout(()=>{btn.textContent='📋 コピーしてSNSアプリで投稿する';},2000);
+  }).catch(()=>{alert('コピーに失敗しました');});
 }
 
 // ─ AI & Commercial Disclosure ────────────────────────────
