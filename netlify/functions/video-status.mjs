@@ -63,7 +63,8 @@ export default async (req) => {
       );
     }
 
-    return new Response(JSON.stringify({ status, videoUrl, taskId }), {
+    const errMsg = d.data?.error?.message || d.data?.error?.raw_message || '';
+    return new Response(JSON.stringify({ status, videoUrl, taskId, ...(errMsg && { error: errMsg }) }), {
       status: 200,
       headers: { 'Content-Type': 'application/json', ...cors },
     });

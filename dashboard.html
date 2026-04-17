@@ -636,20 +636,31 @@ async function generateVideo(){
       attempts++;
       if(attempts>60){clearInterval(interval);status.textContent='タイムアウトしました。履歴から確認してください。';btn.disabled=false;btn.textContent=elevaT('generate_btn');return;}
       try{
-        const res=await fetch('/api/video-status?taskId='+taskId);
+        const res=await fetch('/api/video-status?taskId='+taskId+(genId?'&generationId='+genId:''));
         const data=await res.json();
-        if(data.status==='completed'||data.videoUrl){
+        console.log('poll #'+attempts+':',data.status,data.videoUrl?'has video':'no video');
+        if(data.status==='completed'||data.videoUrl||data.video_url){
           clearInterval(interval);
           localStorage.removeItem('eleva_generating');
           document.getElementById('gen-banner')?.remove();
-          showResult(data.videoUrl||data.video_url||'',genId);
-          btn.disabled=false;btn.textContent=elevaT('generate_btn');status.style.display='none';
-          // Check split suggestion
-          checkSplitSuggestion(genId);
+          const vUrl=data.videoUrl||data.video_url||'';
+          if(vUrl){
+            showResult(vUrl,genId);
+            btn.disabled=false;btn.textContent=elevaT('generate_btn');status.style.display='none';
+            checkSplitSuggestion(genId);
+          }else{
+            status.textContent='動画URLが取得できませんでした。履歴から確認してください。';
+            btn.disabled=false;btn.textContent=elevaT('generate_btn');
+          }
         }else if(data.status==='failed'){
-          clearInterval(interval);status.textContent='生成に失敗しました。再度お試しください。';
+          clearInterval(interval);
+          const errDetail=data.error||data.message||'';
+          status.textContent='生成に失敗しました。'+(errDetail?' ('+errDetail+')':'')+'再度お試しください。';
+          console.error('Video generation failed:',JSON.stringify(data));
           btn.disabled=false;btn.textContent=elevaT('generate_btn');
           localStorage.removeItem('eleva_generating');
+        }else{
+          status.textContent='🔄 生成中... ('+Math.floor(attempts*8/60)+'分'+((attempts*8)%60)+'秒経過)';
         }
       }catch(e){console.error('Poll error:',e);}
     },8000);
@@ -674,11 +685,14 @@ async function generateVideo(){
       body:JSON.stringify(body)
     });
     const data=await res.json();
-    if(data.error)throw new Error(data.error);
+    console.log('generate-video response:',JSON.stringify(data));
+    if(data.error&&!data.success)throw new Error(data.error);
     currentTaskId=data.taskId||data.task_id;
     currentGenId=data.generationId||data.generation_id||data.id;
+    if(!currentTaskId){throw new Error('taskId not returned: '+JSON.stringify(data).slice(0,200));}
     await pollStatus(currentTaskId,currentGenId);
   }catch(e){
+    console.error('generateVideo error:',e);
     status.textContent='エラー: '+e.message;
     btn.disabled=false;btn.textContent=elevaT('generate_btn');
   }
