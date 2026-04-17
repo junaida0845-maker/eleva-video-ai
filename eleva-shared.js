@@ -91,7 +91,7 @@ function showLanguageModal(){
       <button onclick="document.getElementById('lang-modal').remove()" style="background:none;border:none;color:#666;font-size:20px;cursor:pointer;">×</button>
     </div>
     <div style="overflow-y:auto;padding:8px 0;">
-      ${langs.map(code=>`<button onclick="window.ELEVA.applyLanguage('${code}');document.getElementById('lang-modal').remove();" style="width:100%;background:${code===lang?'rgba(201,168,76,0.1)':'none'};border:none;border-bottom:1px solid rgba(255,255,255,0.05);padding:14px 24px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='rgba(201,168,76,0.08)'" onmouseout="this.style.background='${code===lang?'rgba(201,168,76,0.1)':'none'}'">
+      ${langs.map(code=>`<button onclick="window.ELEVA.applyLanguage('${code}');document.getElementById('lang-modal').remove();setTimeout(()=>{if(window.elevaApplyDeep)window.elevaApplyDeep('${code}');},100);" style="width:100%;background:${code===lang?'rgba(201,168,76,0.1)':'none'};border:none;border-bottom:1px solid rgba(255,255,255,0.05);padding:14px 24px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='rgba(201,168,76,0.08)'" onmouseout="this.style.background='${code===lang?'rgba(201,168,76,0.1)':'none'}'">
         <span style="font-size:22px;">${names[code]?.flag||'🌐'}</span>
         <span style="color:${code===lang?'#f0d070':'#ffffff'};font-size:15px;flex:1;text-align:left;">${names[code]?.native||code}</span>
         ${code===lang?'<span style="color:#c9a84c;">✓</span>':''}
