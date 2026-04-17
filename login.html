@@ -23,9 +23,15 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .auth-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
 .form-group{margin-bottom:18px;}
 label{display:block;color:var(--text-secondary);font-size:13px;margin-bottom:6px;}
+.input-wrap{position:relative;}
+.input-wrap input{width:100%;background:var(--black-border);border:1px solid rgba(201,168,76,0.3);color:#fff;padding:12px 44px 12px 16px;border-radius:10px;font-size:15px;outline:none;transition:border-color 0.2s;font-family:'Inter',sans-serif;}
 input{width:100%;background:var(--black-border);border:1px solid rgba(201,168,76,0.3);color:#fff;padding:12px 16px;border-radius:10px;font-size:15px;outline:none;transition:border-color 0.2s;font-family:'Inter',sans-serif;}
 input:focus{border-color:var(--gold);}
 input::placeholder{color:var(--text-muted);}
+.eye-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);padding:4px;display:flex;align-items:center;transition:color 0.2s;}
+.eye-btn:hover{color:var(--gold);}
+.forgot-link{display:block;text-align:right;color:var(--text-muted);font-size:12px;margin-top:6px;text-decoration:none;transition:color 0.2s;cursor:pointer;}
+.forgot-link:hover{color:var(--gold);}
 .btn-primary{width:100%;background:var(--gold);color:#000;border:none;padding:14px;border-radius:10px;font-weight:700;font-size:15px;cursor:pointer;transition:all 0.2s;margin-top:8px;}
 .btn-primary:hover{background:var(--gold-light);}
 .btn-primary:disabled{background:#333;color:#666;cursor:not-allowed;}
@@ -35,12 +41,41 @@ input::placeholder{color:var(--text-muted);}
 .auth-footer a{color:var(--gold);text-decoration:none;}
 .lang-bar{position:fixed;top:16px;right:16px;z-index:10;}
 .lang-bar button{background:rgba(17,17,17,0.9);border:1px solid var(--border-gold);color:var(--gold);padding:8px 14px;border-radius:20px;cursor:pointer;font-size:13px;}
+/* リセットモーダル */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:100;display:none;}
+.modal-overlay.show{display:flex;}
+.modal-box{background:var(--black-card);border:1px solid var(--border-gold);border-radius:20px;padding:32px;width:90%;max-width:380px;}
+.modal-box h3{color:var(--gold);font-size:18px;margin-bottom:8px;}
+.modal-box p{color:var(--text-secondary);font-size:13px;margin-bottom:20px;line-height:1.6;}
+.modal-box input{width:100%;background:var(--black-border);border:1px solid rgba(201,168,76,0.3);color:#fff;padding:12px 16px;border-radius:10px;font-size:15px;outline:none;font-family:'Inter',sans-serif;margin-bottom:12px;}
+.modal-box input:focus{border-color:var(--gold);}
+.modal-actions{display:flex;gap:10px;}
+.btn-cancel{flex:1;background:transparent;border:1px solid rgba(255,255,255,0.1);color:var(--text-muted);padding:12px;border-radius:10px;font-size:14px;cursor:pointer;transition:all 0.2s;}
+.btn-cancel:hover{border-color:var(--gold);color:var(--gold);}
+.btn-send{flex:2;background:var(--gold);color:#000;border:none;padding:12px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;transition:all 0.2s;}
+.btn-send:hover{background:var(--gold-light);}
+.btn-send:disabled{background:#333;color:#666;cursor:not-allowed;}
 </style>
 </head>
 <body>
 
 <div class="lang-bar">
   <button onclick="ELEVA.showLanguageModal()">🌐</button>
+</div>
+
+<!-- パスワードリセットモーダル -->
+<div class="modal-overlay" id="reset-modal">
+  <div class="modal-box">
+    <h3>パスワードをリセット</h3>
+    <p>登録済みのメールアドレスを入力してください。パスワード再設定用のリンクをお送りします。</p>
+    <input type="email" id="reset-email" placeholder="メールアドレス" autocomplete="email"/>
+    <div class="error-msg" id="reset-error"></div>
+    <div class="success-msg" id="reset-success"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeResetModal()">キャンセル</button>
+      <button class="btn-send" id="btn-reset" onclick="doPasswordReset()">送信</button>
+    </div>
+  </div>
 </div>
 
 <div class="auth-wrap">
@@ -63,7 +98,14 @@ input::placeholder{color:var(--text-muted);}
       </div>
       <div class="form-group">
         <label for="login-password" data-i18n="password">パスワード</label>
-        <input type="password" id="login-password" data-i18n-ph="password" placeholder="パスワード" autocomplete="current-password"/>
+        <div class="input-wrap">
+          <input type="password" id="login-password" data-i18n-ph="password" placeholder="パスワード" autocomplete="current-password"/>
+          <button class="eye-btn" type="button" onclick="togglePassword('login-password',this)" tabindex="-1">
+            <svg id="eye-login-show" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg id="eye-login-hide" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+        <span class="forgot-link" onclick="openResetModal()">パスワードをお忘れですか？</span>
       </div>
       <button class="btn-primary" id="btn-login" onclick="doLogin()" data-i18n="login">ログイン</button>
       <div class="error-msg" id="login-error"></div>
@@ -77,7 +119,13 @@ input::placeholder{color:var(--text-muted);}
       </div>
       <div class="form-group">
         <label for="signup-password" data-i18n="password">パスワード</label>
-        <input type="password" id="signup-password" data-i18n-ph="password" placeholder="パスワード（8文字以上）" autocomplete="new-password"/>
+        <div class="input-wrap">
+          <input type="password" id="signup-password" data-i18n-ph="password" placeholder="パスワード（8文字以上）" autocomplete="new-password"/>
+          <button class="eye-btn" type="button" onclick="togglePassword('signup-password',this)" tabindex="-1">
+            <svg id="eye-signup-show" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg id="eye-signup-hide" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
       </div>
       <button class="btn-primary" id="btn-signup" onclick="doSignup()" data-i18n="signup">新規登録</button>
       <div class="error-msg" id="signup-error"></div>
@@ -100,6 +148,47 @@ function switchTab(tab){
   document.getElementById('tab-signup').classList.toggle('active',tab==='signup');
   document.getElementById('form-login').style.display=tab==='login'?'block':'none';
   document.getElementById('form-signup').style.display=tab==='signup'?'block':'none';
+}
+
+function togglePassword(inputId, btn){
+  const input = document.getElementById(inputId);
+  const prefix = inputId === 'login-password' ? 'eye-login' : 'eye-signup';
+  const isHidden = input.type === 'password';
+  input.type = isHidden ? 'text' : 'password';
+  document.getElementById(prefix+'-show').style.display = isHidden ? 'none' : 'inline';
+  document.getElementById(prefix+'-hide').style.display = isHidden ? 'inline' : 'none';
+}
+
+function openResetModal(){
+  const email = document.getElementById('login-email').value;
+  if(email) document.getElementById('reset-email').value = email;
+  document.getElementById('reset-error').style.display='none';
+  document.getElementById('reset-success').style.display='none';
+  document.getElementById('btn-reset').disabled=false;
+  document.getElementById('btn-reset').textContent='送信';
+  document.getElementById('reset-modal').classList.add('show');
+}
+
+function closeResetModal(){
+  document.getElementById('reset-modal').classList.remove('show');
+}
+
+async function doPasswordReset(){
+  const email = document.getElementById('reset-email').value.trim();
+  const btn = document.getElementById('btn-reset');
+  const err = document.getElementById('reset-error');
+  const suc = document.getElementById('reset-success');
+  err.style.display='none'; suc.style.display='none';
+  if(!email){err.textContent='メールアドレスを入力してください';err.style.display='block';return;}
+  btn.disabled=true; btn.textContent='送信中...';
+  const {error} = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + '/reset-password.html'
+  });
+  if(error){err.textContent=error.message;err.style.display='block';btn.disabled=false;btn.textContent='送信';return;}
+  suc.textContent='パスワード再設定メールを送信しました。メールをご確認ください。';
+  suc.style.display='block';
+  btn.textContent='送信済み';
+  setTimeout(()=>closeResetModal(), 3000);
 }
 
 async function doLogin(){
@@ -137,6 +226,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(window.location.hash==='#signup')switchTab('signup');
   document.getElementById('login-password').addEventListener('keypress',e=>{if(e.key==='Enter')doLogin();});
   document.getElementById('signup-password').addEventListener('keypress',e=>{if(e.key==='Enter')doSignup();});
+  document.getElementById('reset-modal').addEventListener('click',e=>{if(e.target===document.getElementById('reset-modal'))closeResetModal();});
 });
 </script>
 </body>
