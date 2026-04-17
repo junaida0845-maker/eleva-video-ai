@@ -139,7 +139,7 @@ textarea::placeholder{color:var(--text-muted);}
 
   <!-- SNS Selector -->
   <div class="card" id="sns-section">
-    <div class="card-title"><span data-icon="platform"></span> 投稿先SNS</div>
+    <div class="card-title"><span data-icon="platform"></span> <span data-i18n="select_sns">投稿先SNS</span></div>
     <div class="sns-grid" id="sns-grid">
       <div class="sns-item" onclick="toggleSNS(this,'tiktok')">
         <span class="plat-icon" data-icon="tiktok"></span>
@@ -188,14 +188,14 @@ textarea::placeholder{color:var(--text-muted);}
       </div>
 
       <div class="divider" data-i18n="or_describe">またはテキストで説明</div>
-      <textarea id="prompt-input" placeholder="投稿内容や動画のイメージを入力してください..." rows="4"></textarea>
+      <textarea id="prompt-input" data-i18n-ph="input_prompt_ph" placeholder="投稿内容や動画のイメージを入力してください..." rows="4"></textarea>
     </div>
 
     <!-- Smart Suggestion -->
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;flex-wrap:wrap;gap:8px;">
-      <button class="btn-outline" onclick="loadSuggestions()" style="display:flex;align-items:center;gap:6px;"><span data-icon="fire"></span> 次の投稿を提案</button>
-      <button class="btn-outline" onclick="optimizePrompt()" data-i18n="optimize_prompt" style="display:flex;align-items:center;gap:6px;"><span data-icon="sparkle"></span> プロンプトを最適化</button>
-      <button class="btn-outline" onclick="openScenarioModal()" style="display:flex;align-items:center;gap:6px;"><span data-icon="star"></span> シナリオ作成</button>
+      <button class="btn-outline" onclick="loadSuggestions()" style="display:flex;align-items:center;gap:6px;"><span data-icon="fire"></span> <span data-i18n="suggest_next">次の投稿を提案</span></button>
+      <button class="btn-outline" onclick="optimizePrompt()" style="display:flex;align-items:center;gap:6px;"><span data-icon="sparkle"></span> <span data-i18n="optimize">プロンプトを最適化</span></button>
+      <button class="btn-outline" onclick="openScenarioModal()" style="display:flex;align-items:center;gap:6px;"><span data-icon="star"></span> <span data-i18n="create_scenario_btn">シナリオ作成</span></button>
     </div>
   </div>
 
@@ -238,14 +238,14 @@ textarea::placeholder{color:var(--text-muted);}
         <button onclick="closePostPrepModal()" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer;">×</button>
       </div>
       <div id="post-prep-upsell" style="display:none;background:rgba(201,168,76,0.06);border:1px solid var(--border-gold);border-radius:12px;padding:20px;text-align:center;margin-bottom:16px;">
-        <div style="font-size:14px;color:var(--gold);font-weight:600;margin-bottom:8px;">🔒 キャプション・ハッシュタグ自動生成はStarter以上で利用できます</div>
+        <div style="font-size:14px;color:var(--gold);font-weight:600;margin-bottom:8px;" data-i18n="post_prep_upsell">🔒 キャプション・ハッシュタグ自動生成はStarter以上で利用できます</div>
         <div style="display:flex;gap:10px;justify-content:center;margin-top:12px;">
-          <a href="/payment.html" class="btn-gold" style="text-decoration:none;padding:10px 20px;border-radius:8px;font-size:13px;">プランをアップグレード</a>
-          <button class="btn-outline" onclick="document.getElementById('post-prep-upsell').style.display='none';document.getElementById('post-prep-content').style.display='block';" style="font-size:13px;">自分で入力する</button>
+          <a href="/payment.html" class="btn-gold" style="text-decoration:none;padding:10px 20px;border-radius:8px;font-size:13px;" data-i18n="upgrade_plan">プランをアップグレード</a>
+          <button class="btn-outline" onclick="document.getElementById('post-prep-upsell').style.display='none';document.getElementById('post-prep-content').style.display='block';" style="font-size:13px;" data-i18n="enter_manually">自分で入力する</button>
         </div>
       </div>
       <div id="post-prep-content">
-        <div style="color:var(--text-secondary);font-size:12px;margin-bottom:12px;">どのSNSに投稿しますか？</div>
+        <div style="color:var(--text-secondary);font-size:12px;margin-bottom:12px;" data-i18n="post_which_sns">どのSNSに投稿しますか？</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;" id="post-sns-btns">
           <button class="btn-outline post-sns-btn active" data-platform="tiktok" onclick="selectPostSNS('tiktok',this)" style="font-size:12px;padding:8px 16px;">TikTok</button>
           <button class="btn-outline post-sns-btn" data-platform="instagram" onclick="selectPostSNS('instagram',this)" style="font-size:12px;padding:8px 16px;">Instagram</button>
@@ -254,16 +254,16 @@ textarea::placeholder{color:var(--text-muted);}
         </div>
         <div style="margin-bottom:14px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <label style="color:var(--text-secondary);font-size:12px;">AIキャプション</label>
+            <label style="color:var(--text-secondary);font-size:12px;" data-i18n="ai_caption">AIキャプション</label>
             <button class="btn-outline" onclick="generateAICaption()" id="gen-cap-btn" style="font-size:11px;padding:4px 12px;">✨ AI生成</button>
           </div>
-          <textarea id="post-caption" rows="4" placeholder="キャプションを入力..." style="width:100%;background:var(--black-border);border:1px solid rgba(201,168,76,0.3);color:#fff;padding:12px;border-radius:8px;font-family:'Inter',sans-serif;font-size:14px;resize:vertical;outline:none;"></textarea>
+          <textarea id="post-caption" rows="4" data-i18n-ph="caption_ph" placeholder="キャプションを入力..." style="width:100%;background:var(--black-border);border:1px solid rgba(201,168,76,0.3);color:#fff;padding:12px;border-radius:8px;font-family:'Inter',sans-serif;font-size:14px;resize:vertical;outline:none;"></textarea>
         </div>
         <div style="margin-bottom:14px;">
-          <label style="color:var(--text-secondary);font-size:12px;display:block;margin-bottom:6px;">ハッシュタグ</label>
+          <label style="color:var(--text-secondary);font-size:12px;display:block;margin-bottom:6px;" data-i18n="hashtags">ハッシュタグ</label>
           <textarea id="post-hashtags" rows="3" placeholder="#ハッシュタグ" style="width:100%;background:var(--black-border);border:1px solid rgba(201,168,76,0.3);color:#fff;padding:12px;border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;resize:vertical;outline:none;"></textarea>
         </div>
-        <button class="btn-gold" onclick="copyPostContent()" style="width:100%;font-size:14px;padding:14px;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:8px;">📋 コピーしてSNSアプリで投稿する</button>
+        <button class="btn-gold" onclick="copyPostContent()" style="width:100%;font-size:14px;padding:14px;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:8px;">📋 <span data-i18n="copy_to_post">コピーしてSNSアプリで投稿する</span></button>
         <div id="post-guide" style="display:none;margin-top:16px;background:rgba(255,255,255,0.03);border-radius:10px;padding:16px;">
           <div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:10px;" id="guide-title"></div>
           <div style="font-size:12px;color:var(--text-secondary);line-height:1.8;" id="guide-steps"></div>
@@ -284,31 +284,31 @@ textarea::placeholder{color:var(--text-muted);}
 
   <!-- Duration -->
   <div class="card">
-    <div class="card-title"><span data-icon="history"></span> 動画尺</div>
+    <div class="card-title"><span data-icon="history"></span> <span data-i18n="video_duration">動画尺</span></div>
     <div class="duration-grid" id="dur-grid">
-      <button class="dur-btn active" onclick="selectDur(this,5)">5秒</button>
-      <button class="dur-btn" onclick="selectDur(this,15)">15秒</button>
-      <button class="dur-btn" onclick="selectDur(this,30)">30秒</button>
-      <button class="dur-btn" onclick="selectDur(this,60)">60秒</button>
-      <button class="dur-btn" onclick="selectDur(this,180)">3分</button>
-      <button class="dur-btn" onclick="selectDur(this,0)">AIにお任せ</button>
+      <button class="dur-btn active" onclick="selectDur(this,5)" data-i18n="duration_5s">5秒</button>
+      <button class="dur-btn" onclick="selectDur(this,15)" data-i18n="duration_15s">15秒</button>
+      <button class="dur-btn" onclick="selectDur(this,30)" data-i18n="duration_30s">30秒</button>
+      <button class="dur-btn" onclick="selectDur(this,60)" data-i18n="duration_60s">60秒</button>
+      <button class="dur-btn" onclick="selectDur(this,180)" data-i18n="duration_3m">3分</button>
+      <button class="dur-btn" onclick="selectDur(this,0)" data-i18n="duration_ai">AIにお任せ</button>
     </div>
   </div>
 
   <!-- Genre -->
   <div class="card">
-    <div class="card-title"><span data-icon="star"></span> ジャンル</div>
+    <div class="card-title"><span data-icon="star"></span> <span data-i18n="genre_label">ジャンル</span></div>
     <div class="genre-grid" id="genre-grid">
-      <button class="genre-btn" onclick="toggleGenre(this,'beauty')">美容</button>
-      <button class="genre-btn active" onclick="toggleGenre(this,'food')">グルメ</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'travel')">旅行</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'fashion')">ファッション</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'fitness')">フィットネス</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'pet')">ペット</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'tech')">テック</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'shop')">商品PR</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'restaurant')">店舗PR</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'edu')">教育</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'beauty')" data-i18n="genre_beauty">美容</button>
+      <button class="genre-btn active" onclick="toggleGenre(this,'food')" data-i18n="genre_food">グルメ</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'travel')" data-i18n="genre_travel">旅行</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'fashion')" data-i18n="genre_fashion">ファッション</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'fitness')" data-i18n="genre_fitness">フィットネス</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'pet')" data-i18n="genre_pet">ペット</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'tech')" data-i18n="genre_tech">テック</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'shop')" data-i18n="genre_product_pr">商品PR</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'restaurant')" data-i18n="genre_store_pr">店舗PR</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'edu')" data-i18n="genre_education">教育</button>
     </div>
   </div>
 
@@ -352,7 +352,7 @@ textarea::placeholder{color:var(--text-muted);}
   <!-- Result -->
   <div class="result-area" id="result-area">
     <video class="result-video" id="result-video" controls></video>
-    <p style="color:var(--text-muted);font-size:12px;margin-top:8px;display:flex;align-items:center;gap:6px;"><span data-icon="photo"></span> 各シーンをスクリーンショットしてInstagramカルーセルにも使えます</p>
+    <p style="color:var(--text-muted);font-size:12px;margin-top:8px;display:flex;align-items:center;gap:6px;"><span data-icon="photo"></span> <span data-i18n="screenshot_tip">各シーンをスクリーンショットしてInstagramカルーセルにも使えます</span></p>
     <div class="result-actions">
       <button class="btn-gold" onclick="downloadVideo()" data-i18n="download" style="display:flex;align-items:center;gap:6px;"><span data-icon="download"></span> ダウンロード</button>
       <button class="btn-gold" id="btn-post-prep" onclick="openPostPrepModal()" style="display:flex;align-items:center;gap:6px;background:#1A1500;color:var(--gold);border:1px solid var(--gold);"><span data-icon="share"></span> 投稿準備</button>
@@ -362,8 +362,8 @@ textarea::placeholder{color:var(--text-muted);}
       <div class="split-title"><span data-icon="scissors"></span> <span data-i18n="split_title">分割投稿の提案</span></div>
       <div class="split-body" id="split-body"></div>
       <div class="split-actions">
-        <button class="btn-gold" onclick="addToSchedule()" style="font-size:13px;padding:10px 18px;">分割して投稿スケジュールに追加</button>
-        <button class="btn-outline" style="font-size:13px;padding:10px 18px;" onclick="document.getElementById('split-card').style.display='none'">このまま1本で投稿</button>
+        <button class="btn-gold" onclick="addToSchedule()" style="font-size:13px;padding:10px 18px;" data-i18n="split_schedule">分割して投稿スケジュールに追加</button>
+        <button class="btn-outline" style="font-size:13px;padding:10px 18px;" onclick="document.getElementById('split-card').style.display='none'" data-i18n="keep_single">このまま1本で投稿</button>
       </div>
     </div>
   </div>
@@ -382,7 +382,7 @@ textarea::placeholder{color:var(--text-muted);}
           </tr>
         </thead>
         <tbody id="schedule-body">
-          <tr><td colspan="4" style="color:var(--text-muted);text-align:center;padding:20px;">読み込み中...</td></tr>
+          <tr><td colspan="4" style="color:var(--text-muted);text-align:center;padding:20px;" data-i18n="loading">読み込み中...</td></tr>
         </tbody>
       </table>
     </div>
@@ -637,7 +637,7 @@ async function generateVideo(){
       ...(inputVideoUrl&&{input_video_url:inputVideoUrl}),
       ...(sourceUrl&&{source_url:sourceUrl})
     };
-    status.textContent='⚡ 生成リクエストを送信中...';
+    status.textContent='⚡ '+(window.elevaT?elevaT('generating_request'):'生成リクエストを送信中...');
     const res=await fetch('/api/generate-video',{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify(body)
