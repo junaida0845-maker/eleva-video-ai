@@ -1,0 +1,7 @@
+{
+  "name": "eleva-video-ai",
+  "private": true,
+  "dependencies": {
+    "@supabase/supabase-js": "^2"
+  }
+}

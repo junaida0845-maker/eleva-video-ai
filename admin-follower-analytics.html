@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Follower Analytics — ELEVA Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/eleva-i18n.js"></script>
+<script src="/eleva-shared.js"></script>
+<style>
+  :root { --gold: #D4AF37; --gold-dim: #A89030; --bg: #080808; --bg2: #111; --bg3: #0D0D0D; --border: #1E1E1E; --text: #E8E8E8; --muted: #666; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', 'DM Mono', 'Courier New', monospace; min-height: 100vh; padding: 32px 24px; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+  h1 { font-size: 26px; font-weight: 700; letter-spacing: .15em; color: var(--gold); }
+  .subtitle { font-size: 11px; color: var(--muted); margin-top: 4px; letter-spacing: .08em; }
+  .total-count { font-size: 12px; color: #555; letter-spacing: .1em; padding-top: 6px; }
+  .summary { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 20px; }
+  @media(max-width:700px){ .summary { grid-template-columns: repeat(2,1fr); } }
+  .scard { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; }
+  .scard-label { font-size: 9px; color: #555; letter-spacing: .1em; margin-bottom: 8px; }
+  .scard-val { font-size: 20px; font-weight: 700; }
+  .filters { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  .filter-group { display: flex; align-items: center; gap: 8px; }
+  .filter-label { font-size: 9px; color: #555; letter-spacing: .1em; white-space: nowrap; }
+  .filter-btns { display: flex; gap: 4px; }
+  .fbtn { background: #0D0D0D; border: 1px solid #222; border-radius: 4px; padding: 4px 9px; color: #666; font-size: 9px; cursor: pointer; letter-spacing: .08em; font-family: inherit; transition: all .15s; }
+  .fbtn.active { background: #1A1500; border-color: var(--gold); color: var(--gold); }
+  select, input[type=text] { background: #0D0D0D; border: 1px solid #2A2A2A; border-radius: 5px; padding: 5px 10px; color: var(--text); font-size: 11px; outline: none; font-family: inherit; }
+  input[type=text] { width: 180px; }
+  .table-wrap { overflow-x: auto; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  thead tr { background: #0A0A0A; }
+  th { padding: 11px 12px; text-align: left; color: #555; font-size: 9px; letter-spacing: .08em; border-bottom: 1px solid #1A1A1A; white-space: nowrap; }
+  td { padding: 10px 12px; color: #CCC; white-space: nowrap; }
+  tr:nth-child(odd) td { background: #0A0A0A; }
+  .u-name { font-size: 11px; color: #CCC; font-weight: 500; }
+  .u-email { font-size: 9px; color: #444; margin-top: 2px; }
+  .platform-tag { font-size: 9px; padding: 2px 6px; border-radius: 3px; color: var(--gold); letter-spacing: .08em; }
+  .type-tag { font-size: 9px; border: 1px solid; border-radius: 3px; padding: 2px 5px; letter-spacing: .07em; }
+  .plan-tag { font-size: 9px; background: #1A1500; color: var(--gold-dim); padding: 2px 6px; border-radius: 3px; letter-spacing: .07em; }
+  .positive { color: var(--gold); font-weight: 700; }
+  .negative { color: #FF6B6B; font-weight: 700; }
+  .pagination { display: flex; justify-content: center; align-items: center; gap: 16px; }
+  .page-btn { background: transparent; border: 1px solid #2A2A2A; border-radius: 5px; padding: 6px 14px; color: var(--gold); font-size: 10px; cursor: pointer; letter-spacing: .1em; font-family: inherit; }
+  .page-btn:disabled { opacity: .3; cursor: default; }
+  .page-info { font-size: 11px; color: #555; }
+  .loading-row { text-align: center; padding: 40px; color: #555; }
+  .spinner { width: 24px; height: 24px; border: 2px solid #1E1E1E; border-top: 2px solid var(--gold); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="header">
+  <div><h1>FOLLOWER ANALYTICS</h1><p class="subtitle">Admin — All user SNS performance</p></div>
+  <div class="total-count" id="total-count">— accounts</div>
+</div>
+
+<div class="summary">
+  <div class="scard"><div class="scard-label">AVG GROWTH RATE</div><div class="scard-val positive" id="avg-rate">—</div></div>
+  <div class="scard"><div class="scard-label">TOP GROWTH RATE</div><div class="scard-val positive" id="top-rate">—</div></div>
+  <div class="scard"><div class="scard-label">TOTAL FOLLOWERS</div><div class="scard-val" id="total-followers">—</div></div>
+  <div class="scard"><div class="scard-label">ACTIVE ACCOUNTS</div><div class="scard-val" id="active-count">—</div></div>
+</div>
+
+<div class="filters">
+  <input type="text" id="search" placeholder="Search @handle..." oninput="onFilter()">
+  <div class="filter-group">
+    <span class="filter-label">PLATFORM</span>
+    <div class="filter-btns" id="platform-btns">
+      <button class="fbtn active" data-val="all" onclick="setFilter('platform',this)">ALL</button>
+      <button class="fbtn" data-val="tiktok" onclick="setFilter('platform',this)">TIKTOK</button>
+      <button class="fbtn" data-val="instagram" onclick="setFilter('platform',this)">IG</button>
+      <button class="fbtn" data-val="x" onclick="setFilter('platform',this)">X</button>
+      <button class="fbtn" data-val="youtube" onclick="setFilter('platform',this)">YT</button>
+    </div>
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">TYPE</span>
+    <div class="filter-btns">
+      <button class="fbtn active" data-val="all" onclick="setFilter('accountType',this)">ALL</button>
+      <button class="fbtn" data-val="existing" onclick="setFilter('accountType',this)">EXISTING</button>
+      <button class="fbtn" data-val="new" onclick="setFilter('accountType',this)">NEW</button>
+    </div>
+  </div>
+  <div class="filter-group">
+    <span class="filter-label">SORT</span>
+    <select id="sort-filter" onchange="onFilter()">
+      <option value="total_growth_rate_desc">Growth Rate ↓</option>
+      <option value="total_growth_rate_asc">Growth Rate ↑</option>
+      <option value="follower_count_desc">Followers ↓</option>
+      <option value="follower_count_asc">Followers ↑</option>
+      <option value="registered_at_desc">Newest First</option>
+      <option value="registered_at_asc">Oldest First</option>
+    </select>
+  </div>
+</div>
+
+<div class="table-wrap">
+  <div id="loading-row" class="loading-row"><div class="spinner"></div>Loading...</div>
+  <table id="data-table" style="display:none">
+    <thead><tr>
+      <th>#</th><th>USER</th><th>PLATFORM</th><th>@HANDLE</th><th>TYPE</th>
+      <th>PLAN</th><th>AT START</th><th>CURRENT</th><th>TOTAL ±</th><th>RATE</th>
+      <th>MONTHLY ±</th><th>MONTHLY %</th>
+    </tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<div class="pagination">
+  <button class="page-btn" id="btn-prev" onclick="changePage(-1)" disabled>← PREV</button>
+  <span class="page-info" id="page-info">—</span>
+  <button class="page-btn" id="btn-next" onclick="changePage(1)">NEXT →</button>
+</div>
+
+<script>
+const sb = ELEVA.getSupabase();
+const PAGE_SIZE = 20;
+let page = 0, total = 0;
+let filters = { platform: 'all', accountType: 'all', search: '', sort: 'total_growth_rate_desc' };
+let profiles = {};
+
+async function init() {
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) { location.href = '/login.html'; return; }
+  const { data: prof } = await sb.from('profiles').select('is_admin').eq('id', user.id).single();
+  if (!prof?.is_admin) { location.href = '/'; return; }
+  fetchData();
+}
+
+function setFilter(key, btn) {
+  const parent = btn.parentElement;
+  parent.querySelectorAll('.fbtn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (key === 'platform') filters.platform = btn.dataset.val;
+  if (key === 'accountType') filters.accountType = btn.dataset.val;
+  page = 0; fetchData();
+}
+
+function onFilter() {
+  filters.search = document.getElementById('search').value;
+  filters.sort = document.getElementById('sort-filter').value;
+  page = 0; fetchData();
+}
+
+function changePage(dir) { page = Math.max(0, page + dir); fetchData(); }
+
+async function fetchData() {
+  document.getElementById('loading-row').style.display = 'block';
+  document.getElementById('data-table').style.display = 'none';
+
+  let query = sb.from('follower_growth_summary').select('*', { count: 'exact' });
+
+  if (filters.platform !== 'all') query = query.eq('platform', filters.platform);
+  if (filters.accountType !== 'all') query = query.eq('account_type', filters.accountType);
+  if (filters.search) query = query.ilike('account_name', `%${filters.search}%`);
+
+  const sortMap = {
+    'total_growth_rate_desc': ['total_growth_rate', false],
+    'total_growth_rate_asc': ['total_growth_rate', true],
+    'follower_count_desc': ['current_follower_count', false],
+    'follower_count_asc': ['current_follower_count', true],
+    'registered_at_desc': ['registered_at', false],
+    'registered_at_asc': ['registered_at', true],
+  };
+  const [sortCol, sortAsc] = sortMap[filters.sort] || ['total_growth_rate', false];
+  query = query.order(sortCol, { ascending: sortAsc, nullsFirst: false });
+  query = query.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+  const { data: rows, count } = await query;
+  total = count || 0;
+
+  if (rows?.length > 0) {
+    const userIds = [...new Set(rows.map(r => r.user_id))];
+    const { data: profs } = await sb.from('profiles').select('id,display_name,email,plan').in('id', userIds);
+    profiles = {};
+    (profs||[]).forEach(p => profiles[p.id] = p);
+    renderTable(rows);
+    updateSummary(rows);
+  } else {
+    renderTable([]);
+    updateSummary([]);
+  }
+
+  document.getElementById('total-count').textContent = `${total.toLocaleString()} accounts`;
+  document.getElementById('page-info').textContent = `${page*PAGE_SIZE+1}–${Math.min((page+1)*PAGE_SIZE,total)} of ${total}`;
+  document.getElementById('btn-prev').disabled = page === 0;
+  document.getElementById('btn-next').disabled = (page+1)*PAGE_SIZE >= total;
+  document.getElementById('loading-row').style.display = 'none';
+  document.getElementById('data-table').style.display = 'table';
+}
+
+function updateSummary(rows) {
+  const rates = rows.map(r => r.total_growth_rate || 0);
+  const avg = rates.length > 0 ? (rates.reduce((a,b)=>a+b,0)/rates.length).toFixed(1) : 0;
+  const top = rates.length > 0 ? Math.max(...rates).toFixed(1) : 0;
+  const totalF = rows.reduce((s,r) => s+(r.current_follower_count||0), 0);
+  document.getElementById('avg-rate').textContent = `+${avg}%`;
+  document.getElementById('top-rate').textContent = `+${top}%`;
+  document.getElementById('total-followers').textContent = totalF.toLocaleString();
+  document.getElementById('active-count').textContent = total.toLocaleString();
+}
+
+function renderTable(rows) {
+  const tbody = document.getElementById('tbody');
+  if (rows.length === 0) { tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:40px;color:#444">No data</td></tr>'; return; }
+
+  tbody.innerHTML = rows.map((r, i) => {
+    const prof = profiles[r.user_id] || {};
+    const totalGrowth = (r.current_follower_count||0) - (r.registered_follower_count||0);
+    const totalRate = r.registered_follower_count > 0 ? ((totalGrowth/r.registered_follower_count)*100).toFixed(1) : null;
+    const pos = totalGrowth >= 0;
+    const mPos = (r.monthly_growth_rate || 0) >= 0;
+
+    return `<tr>
+      <td style="color:#555">${page*PAGE_SIZE+i+1}</td>
+      <td><div class="u-name">${prof.display_name||'—'}</div><div class="u-email">${prof.email||'—'}</div></td>
+      <td><span class="platform-tag">${r.platform?.toUpperCase()||'—'}</span></td>
+      <td>@${r.account_name||'—'}</td>
+      <td><span class="type-tag" style="border-color:${r.account_type==='new'?'#D4AF37':'#333'};color:${r.account_type==='new'?'#D4AF37':'#555'}">${r.account_type?.toUpperCase()||'—'}</span></td>
+      <td><span class="plan-tag">${prof.plan||'free'}</span></td>
+      <td>${(r.registered_follower_count||0).toLocaleString()}</td>
+      <td>${(r.current_follower_count||0).toLocaleString()}</td>
+      <td class="${pos?'positive':'negative'}">${pos?'+':''}${totalGrowth.toLocaleString()}</td>
+      <td class="${pos?'positive':'negative'}">${totalRate!==null?(pos?'+':'')+totalRate+'%':'—'}</td>
+      <td class="${mPos?'positive':'negative'}">${r.monthly_growth_count!==null?(mPos?'+':'')+r.monthly_growth_count.toLocaleString():'—'}</td>
+      <td class="${mPos?'positive':'negative'}">${r.monthly_growth_rate!==null?(mPos?'+':'')+r.monthly_growth_rate+'%':'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+init();
+</script>
+</body>
+</html>

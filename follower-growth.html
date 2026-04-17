@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Follower Growth — ELEVA</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/eleva-i18n.js"></script>
+<script src="/eleva-shared.js"></script>
+<style>
+  :root { --gold: #D4AF37; --gold-dim: #A89030; --bg: #080808; --bg2: #111; --bg3: #0D0D0D; --border: #1E1E1E; --text: #E8E8E8; --muted: #666; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', 'DM Mono', 'Courier New', monospace; min-height: 100vh; padding: 40px 24px; }
+  h1 { font-size: 28px; font-weight: 700; letter-spacing: .15em; color: var(--gold); }
+  .subtitle { color: var(--muted); font-size: 12px; letter-spacing: .08em; margin-top: 6px; margin-bottom: 32px; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; margin-bottom: 40px; }
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; cursor: pointer; transition: border-color .2s; }
+  .card:hover, .card.active { border-color: var(--gold); background: #141410; }
+  .card-top { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .platform-badge { width: 38px; height: 38px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #000; flex-shrink: 0; background: var(--gold); }
+  .handle { font-size: 14px; font-weight: 600; }
+  .platform-name { font-size: 10px; color: var(--muted); margin-top: 2px; letter-spacing: .1em; }
+  .type-badge { margin-left: auto; font-size: 9px; border: 1px solid; border-radius: 4px; padding: 2px 7px; letter-spacing: .08em; }
+  .type-new { border-color: var(--gold); color: var(--gold); }
+  .type-existing { border-color: #333; color: #555; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
+  .stat-label { font-size: 9px; color: #555; letter-spacing: .08em; margin-bottom: 4px; }
+  .stat-val { font-size: 14px; font-weight: 600; }
+  .stat-val-lg { font-size: 20px; font-weight: 700; }
+  .positive { color: var(--gold); }
+  .negative { color: #FF6B6B; }
+  .monthly-row { margin-top: 14px; padding-top: 14px; border-top: 1px solid #1A1A1A; display: flex; justify-content: space-between; align-items: center; }
+  .monthly-label { font-size: 10px; color: #555; letter-spacing: .08em; }
+  .monthly-val { font-size: 12px; font-weight: 600; }
+  .chart-section { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 24px; display: none; }
+  .chart-section.show { display: block; }
+  .chart-title { font-size: 15px; font-weight: 600; color: var(--gold); margin-bottom: 24px; letter-spacing: .05em; }
+  .bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 140px; overflow-x: auto; margin-bottom: 24px; }
+  .bar-col { min-width: 50px; flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; }
+  .bar-label-top { font-size: 8px; color: #555; margin-bottom: 4px; white-space: nowrap; }
+  .bar-outer { flex: 1; width: 100%; background: #1A1A1A; border-radius: 4px; display: flex; align-items: flex-end; }
+  .bar-inner { width: 100%; border-radius: 4px; transition: height .5s; }
+  .bar-date { font-size: 8px; color: #555; margin-top: 6px; text-align: center; }
+  .tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .tbl th { padding: 10px 14px; text-align: left; color: #555; font-size: 10px; letter-spacing: .08em; border-bottom: 1px solid #1A1A1A; white-space: nowrap; }
+  .tbl td { padding: 10px 14px; color: #CCC; white-space: nowrap; }
+  .tbl tr:nth-child(even) { background: #0D0D0D; }
+  .connect-section { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+  .connect-title { font-size: 14px; font-weight: 600; color: var(--gold); margin-bottom: 16px; letter-spacing: .08em; }
+  .connect-buttons { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn-connect { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; border: 1px solid #333; background: #0D0D0D; color: #CCC; font-size: 12px; cursor: pointer; letter-spacing: .05em; text-decoration: none; font-family: inherit; transition: border-color .2s, color .2s; }
+  .btn-connect:hover { border-color: var(--gold); color: var(--gold); }
+  .btn-connect.connected { border-color: var(--gold); color: var(--gold); background: #1A1500; }
+  .empty { text-align: center; padding: 60px; color: #444; font-size: 13px; }
+  .loading { text-align: center; padding: 60px; color: #555; }
+  .spinner { width: 28px; height: 28px; border: 2px solid #1E1E1E; border-top: 2px solid var(--gold); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<h1 id="page-title">FOLLOWER GROWTH</h1>
+<p class="subtitle" id="page-subtitle">Your SNS account performance overview</p>
+
+<div class="connect-section">
+  <div class="connect-title" id="connect-title">Connect SNS Accounts</div>
+  <div class="connect-buttons">
+    <a id="btn-x" href="/api/x-auth-start" class="btn-connect">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      <span id="x-status">Connect X</span>
+    </a>
+    <a id="btn-instagram" href="/api/instagram-auth-start" class="btn-connect">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+      <span id="ig-status">Connect Instagram</span>
+    </a>
+  </div>
+</div>
+
+<div id="loading" class="loading"><div class="spinner"></div>Loading...</div>
+<div id="card-grid" class="card-grid" style="display:none"></div>
+<div id="empty" class="empty" style="display:none">No SNS accounts connected yet.</div>
+
+<div id="chart-section" class="chart-section">
+  <div class="chart-title" id="chart-title"></div>
+  <div class="bar-chart" id="bar-chart"></div>
+  <div style="overflow-x:auto">
+    <table class="tbl">
+      <thead><tr>
+        <th>Date</th><th>Followers</th><th>Monthly ±</th><th>Growth Rate</th><th>Eng. Rate</th>
+      </tr></thead>
+      <tbody id="snap-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const sb = ELEVA.getSupabase();
+let accounts = [], snapshots = {}, selectedId = null;
+
+async function init() {
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) { location.href = '/login.html'; return; }
+
+  const { data: accs } = await sb.from('user_sns_accounts').select('*').eq('user_id', user.id).eq('is_active', true);
+  accounts = accs || [];
+
+  const xConn = accounts.find(a => a.platform === 'x');
+  const igConn = accounts.find(a => a.platform === 'instagram');
+  if (xConn) { document.getElementById('x-status').textContent = '✓ X Connected'; document.getElementById('btn-x').classList.add('connected'); document.getElementById('btn-x').href = '#'; }
+  if (igConn) { document.getElementById('ig-status').textContent = '✓ Instagram Connected'; document.getElementById('btn-instagram').classList.add('connected'); document.getElementById('btn-instagram').href = '#'; }
+
+  for (const acc of accounts) {
+    const { data: snaps } = await sb.from('follower_snapshots').select('*').eq('sns_account_id', acc.id).order('snapshot_date', { ascending: true }).limit(12);
+    snapshots[acc.id] = snaps || [];
+  }
+
+  renderCards();
+}
+
+function renderCards() {
+  const grid = document.getElementById('card-grid');
+  const loading = document.getElementById('loading');
+  const empty = document.getElementById('empty');
+  loading.style.display = 'none';
+
+  if (accounts.length === 0) { empty.style.display = 'block'; return; }
+  grid.style.display = 'grid';
+
+  grid.innerHTML = accounts.map(acc => {
+    const totalGrowth = (acc.follower_count || 0) - (acc.registered_follower_count || 0);
+    const totalRate = acc.registered_follower_count > 0 ? ((totalGrowth / acc.registered_follower_count) * 100).toFixed(1) : null;
+    const pos = totalGrowth >= 0;
+    const mGrowth = acc.monthly_growth_count;
+    const mPos = mGrowth === null || mGrowth >= 0;
+
+    return `<div class="card ${selectedId === acc.id ? 'active' : ''}" onclick="selectAccount('${acc.id}')">
+      <div class="card-top">
+        <div class="platform-badge">${acc.platform === 'instagram' ? 'IG' : acc.platform.toUpperCase().slice(0,2)}</div>
+        <div><div class="handle">@${acc.account_name || '—'}</div><div class="platform-name">${acc.platform.toUpperCase()}</div></div>
+        <span class="type-badge ${acc.account_type === 'new' ? 'type-new' : 'type-existing'}">${acc.account_type === 'new' ? 'NEW' : 'EXISTING'}</span>
+      </div>
+      <div class="stats">
+        <div><div class="stat-label">CURRENT</div><div class="stat-val">${(acc.follower_count || 0).toLocaleString()}</div></div>
+        <div><div class="stat-label">AT START</div><div class="stat-val">${(acc.registered_follower_count || 0).toLocaleString()}</div></div>
+        <div><div class="stat-label">TOTAL GROWTH</div><div class="stat-val ${pos ? 'positive' : 'negative'}">${pos ? '+' : ''}${totalGrowth.toLocaleString()}</div></div>
+        <div><div class="stat-label">RATE</div><div class="stat-val-lg ${pos ? 'positive' : 'negative'}">${totalRate !== null ? (pos ? '+' : '') + totalRate + '%' : '—'}</div></div>
+      </div>
+      ${mGrowth !== null ? `<div class="monthly-row"><span class="monthly-label">LAST MONTH</span><span class="monthly-val ${mPos ? 'positive' : 'negative'}">${mPos ? '+' : ''}${mGrowth.toLocaleString()} (${acc.monthly_growth_rate !== null ? (mPos ? '+' : '') + acc.monthly_growth_rate + '%' : '—'})</span></div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function selectAccount(id) {
+  selectedId = selectedId === id ? null : id;
+  renderCards();
+  renderChart();
+}
+
+function renderChart() {
+  const sec = document.getElementById('chart-section');
+  if (!selectedId) { sec.classList.remove('show'); return; }
+  sec.classList.add('show');
+
+  const acc = accounts.find(a => a.id === selectedId);
+  const snaps = snapshots[selectedId] || [];
+  document.getElementById('chart-title').textContent = `@${acc?.account_name || '—'} — Monthly History`;
+
+  const maxCount = Math.max(...snaps.map(s => s.follower_count || 0), 1);
+  document.getElementById('bar-chart').innerHTML = snaps.map((s, i) => {
+    const h = ((s.follower_count || 0) / maxCount * 100).toFixed(1);
+    const isLast = i === snaps.length - 1;
+    return `<div class="bar-col">
+      <div class="bar-label-top">${(s.follower_count || 0).toLocaleString()}</div>
+      <div class="bar-outer"><div class="bar-inner" style="height:${h}%;background:${isLast ? '#D4AF37' : 'rgba(212,175,55,.35)'}"></div></div>
+      <div class="bar-date">${(s.snapshot_date || '').slice(0,7)}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('snap-tbody').innerHTML = [...snaps].reverse().map(s => {
+    const pos = (s.monthly_growth_count || 0) >= 0;
+    const rPos = (s.monthly_growth_rate || 0) >= 0;
+    return `<tr>
+      <td>${s.snapshot_date || '—'}</td>
+      <td>${(s.follower_count || 0).toLocaleString()}</td>
+      <td style="color:${pos ? '#D4AF37' : '#FF6B6B'}">${s.monthly_growth_count !== null ? (pos ? '+' : '') + s.monthly_growth_count.toLocaleString() : '—'}</td>
+      <td style="color:${rPos ? '#D4AF37' : '#FF6B6B'}">${s.monthly_growth_rate !== null ? (rPos ? '+' : '') + s.monthly_growth_rate + '%' : '—'}</td>
+      <td>${s.engagement_rate !== null ? s.engagement_rate + '%' : '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+init();
+</script>
+</body>
+</html>

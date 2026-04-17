@@ -42,8 +42,31 @@
   to = "/.netlify/functions/instagram-post"
   status = 200
 
+[[redirects]]
+  from = "/api/x-auth-start"
+  to = "/.netlify/functions/x-auth-start"
+  status = 200
+
+[[redirects]]
+  from = "/api/x-auth-callback"
+  to = "/.netlify/functions/x-auth-callback"
+  status = 200
+
+[[redirects]]
+  from = "/api/instagram-auth-start"
+  to = "/.netlify/functions/instagram-auth-start"
+  status = 200
+
+[[redirects]]
+  from = "/api/instagram-auth-callback"
+  to = "/.netlify/functions/instagram-auth-callback"
+  status = 200
+
 [functions."payment-reminders"]
   schedule = "0 9 * * *"
 
 [functions."refresh-trends"]
   schedule = "0 0 * * 1"
+
+[functions."follower-snapshot"]
+  schedule = "0 18 L * *"
