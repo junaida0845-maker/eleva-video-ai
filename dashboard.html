@@ -174,13 +174,16 @@ textarea::placeholder{color:var(--text-muted);}
         <button class="upload-btn" onclick="document.getElementById('video-input').click()"><span data-icon="video"></span> <span data-i18n="video">動画</span></button>
         <button class="upload-btn" onclick="toggleUrlInput()"><span data-icon="link"></span> <span data-i18n="url">URL</span></button>
       </div>
-      <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(this)"/>
+      <input type="file" id="photo-input" accept="image/*" multiple style="display:none" onchange="handleMultiPhoto(this)"/>
       <input type="file" id="video-input" accept="video/*" style="display:none" onchange="handleVideoUpload(this)"/>
 
       <!-- URL Input -->
       <div class="url-input-wrap" id="url-input-wrap">
         <input type="url" id="source-url" data-i18n-ph="url_placeholder" placeholder="動画・画像のURLを貼り付け" onchange="handleUrlInput(this.value)"/>
       </div>
+
+      <!-- Multi Photo Preview -->
+      <div id="multi-photo-preview" style="display:none;margin:12px 0;display:flex;flex-wrap:wrap;gap:8px;"></div>
 
       <!-- Media Preview -->
       <div class="media-preview" id="media-preview">
@@ -254,10 +257,26 @@ textarea::placeholder{color:var(--text-muted);}
           <button class="btn-outline post-sns-btn" data-platform="x" onclick="selectPostSNS('x',this)" style="font-size:12px;padding:8px 16px;">X</button>
           <button class="btn-outline post-sns-btn" data-platform="youtube" onclick="selectPostSNS('youtube',this)" style="font-size:12px;padding:8px 16px;">YouTube</button>
         </div>
+        <!-- Posting Materials -->
+        <div id="posting-materials" style="display:none;margin-bottom:16px;">
+          <div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:12px;">📱 投稿素材（トレンドデータより）</div>
+          <div id="pm-bgm" style="margin-bottom:12px;">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">🎵 おすすめBGM</div>
+            <div id="pm-bgm-list" style="font-size:13px;color:var(--text-secondary);"></div>
+          </div>
+          <div id="pm-effects" style="margin-bottom:12px;">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">✨ おすすめエフェクト</div>
+            <div id="pm-effects-list" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+          </div>
+          <div style="margin-bottom:12px;">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">📝 テロップ提案</div>
+            <textarea id="pm-telop" rows="2" style="width:100%;background:var(--black-border);border:1px solid rgba(201,168,76,0.15);color:#fff;padding:10px;border-radius:8px;font-family:inherit;font-size:13px;resize:vertical;outline:none;"></textarea>
+          </div>
+        </div>
         <div style="margin-bottom:14px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <label style="color:var(--text-secondary);font-size:12px;" data-i18n="ai_caption">AIキャプション</label>
-            <button class="btn-outline" onclick="generateAICaption()" id="gen-cap-btn" style="font-size:11px;padding:4px 12px;">✨ AI生成</button>
+            <button class="btn-outline" onclick="generateAllPostMaterials()" id="gen-cap-btn" style="font-size:11px;padding:4px 12px;">✨ AI生成</button>
           </div>
           <textarea id="post-caption" rows="4" data-i18n-ph="caption_ph" placeholder="キャプションを入力..." style="width:100%;background:var(--black-border);border:1px solid rgba(201,168,76,0.3);color:#fff;padding:12px;border-radius:8px;font-family:'Inter',sans-serif;font-size:14px;resize:vertical;outline:none;"></textarea>
         </div>
@@ -308,9 +327,19 @@ textarea::placeholder{color:var(--text-muted);}
       <button class="genre-btn" onclick="toggleGenre(this,'fitness')" data-i18n="genre_fitness">フィットネス</button>
       <button class="genre-btn" onclick="toggleGenre(this,'pet')" data-i18n="genre_pet">ペット</button>
       <button class="genre-btn" onclick="toggleGenre(this,'tech')" data-i18n="genre_tech">テック</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'gaming')" data-i18n="genre_gaming">ゲーム</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'music_genre')" data-i18n="genre_music_cat">音楽</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'comedy')" data-i18n="genre_comedy">コメディ</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'vlog')" data-i18n="genre_vlog">Vlog</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'dance')" data-i18n="genre_dance">ダンス</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'cooking')" data-i18n="genre_cooking">料理</button>
       <button class="genre-btn" onclick="toggleGenre(this,'shop')" data-i18n="genre_product_pr">商品PR</button>
       <button class="genre-btn" onclick="toggleGenre(this,'restaurant')" data-i18n="genre_store_pr">店舗PR</button>
       <button class="genre-btn" onclick="toggleGenre(this,'edu')" data-i18n="genre_education">教育</button>
+      <button class="genre-btn" onclick="toggleGenre(this,'other')" data-i18n="genre_other" data-genre="other">その他</button>
+    </div>
+    <div id="custom-genre-wrap" style="display:none;margin-top:10px;">
+      <input type="text" id="custom-genre" data-i18n-ph="genre_custom_ph" placeholder="ジャンルを入力..." style="width:100%;padding:10px 14px;background:var(--black-border);border:1px solid var(--gold);border-radius:8px;color:#fff;font-size:14px;outline:none;font-family:inherit;">
     </div>
   </div>
 
@@ -733,6 +762,106 @@ async function loadPostingSchedule(){
       <tr><td>Instagram</td><td style="color:var(--text-secondary);">${_t('genre_general')}</td><td>水・金</td><td>12:00-13:00</td></tr>
     `;
   }
+}
+
+// ─ Multi Photo ──────────────────────────────────────────
+let selectedPhotos=[];
+function handleMultiPhoto(input){
+  const files=Array.from(input.files||[]);
+  if(selectedPhotos.length+files.length>10){alert(window.elevaT?elevaT('max_10_photos'):'最大10枚まで選択できます');return;}
+  files.forEach(f=>{
+    const reader=new FileReader();
+    reader.onload=e=>{selectedPhotos.push({file:f,url:e.target.result});renderPhotoThumbs();};
+    reader.readAsDataURL(f);
+  });
+  input.value='';
+}
+function renderPhotoThumbs(){
+  const wrap=document.getElementById('multi-photo-preview');
+  if(!selectedPhotos.length){wrap.style.display='none';return;}
+  wrap.style.display='flex';
+  wrap.innerHTML=selectedPhotos.map((p,i)=>`<div style="position:relative;width:64px;height:64px;border-radius:8px;overflow:hidden;border:1px solid var(--border-gold);flex-shrink:0;">
+    <img src="${p.url}" style="width:100%;height:100%;object-fit:cover;">
+    <button onclick="removePhoto(${i})" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.7);color:#fff;border:none;width:18px;height:18px;border-radius:50%;font-size:11px;cursor:pointer;line-height:1;">×</button>
+  </div>`).join('')+`<div style="color:var(--text-muted);font-size:11px;align-self:center;margin-left:4px;">${selectedPhotos.length}/10</div>`;
+  if(selectedPhotos.length>0)inputImageUrl=selectedPhotos[0].url;
+}
+function removePhoto(idx){selectedPhotos.splice(idx,1);renderPhotoThumbs();if(!selectedPhotos.length)inputImageUrl=null;}
+
+// ─ Genre custom input ───────────────────────────────────
+const _origToggleGenre=typeof toggleGenre==='function'?toggleGenre:null;
+function toggleGenre(el,genre){
+  el.classList.toggle('active');
+  const customWrap=document.getElementById('custom-genre-wrap');
+  if(genre==='other'){
+    customWrap.style.display=el.classList.contains('active')?'block':'none';
+    if(el.classList.contains('active'))document.getElementById('custom-genre').focus();
+  }else if(customWrap){
+    customWrap.style.display='none';
+    document.querySelectorAll('.genre-btn[data-genre="other"]').forEach(b=>b.classList.remove('active'));
+  }
+  updateSelectedGenres();
+}
+function updateSelectedGenres(){
+  selectedGenres=[];
+  document.querySelectorAll('.genre-btn.active').forEach(b=>{
+    const g=b.getAttribute('onclick')?.match(/toggleGenre\(this,'([^']+)'\)/)?.[1];
+    if(g&&g!=='other')selectedGenres.push(g);
+  });
+  const custom=document.getElementById('custom-genre')?.value?.trim();
+  if(custom&&document.querySelector('.genre-btn[data-genre="other"]')?.classList.contains('active')){
+    selectedGenres.push(custom);
+  }
+}
+
+// ─ Posting Materials (BGM/Effects/Telop) ────────────────
+const EFFECT_MAP={
+  beauty:['グロー','ソフトフォーカス','パステル'],food:['温かみフィルター','ビネット','ブライトネス'],
+  travel:['シネマスコープ','カラーグレーディング','スローモーション'],fitness:['エナジェティック','コントラスト強調','スピードアップ'],
+  gaming:['ネオン','グリッチ','スピード'],music_genre:['ビジュアライザー','ビート同期','グロー'],
+  comedy:['ポップ','カートゥーン','ズーム'],dance:['スローモーション','ミラー','ストロボ'],
+  default:['ナチュラル','ビビッド','ヴィンテージ']
+};
+
+async function fetchPostingMaterials(genre,platform,lang){
+  const sb=ELEVA.getSupabase();
+  let trendData={hashtags:[],music:[],topics:[]};
+  try{
+    const {data}=await sb.from('sns_trends').select('hashtags,music,topics').eq('platform',platform).order('created_at',{ascending:false}).limit(1).single();
+    if(data)trendData=data;
+  }catch(e){}
+  const res=await fetch('/api/generate-caption',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({title:document.getElementById('prompt-input')?.value?.slice(0,100)||'',genre,platform,lang,trending_hashtags:trendData.hashtags||[],trending_topics:(trendData.topics||[]).slice(0,3)})
+  });
+  const aiData=await res.json().catch(()=>({}));
+  return {
+    bgm:(trendData.music||[]).slice(0,3),
+    hashtags:aiData.hashtags||trendData.hashtags||[],
+    caption:aiData.caption||'',
+    effects:EFFECT_MAP[genre]||EFFECT_MAP.default,
+    telop:aiData.telop||'',
+  };
+}
+
+async function generateAllPostMaterials(){
+  const btn=document.getElementById('gen-cap-btn');
+  btn.disabled=true;btn.textContent='生成中...';
+  try{
+    const genre=selectedGenres[0]||'general';
+    const lang=localStorage.getItem('eleva_lang')||'ja';
+    const materials=await fetchPostingMaterials(genre,postSNS,lang);
+    document.getElementById('post-caption').value=materials.caption;
+    document.getElementById('post-hashtags').value=(materials.hashtags||[]).join(' ');
+    document.getElementById('pm-telop').value=materials.telop;
+    const pmEl=document.getElementById('posting-materials');
+    pmEl.style.display='block';
+    document.getElementById('pm-bgm-list').innerHTML=materials.bgm.length
+      ?materials.bgm.map((m,i)=>`<div style="padding:4px 0;">${i+1}. ${typeof m==='string'?m:(m.title||m.name||'-')}</div>`).join('')
+      :'<div style="color:var(--text-muted);font-size:12px;">BGMデータなし</div>';
+    document.getElementById('pm-effects-list').innerHTML=materials.effects.map(e=>`<span style="background:rgba(201,168,76,0.1);border:1px solid var(--border-gold);padding:4px 10px;border-radius:6px;font-size:11px;color:var(--gold);">${e}</span>`).join('');
+  }catch(e){alert('生成に失敗しました: '+e.message);}
+  finally{btn.disabled=false;btn.textContent='✨ AI生成';}
 }
 
 // ─ Post Preparation ─────────────────────────────────────
