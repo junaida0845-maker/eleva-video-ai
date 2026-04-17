@@ -81,5 +81,5 @@ export default async (req, context) => {
 };
 
 export const config = {
-  schedule: '0 18 L * *',
+  schedule: '0 18 28 * *',
 };

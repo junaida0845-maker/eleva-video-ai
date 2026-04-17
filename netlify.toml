@@ -69,4 +69,4 @@
   schedule = "0 0 * * 1"
 
 [functions."follower-snapshot"]
-  schedule = "0 18 L * *"
+  schedule = "0 18 28 * *"
