@@ -383,6 +383,7 @@ async function registerBiometrics(){
     if(credential){
       const credId=btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
       await sb.from('profiles').update({webauthn_credential_id:credId}).eq('id',user.id);
+      localStorage.setItem('eleva_webauthn_registered','true');
       alert('生体認証を登録しました');
     }
   }catch(err){alert('生体認証の登録に失敗しました: '+err.message);}
