@@ -65,12 +65,16 @@ function t(key){return win.elevaT?win.elevaT(key):key;}
 
 function applyLanguage(code){
   localStorage.setItem('eleva_lang',code);
-  document.querySelectorAll('[data-i18n]').forEach(el=>{
-    const v=t(el.dataset.i18n);
-    if(el.tagName==='INPUT'||el.tagName==='TEXTAREA')el.placeholder=v;
-    else el.textContent=v;
-  });
-  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{el.placeholder=t(el.dataset.i18nPh);});
+  if(win.elevaApplyDeep){
+    win.elevaApplyDeep(code);
+  } else {
+    document.querySelectorAll('[data-i18n]').forEach(el=>{
+      const v=t(el.dataset.i18n);
+      if(el.tagName==='INPUT'||el.tagName==='TEXTAREA')el.placeholder=v;
+      else el.textContent=v;
+    });
+    document.querySelectorAll('[data-i18n-ph]').forEach(el=>{el.placeholder=t(el.dataset.i18nPh);});
+  }
 }
 
 function showLanguageModal(){
@@ -142,11 +146,11 @@ function showAddVideoModal(){
   const m=document.createElement('div');
   m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;';
   m.innerHTML=`<div style="background:#111111;border:1px solid #c9a84c;border-radius:16px;padding:32px;max-width:380px;width:90%;text-align:center;">
-    <div style="font-size:20px;font-weight:700;color:#f0d070;margin-bottom:12px;">➕ 動画を追加</div>
-    <p style="color:#aaaaaa;margin-bottom:24px;">新しい動画を生成しますか？</p>
+    <div style="font-size:20px;font-weight:700;color:#f0d070;margin-bottom:12px;" data-i18n="add_video">動画を追加</div>
+    <p style="color:#aaaaaa;margin-bottom:24px;" data-i18n="generate_title">新しい動画を生成しますか？</p>
     <div style="display:flex;gap:12px;justify-content:center;">
-      <button onclick="window.location.href='/dashboard.html#generate'" style="background:#c9a84c;color:#000;border:none;padding:12px 28px;border-radius:8px;font-weight:600;cursor:pointer;font-size:15px;">YES</button>
-      <button onclick="this.closest('[style*=fixed]').remove()" style="background:#333;color:#666;border:none;padding:12px 28px;border-radius:8px;cursor:pointer;font-size:15px;">NO</button>
+      <button onclick="window.location.href='/dashboard.html#generate'" style="background:#c9a84c;color:#000;border:none;padding:12px 28px;border-radius:8px;font-weight:600;cursor:pointer;font-size:15px;" data-i18n="yes">YES</button>
+      <button onclick="this.closest('[style*=fixed]').remove()" style="background:#333;color:#666;border:none;padding:12px 28px;border-radius:8px;cursor:pointer;font-size:15px;" data-i18n="no">NO</button>
     </div>
   </div>`;
   m.addEventListener('click',e=>{if(e.target===m)m.remove();});
@@ -166,7 +170,6 @@ function initChatbot(){
   chatWin.id='chatbot-window';
   chatWin.style.cssText='position:fixed;bottom:92px;right:24px;width:340px;height:480px;background:#111111;border:1px solid rgba(201,168,76,0.3);border-radius:16px;z-index:989;display:none;flex-direction:column;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.5);';
 
-  const lang=localStorage.getItem('eleva_lang')||'ja';
   const qrs=[t('quick_reply_1'),t('quick_reply_2'),t('quick_reply_3')];
 
   chatWin.innerHTML=`<div style="background:#0d0d0d;padding:16px 20px;border-bottom:1px solid rgba(201,168,76,0.2);display:flex;justify-content:space-between;align-items:center;">
@@ -174,13 +177,13 @@ function initChatbot(){
     <button id="chatbot-close" style="background:none;border:none;color:#666;font-size:18px;cursor:pointer;">×</button>
   </div>
   <div id="chatbot-msgs" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;">
-    <div style="background:#1a1a1a;color:#aaaaaa;padding:12px 16px;border-radius:18px 18px 18px 4px;font-size:14px;max-width:85%;">${t('chatbot_welcome')}</div>
+    <div style="background:#1a1a1a;color:#aaaaaa;padding:12px 16px;border-radius:18px 18px 18px 4px;font-size:14px;max-width:85%;" data-i18n="chatbot_welcome">${t('chatbot_welcome')}</div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;">
       ${qrs.map(q=>`<button class="qr-chip" onclick="window.elevaChat('${q}')" style="background:transparent;border:1px solid #c9a84c;color:#c9a84c;padding:6px 12px;border-radius:20px;font-size:12px;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='rgba(201,168,76,0.1)'" onmouseout="this.style.background='transparent'">${q}</button>`).join('')}
     </div>
   </div>
   <div style="padding:12px;border-top:1px solid rgba(201,168,76,0.15);display:flex;gap:8px;">
-    <input id="chatbot-input" type="text" placeholder="${t('chatbot_placeholder')}" style="flex:1;background:#1a1a1a;border:1px solid #c9a84c;color:#fff;padding:10px 14px;border-radius:24px;font-size:14px;outline:none;"/>
+    <input id="chatbot-input" type="text" placeholder="${t('chatbot_placeholder')}" data-i18n-ph="chatbot_placeholder" style="flex:1;background:#1a1a1a;border:1px solid #c9a84c;color:#fff;padding:10px 14px;border-radius:24px;font-size:14px;outline:none;"/>
     <button id="chatbot-send" style="background:#c9a84c;border:none;color:#000;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">➤</button>
   </div>`;
 
@@ -214,10 +217,10 @@ function initChatbot(){
       typing.remove();
       const aMsg=document.createElement('div');
       aMsg.style.cssText='background:#1a1a1a;color:#ffffff;padding:10px 16px;border-radius:18px 18px 18px 4px;font-size:14px;max-width:85%;white-space:pre-wrap;';
-      aMsg.textContent=data.reply||data.message||'申し訳ありません。もう一度お試しください。';
+      aMsg.textContent=data.reply||data.message||t('error');
       msgs.appendChild(aMsg);chatHistory.push({role:'assistant',content:aMsg.textContent});
     }catch(e){
-      typing.style.color='#ff4444';typing.textContent='接続エラーです。';
+      typing.style.color='#ff4444';typing.textContent=t('error');
     }
     msgs.scrollTop=msgs.scrollHeight;
     chatWin.querySelector('#chatbot-input').value='';
@@ -253,7 +256,7 @@ function showGenBanner(taskId,generationId,platform){
   const banner=document.createElement('div');
   banner.id='gen-banner';
   banner.style.cssText='position:fixed;top:0;left:0;right:0;background:#c9a84c;color:#000;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;z-index:9990;font-size:14px;font-weight:600;';
-  banner.innerHTML=`<span>⚡ AI生成中... ${t('background_notice')}</span><a href="/history.html" style="color:#000;text-decoration:underline;font-size:13px;">履歴で確認</a>`;
+  banner.innerHTML=`<span>⚡ <span data-i18n="generating">${t('generating')}</span> — <span data-i18n="background_notice">${t('background_notice')}</span></span><a href="/history.html" style="color:#000;text-decoration:underline;font-size:13px;" data-i18n="history">${t('history')}</a>`;
   document.body.prepend(banner);
   document.body.style.paddingTop=(parseInt(document.body.style.paddingTop||'0')+44)+'px';
 }
@@ -263,7 +266,7 @@ function showCompletionBanner(generationId){
   const b=document.getElementById('gen-banner');if(b)b.remove();
   const banner=document.createElement('div');
   banner.style.cssText='position:fixed;top:0;left:0;right:0;background:#1a1a1a;border-bottom:2px solid #44ff88;color:#44ff88;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;z-index:9990;font-size:14px;font-weight:600;';
-  banner.innerHTML=`<span>✅ ${t('completed')}</span><a href="/history.html${generationId?'?id='+generationId:''}" style="background:#44ff88;color:#000;padding:6px 16px;border-radius:20px;text-decoration:none;font-size:13px;font-weight:700;">${t('view_now')}</a>`;
+  banner.innerHTML=`<span>✅ <span data-i18n="completed">${t('completed')}</span></span><a href="/history.html${generationId?'?id='+generationId:''}" style="background:#44ff88;color:#000;padding:6px 16px;border-radius:20px;text-decoration:none;font-size:13px;font-weight:700;" data-i18n="view_now">${t('view_now')}</a>`;
   document.body.prepend(banner);
   setTimeout(()=>banner.remove(),10000);
 }
@@ -279,11 +282,10 @@ function requestPushPermission(){
     m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10001;display:flex;align-items:center;justify-content:center;';
     m.innerHTML=`<div style="background:#111111;border:1px solid #c9a84c;border-radius:16px;padding:28px;max-width:360px;width:90%;text-align:center;">
       <div style="font-size:32px;margin-bottom:12px;">🔔</div>
-      <div style="color:#f0d070;font-weight:700;font-size:16px;margin-bottom:10px;">${t('push_title')}</div>
-      <p style="color:#aaaaaa;font-size:14px;margin-bottom:20px;">生成が完了したらすぐにお知らせします。</p>
+      <div style="color:#f0d070;font-weight:700;font-size:16px;margin-bottom:10px;" data-i18n="push_title">${t('push_title')}</div>
       <div style="display:flex;gap:10px;justify-content:center;">
-        <button onclick="Notification.requestPermission();this.closest('[style*=fixed]').remove();" style="background:#c9a84c;color:#000;border:none;padding:10px 24px;border-radius:8px;font-weight:600;cursor:pointer;">${t('push_allow')}</button>
-        <button onclick="this.closest('[style*=fixed]').remove()" style="background:#333;color:#666;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;">${t('push_later')}</button>
+        <button onclick="Notification.requestPermission();this.closest('[style*=fixed]').remove();" style="background:#c9a84c;color:#000;border:none;padding:10px 24px;border-radius:8px;font-weight:600;cursor:pointer;" data-i18n="push_allow">${t('push_allow')}</button>
+        <button onclick="this.closest('[style*=fixed]').remove()" style="background:#333;color:#666;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;" data-i18n="push_later">${t('push_later')}</button>
       </div>
     </div>`;
     document.body.appendChild(m);
