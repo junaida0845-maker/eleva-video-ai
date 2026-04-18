@@ -180,16 +180,27 @@ function renderMusic(items){
     </div>`).join('');
 }
 
+const TOPIC_PAGE_MAP={
+  'AI動画生成トレンド':'/trend-ai-video.html',
+  'ショート動画の収益化':'/short-video-monetization.html',
+  'バズる投稿の条件':'/buzz-conditions.html',
+};
 function renderTopics(items){
   const el=document.getElementById('topic-grid');
   if(!el)return;
-  el.innerHTML=items.slice(0,6).map(t=>`
-    <div class="trend-card">
+  el.innerHTML=items.slice(0,6).map(t=>{
+    const title=t.topic||t.name||t;
+    const page=TOPIC_PAGE_MAP[title];
+    const safeTitle=(title+'').replace(/"/g,'&quot;');
+    const cta=page?`style="cursor:pointer;" onclick="location.href='${page}'"`:'';
+    return `
+    <div class="trend-card" ${cta}>
       <div class="trend-body">
-        <div class="trend-name">${t.topic||t.name||t}</div>
+        <div class="trend-name">${safeTitle}${page?' <span style="color:var(--gold);font-size:11px;">›</span>':''}</div>
         <div class="trend-meta">${t.description||''}</div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function useHashtag(tag){
