@@ -357,28 +357,27 @@ textarea::placeholder{color:var(--text-muted);}
 
   <!-- Genre -->
   <div class="card">
-    <div class="card-title"><span data-icon="star"></span> <span data-i18n="genre_label">ジャンル</span></div>
-    <div class="genre-grid" id="genre-grid">
-      <button class="genre-btn" onclick="toggleGenre(this,'beauty')" data-i18n="genre_beauty">美容</button>
-      <button class="genre-btn active" onclick="toggleGenre(this,'food')" data-i18n="genre_food">グルメ</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'travel')" data-i18n="genre_travel">旅行</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'fashion')" data-i18n="genre_fashion">ファッション</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'fitness')" data-i18n="genre_fitness">フィットネス</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'pet')" data-i18n="genre_pet">ペット</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'tech')" data-i18n="genre_tech">テック</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'gaming')" data-i18n="genre_gaming">ゲーム</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'music_genre')" data-i18n="genre_music_cat">音楽</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'comedy')" data-i18n="genre_comedy">コメディ</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'vlog')" data-i18n="genre_vlog">Vlog</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'dance')" data-i18n="genre_dance">ダンス</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'cooking')" data-i18n="genre_cooking">料理</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'shop')" data-i18n="genre_product_pr">商品PR</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'restaurant')" data-i18n="genre_store_pr">店舗PR</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'edu')" data-i18n="genre_education">教育</button>
-      <button class="genre-btn" onclick="toggleGenre(this,'other')" data-i18n="genre_other" data-genre="other">その他</button>
+    <div class="card-title"><span data-icon="star"></span> <span data-i18n="genre_label">ジャンル</span> <span style="color:var(--text-muted);font-size:11px;font-weight:400;">（1つ選択）</span></div>
+    <div style="color:var(--text-secondary);font-size:12px;margin-bottom:8px;font-weight:600;" data-i18n="genre_personal_label">個人向け</div>
+    <div class="genre-grid" id="genre-grid-personal">
+      <button class="genre-btn" onclick="pickGenre(this,'travel')" data-i18n="genre_travel">旅行</button>
+      <button class="genre-btn active" onclick="pickGenre(this,'food')" data-i18n="genre_food">グルメ</button>
+      <button class="genre-btn" onclick="pickGenre(this,'fashion')" data-i18n="genre_fashion">ファッション</button>
+      <button class="genre-btn" onclick="pickGenre(this,'beauty')" data-i18n="genre_beauty">美容</button>
+      <button class="genre-btn" onclick="pickGenre(this,'fitness')" data-i18n="genre_fitness">フィットネス</button>
+      <button class="genre-btn" onclick="pickGenre(this,'music')" data-i18n="genre_music">音楽</button>
+      <button class="genre-btn" onclick="pickGenre(this,'pet')" data-i18n="genre_pet">ペット</button>
+      <button class="genre-btn" onclick="pickGenre(this,'bike')" data-i18n="genre_bike">バイク・車</button>
+      <button class="genre-btn" onclick="pickGenre(this,'game')" data-i18n="genre_game">ゲーム</button>
     </div>
-    <div id="custom-genre-wrap" style="display:none;margin-top:10px;">
-      <input type="text" id="custom-genre" data-i18n-ph="genre_custom_ph" placeholder="ジャンルを入力..." style="width:100%;padding:10px 14px;background:var(--black-border);border:1px solid var(--gold);border-radius:8px;color:#fff;font-size:14px;outline:none;font-family:inherit;">
+    <div style="color:var(--text-secondary);font-size:12px;margin:14px 0 8px;font-weight:600;" data-i18n="genre_business_label">業者向け</div>
+    <div class="genre-grid" id="genre-grid-business">
+      <button class="genre-btn" onclick="pickGenre(this,'shop_pr')" data-i18n="genre_shop_pr">お店PR</button>
+      <button class="genre-btn" onclick="pickGenre(this,'product_sale')" data-i18n="genre_product_sale">商品販売</button>
+      <button class="genre-btn" onclick="pickGenre(this,'restaurant')" data-i18n="genre_restaurant">飲食店PR</button>
+      <button class="genre-btn" onclick="pickGenre(this,'salon')" data-i18n="genre_salon">サロン・美容室</button>
+      <button class="genre-btn" onclick="pickGenre(this,'real_estate')" data-i18n="genre_real_estate">不動産</button>
+      <button class="genre-btn" onclick="pickGenre(this,'event')" data-i18n="genre_event">イベント告知</button>
     </div>
   </div>
 
@@ -479,8 +478,8 @@ textarea::placeholder{color:var(--text-muted);}
   <div id="sugg-list"></div>
 </div>
 
-<script src="/eleva-i18n.js"></script>
-<script src="/eleva-shared.js"></script>
+<script src="/eleva-i18n.js?v=20260418"></script>
+<script src="/eleva-shared.js?v=20260418"></script>
 <script>document.addEventListener('DOMContentLoaded',()=>{if(window.ELEVA_applyIcons)window.ELEVA_applyIcons();});</script>
 <script>
 const SUPABASE_URL=ELEVA.SUPABASE_URL;
@@ -514,11 +513,7 @@ function selectDur(btn,sec){
   selectedDuration=sec;
 }
 
-// ─ Genre ─────────────────────────────────────────────────
-function toggleGenre(btn,genre){
-  btn.classList.toggle('active');
-  selectedGenres=Array.from(document.querySelectorAll('.genre-btn.active')).map(b=>b.dataset.genre||genre);
-}
+// ─ Genre (see single-select definition further below) ───
 
 // ─ Media Upload ───────────────────────────────────────────
 async function handlePhotoUpload(input){
@@ -1068,31 +1063,14 @@ function renderPhotoThumbs(){
 }
 function removePhoto(idx){selectedPhotos.splice(idx,1);renderPhotoThumbs();if(!selectedPhotos.length)inputImageUrl=null;}
 
-// ─ Genre custom input ───────────────────────────────────
-const _origToggleGenre=typeof toggleGenre==='function'?toggleGenre:null;
-function toggleGenre(el,genre){
-  el.classList.toggle('active');
-  const customWrap=document.getElementById('custom-genre-wrap');
-  if(genre==='other'){
-    customWrap.style.display=el.classList.contains('active')?'block':'none';
-    if(el.classList.contains('active'))document.getElementById('custom-genre').focus();
-  }else if(customWrap){
-    customWrap.style.display='none';
-    document.querySelectorAll('.genre-btn[data-genre="other"]').forEach(b=>b.classList.remove('active'));
-  }
-  updateSelectedGenres();
+// ─ Genre single-select ──────────────────────────────────
+function pickGenre(el,genre){
+  document.querySelectorAll('#genre-grid-personal .genre-btn, #genre-grid-business .genre-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  selectedGenres=[genre];
 }
-function updateSelectedGenres(){
-  selectedGenres=[];
-  document.querySelectorAll('.genre-btn.active').forEach(b=>{
-    const g=b.getAttribute('onclick')?.match(/toggleGenre\(this,'([^']+)'\)/)?.[1];
-    if(g&&g!=='other')selectedGenres.push(g);
-  });
-  const custom=document.getElementById('custom-genre')?.value?.trim();
-  if(custom&&document.querySelector('.genre-btn[data-genre="other"]')?.classList.contains('active')){
-    selectedGenres.push(custom);
-  }
-}
+// Legacy alias — any remaining call sites fall through to single-select
+function toggleGenre(el,genre){ pickGenre(el,genre); }
 
 // ─ Posting Materials (BGM/Effects/Telop) ────────────────
 const EFFECT_MAP={
