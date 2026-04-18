@@ -220,16 +220,34 @@ async function processPayment(){
   },1500);
 }
 
-// Read plan from URL params
+// Plan label + price (price via /api/detect-region)
+const PLAN_ALIAS = { pro: 'growth', business: 'scale' };
+function resolvePlanKey(k){ return PLAN_ALIAS[k] || k; }
+
+async function loadRegionalPricing(planKey){
+  try{
+    const res = await fetch('/api/detect-region');
+    const data = await res.json();
+    const normalized = resolvePlanKey(planKey);
+    const p = data.plans?.[normalized];
+    if(p){
+      document.getElementById('plan-price').innerHTML =
+        `${p.formatted}<span>/${window.elevaT?elevaT('per_month'):'月'}</span>`;
+      const badge = document.getElementById('plan-badge');
+      if(badge) badge.setAttribute('data-country', data.country);
+    }
+  }catch(e){ console.warn('region detect failed:', e); }
+}
+
 document.addEventListener('DOMContentLoaded',()=>{
   ELEVA.initElevaPage({page:'payment'});
   ELEVA.applyLanguage(localStorage.getItem('eleva_lang')||'ja');
   const params=new URLSearchParams(window.location.search);
-  const plan=params.get('plan')||'pro';
-  const plans={free:{name:'FREE',price:'¥0',amount:'0'},pro:{name:'PRO',price:'¥2,980',amount:'2,980'},business:{name:'BUSINESS',price:'¥9,800',amount:'9,800'}};
-  const p=plans[plan]||plans.pro;
-  document.getElementById('plan-badge').textContent=p.name;
-  document.getElementById('plan-price').innerHTML=p.price+'<span>/月</span>';
+  const plan=params.get('plan')||'growth';
+  const PLAN_NAMES = { free:'FREE', starter:'STARTER', growth:'GROWTH', scale:'SCALE', pro:'GROWTH', business:'SCALE' };
+  document.getElementById('plan-badge').textContent = PLAN_NAMES[plan] || plan.toUpperCase();
+  document.getElementById('plan-price').innerHTML = '<span style="color:var(--text-muted);font-size:14px;">...</span>';
+  loadRegionalPricing(plan);
 });
 </script>
 <footer style="text-align:center;padding:24px 16px;margin-top:60px;border-top:1px solid #1A1A1A;color:#555;font-size:11px;letter-spacing:.05em;">

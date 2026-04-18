@@ -77,6 +77,11 @@
   to = "/.netlify/functions/refine-concept"
   status = 200
 
+[[redirects]]
+  from = "/api/detect-region"
+  to = "/.netlify/functions/detect-region"
+  status = 200
+
 [functions."payment-reminders"]
   schedule = "0 9 * * *"
 
