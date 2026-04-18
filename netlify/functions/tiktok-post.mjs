@@ -13,8 +13,7 @@
 // Optional env:
 //   TIKTOK_DEFAULT_PRIVACY — PUBLIC_TO_EVERYONE | MUTUAL_FOLLOW_FRIENDS | SELF_ONLY
 //
-// Required Supabase column (apply once):
-//   alter table public.video_generations add column if not exists ai_disclosed boolean not null default true;
+// AI disclosure is recorded in public.generations.metadata.ai_disclosed (jsonb field, no DDL required).
 
 const TIKTOK_ENDPOINT = 'https://open.tiktokapis.com/v2/post/publish/video/init/';
 const DEFAULT_PRIVACY = process.env.TIKTOK_DEFAULT_PRIVACY || 'SELF_ONLY';
@@ -55,19 +54,27 @@ function buildPayload({ videoUrl, title, commercial, privacy }) {
 
 async function markDisclosed(generationId) {
   if (!generationId || !SUPABASE_SERVICE_ROLE_KEY) return;
-  await fetch(
-    `${SUPABASE_URL}/rest/v1/video_generations?id=eq.${encodeURIComponent(generationId)}`,
-    {
-      method: 'PATCH',
-      headers: {
-        apikey: SUPABASE_SERVICE_ROLE_KEY,
-        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=minimal',
-      },
-      body: JSON.stringify({ ai_disclosed: true }),
-    }
-  ).catch(() => {});
+  try {
+    const headers = {
+      apikey: SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      'Content-Type': 'application/json',
+    };
+    const getRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/generations?id=eq.${encodeURIComponent(generationId)}&select=metadata`,
+      { headers }
+    );
+    const rows = await getRes.json();
+    const metadata = { ...(rows?.[0]?.metadata || {}), ai_disclosed: true };
+    await fetch(
+      `${SUPABASE_URL}/rest/v1/generations?id=eq.${encodeURIComponent(generationId)}`,
+      {
+        method: 'PATCH',
+        headers: { ...headers, Prefer: 'return=minimal' },
+        body: JSON.stringify({ metadata }),
+      }
+    );
+  } catch { /* best-effort audit trail */ }
 }
 
 export default async (req) => {

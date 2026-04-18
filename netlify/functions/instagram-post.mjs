@@ -75,19 +75,27 @@ async function publishContainer({ igUserId, accessToken, creationId }) {
 
 async function markDisclosed(generationId) {
   if (!generationId || !SUPABASE_SERVICE_ROLE_KEY) return;
-  await fetch(
-    `${SUPABASE_URL}/rest/v1/video_generations?id=eq.${encodeURIComponent(generationId)}`,
-    {
-      method: 'PATCH',
-      headers: {
-        apikey: SUPABASE_SERVICE_ROLE_KEY,
-        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=minimal',
-      },
-      body: JSON.stringify({ ai_disclosed: true }),
-    }
-  ).catch(() => {});
+  try {
+    const headers = {
+      apikey: SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      'Content-Type': 'application/json',
+    };
+    const getRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/generations?id=eq.${encodeURIComponent(generationId)}&select=metadata`,
+      { headers }
+    );
+    const rows = await getRes.json();
+    const metadata = { ...(rows?.[0]?.metadata || {}), ai_disclosed: true };
+    await fetch(
+      `${SUPABASE_URL}/rest/v1/generations?id=eq.${encodeURIComponent(generationId)}`,
+      {
+        method: 'PATCH',
+        headers: { ...headers, Prefer: 'return=minimal' },
+        body: JSON.stringify({ metadata }),
+      }
+    );
+  } catch { /* best-effort audit trail */ }
 }
 
 export default async (req) => {

@@ -266,10 +266,12 @@ function renderPosts(posts) {
 async function loadData() {
   if (!currentUser) return;
   try {
-    const { data } = await sb.from('video_generations')
+    const { data } = await sb.from('generations')
       .select('*').eq('user_id', currentUser.id)
       .order('created_at', { ascending: false }).limit(30);
-    allPosts = data || [];
+    // Flatten metadata (platform, duration_sec, genre, etc.) onto the top level
+    // so existing renderers can read p.platform / p.genre without changes.
+    allPosts = (data || []).map(r => ({ ...r, ...(r.metadata || {}) }));
     renderKPIs(allPosts);
     renderChart(allPosts);
     renderInsights(allPosts);

@@ -49,7 +49,7 @@ export default async (req) => {
     // Update Supabase if completed
     if (status === 'completed' && videoUrl && generationId && SERVICE_KEY) {
       await fetch(
-        `${SUPABASE_URL}/rest/v1/video_generations?id=eq.${generationId}`,
+        `${SUPABASE_URL}/rest/v1/generations?id=eq.${generationId}`,
         {
           method: 'PATCH',
           headers: {

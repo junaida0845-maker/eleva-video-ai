@@ -285,7 +285,7 @@ async function loadDashboard(){
   try{
     const [usersRes,gensRes,planRes]=await Promise.all([
       sb.from('profiles').select('id,plan_type',{count:'exact'}),
-      sb.from('video_generations').select('id',{count:'exact'}).gte('created_at',new Date(Date.now()-86400000).toISOString()),
+      sb.from('generations').select('id',{count:'exact'}).gte('created_at',new Date(Date.now()-86400000).toISOString()),
       sb.from('profiles').select('plan_type')
     ]);
     document.getElementById('kpi-users').textContent=usersRes.count||0;
@@ -411,17 +411,20 @@ async function toggleBan(userId,ban){
 }
 
 async function loadGenerations(){
-  const {data}=await sb.from('video_generations').select('*').order('created_at',{ascending:false}).limit(50);
+  const {data}=await sb.from('generations').select('*').order('created_at',{ascending:false}).limit(50);
   const tbody=document.getElementById('gens-tbody');
   if(!data?.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:32px;">データなし</td></tr>';return;}
-  tbody.innerHTML=(data||[]).map(g=>`<tr>
+  tbody.innerHTML=(data||[]).map(g=>{
+    const m=g.metadata||{};
+    return `<tr>
     <td class="secondary" style="font-size:11px;">${g.user_id?.slice(0,8)}...</td>
     <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${g.prompt||'-'}</td>
-    <td class="secondary">${g.platform||'-'}</td>
-    <td class="secondary">${g.duration_sec||'-'}秒</td>
+    <td class="secondary">${m.platform||'-'}</td>
+    <td class="secondary">${m.duration_sec||m.duration||'-'}秒</td>
     <td><span class="badge ${g.status==='completed'?'badge-active':g.status==='failed'?'badge-banned':'badge-free'}">${g.status||'?'}</span></td>
     <td class="secondary" style="font-size:11px;">${g.created_at?new Date(g.created_at).toLocaleString('ja-JP'):'-'}</td>
-  </tr>`).join('');
+  </tr>`;
+  }).join('');
 }
 
 async function loadCancellations(){
