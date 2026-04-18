@@ -67,6 +67,16 @@
   to = "/.netlify/functions/generate-caption"
   status = 200
 
+[[redirects]]
+  from = "/api/generate-proposals"
+  to = "/.netlify/functions/generate-proposals"
+  status = 200
+
+[[redirects]]
+  from = "/api/refine-concept"
+  to = "/.netlify/functions/refine-concept"
+  status = 200
+
 [functions."payment-reminders"]
   schedule = "0 9 * * *"
 
