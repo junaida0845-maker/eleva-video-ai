@@ -264,6 +264,17 @@ textarea::placeholder{color:var(--text-muted);}
   </div>
 
   <!-- Post Preparation Modal -->
+  <!-- Buzz Style Modal -->
+  <div id="buzz-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;padding:20px;overflow-y:auto;">
+    <div style="max-width:500px;margin:40px auto;background:var(--black-card);border:1px solid var(--gold);border-radius:16px;padding:24px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h3 id="buzz-modal-title" style="color:var(--gold);font-size:16px;letter-spacing:.05em;"></h3>
+        <button onclick="document.getElementById('buzz-modal').style.display='none'" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer;">×</button>
+      </div>
+      <div id="buzz-modal-content"></div>
+    </div>
+  </div>
+
   <div id="post-prep-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:1000;overflow-y:auto;padding:24px 12px;">
     <div style="max-width:640px;margin:0 auto;background:var(--black-card);border:1px solid var(--border-gold);border-radius:16px;padding:24px;color:#fff;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
@@ -427,6 +438,15 @@ textarea::placeholder{color:var(--text-muted);}
         <button class="btn-outline" style="font-size:13px;padding:10px 18px;" onclick="document.getElementById('split-card').style.display='none'" data-i18n="keep_single">このまま1本で投稿</button>
       </div>
     </div>
+  </div>
+
+  <!-- Buzz Style -->
+  <div class="card" style="margin-top:20px;">
+    <div class="card-title"><span data-icon="fire"></span> <span data-i18n="buzz_style_title">国別バズり方</span></div>
+    <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;" data-i18n="buzz_style_desc">あなたの言語設定に合わせた動画スタイル・テロップ・BGM・ペースのガイド</p>
+    <button id="buzz-style-btn" onclick="showBuzzStyle()" style="background:transparent;border:1px solid var(--gold);color:var(--gold);padding:8px 18px;border-radius:20px;font-size:13px;cursor:pointer;letter-spacing:.05em;display:inline-flex;align-items:center;gap:6px;">
+      ⚡ <span data-i18n="buzz_style_btn">この国のバズり方を見る</span>
+    </button>
   </div>
 
   <!-- Posting Schedule -->
@@ -812,6 +832,101 @@ async function loadPostingSchedule(){
   }
 }
 
+// ─ Buzz Style (per-country) ────────────────────────────
+const BUZZ_STYLES={
+  'ja':{label:'🇯🇵 日本',items:[
+    {icon:'🎬',title:'動画スタイル',desc:'kawaii・美的感覚重視・清潔感。感情は控えめに、景色や物の美しさで魅せる。'},
+    {icon:'📝',title:'テロップ',desc:'大きな太字テキスト（白＋黒縁取り）を画面下部に配置。インパクトのある漢字。'},
+    {icon:'🎵',title:'BGM',desc:'シティポップ・lo-fi・J-pop・アップテンポ電子音楽・感情的なピアノ。'},
+    {icon:'⏱',title:'ペース',desc:'ミディアムペース。スムーズなトランジション。サティスファイング（満足感）な見せ方。'},
+    {icon:'⚠️',title:'注意',desc:'直接的な対立や攻撃的なコンテンツは避ける。繊細さが鍵。'}]},
+  'ko':{label:'🇰🇷 韓国',items:[
+    {icon:'🎬',title:'動画スタイル',desc:'K-drama/K-pop的な高品質映像。シネマティックな照明、トレンドファッション、洗練された見た目。'},
+    {icon:'📝',title:'テロップ',desc:'スタイリッシュな韓国語テキスト、グラデーションカラー、モダンフォント、ダイナミックなアニメーション。'},
+    {icon:'🎵',title:'BGM',desc:'K-pop・K-indie・トレンドの電子ビート。'},
+    {icon:'⏱',title:'ペース',desc:'パンチのあるカットで高速、高プロダクション品質。'},
+    {icon:'⚠️',title:'注意',desc:'映像品質への高い基準。ぼやけた・低品質なコンテンツはパフォーマンスが低い。'}]},
+  'en-us':{label:'🇺🇸 アメリカ',items:[
+    {icon:'🎬',title:'動画スタイル',desc:'本物らしく・リアルなアメリカンスタイル。最初の2秒で強いフック。ストーリーテリング形式が効果的。'},
+    {icon:'📝',title:'テロップ',desc:'太い英語キャプション、大フォント、高コントラスト。自動キャプション風が人気。'},
+    {icon:'🎵',title:'BGM',desc:'ヒップホップ・ポップ・カントリー・トレンドの音声クリップ。'},
+    {icon:'⏱',title:'ペース',desc:'超高速フック、その後は多様。POVやリアクション形式が人気。'},
+    {icon:'⚠️',title:'注意',desc:'政治的に敏感に見えるコンテンツは避ける。'}]},
+  'zh-tw':{label:'🇹🇼 台湾',items:[
+    {icon:'🎬',title:'動画スタイル',desc:'親しみやすさ・日常感・美食やペット重視。繁体字文化の表現。'},
+    {icon:'📝',title:'テロップ',desc:'繁体字の明瞭な大文字テキスト。カラフルでポップ。'},
+    {icon:'🎵',title:'BGM',desc:'C-pop・台湾インディー・バイラルアジア系サウンド。'},
+    {icon:'⏱',title:'ペース',desc:'ミディアム〜高速。コメディやツッコミのタイミングが重要。'},
+    {icon:'⚠️',title:'注意',desc:'政治的トピック（特に両岸問題）は避ける。'}]},
+  'zh-cn':{label:'🇨🇳 中国',items:[
+    {icon:'🎬',title:'動画スタイル',desc:'高品質・ドラマチック・感情的。都市景観や美食の美。Douyin向けは規制考慮。'},
+    {icon:'📝',title:'テロップ',desc:'簡体字の大きな太字。ネオン系カラー、動的アニメーション。'},
+    {icon:'🎵',title:'BGM',desc:'C-pop・中国風古风音楽・トレンドのDouyin音声。'},
+    {icon:'⏱',title:'ペース',desc:'高速カット、視覚インパクト重視。'},
+    {icon:'⚠️',title:'注意',desc:'政治・歴史的にセンシティブな内容は厳禁。プラットフォーム規制に従う。'}]},
+  'th':{label:'🇹🇭 タイ',items:[
+    {icon:'🎬',title:'動画スタイル',desc:'ユーモア・可愛さ・ライフスタイル感。"サヌック"（楽しむ文化）が鍵。'},
+    {icon:'📝',title:'テロップ',desc:'タイ語の明るいテキスト。絵文字多用、ポップカラー。'},
+    {icon:'🎵',title:'BGM',desc:'T-pop・モラム・バイラルタイソング。'},
+    {icon:'⏱',title:'ペース',desc:'ミディアム〜速め。コメディ系が特に強い。'},
+    {icon:'⚠️',title:'注意',desc:'王室・仏教への敬意必須（lèse-majesté法）。'}]},
+  'vi':{label:'🇻🇳 ベトナム',items:[
+    {icon:'🎬',title:'動画スタイル',desc:'家族重視・若者カルチャー・コメディ。都市と田舎両方のシーン。'},
+    {icon:'📝',title:'テロップ',desc:'ベトナム語の太字テキスト、明るい色、親しみやすい雰囲気。'},
+    {icon:'🎵',title:'BGM',desc:'V-pop・バイラルTikTokベトナム音源。'},
+    {icon:'⏱',title:'ペース',desc:'速くエネルギッシュ、コメディのタイミング重視。'},
+    {icon:'⚠️',title:'注意',desc:'政府批判的な内容は避ける。'}]},
+  'id':{label:'🇮🇩 インドネシア',items:[
+    {icon:'🎬',title:'動画スタイル',desc:'エネルギッシュ・コメディ・日常生活の共感。コミュニティと家族のテーマ。イスラムフレンドリーなコンテンツが最もパフォーマンス高い。'},
+    {icon:'📝',title:'テロップ',desc:'楽しいカラフルなインドネシア語テキスト、ミームスタイル、絵文字多用。'},
+    {icon:'🎵',title:'BGM',desc:'ダンドゥット・インドネシアポップ・バイラルローカルサウンド。'},
+    {icon:'⏱',title:'ペース',desc:'速くエンターテイニング、コメディのタイミングが重要。'},
+    {icon:'⚠️',title:'注意',desc:'イスラムの価値観を尊重。露出の多い服やアルコール関連は避ける。'}]},
+  'de':{label:'🇩🇪 ドイツ',items:[
+    {icon:'🎬',title:'動画スタイル',desc:'情報密度高め・実用的・機能美。過度な演出より中身重視。'},
+    {icon:'📝',title:'テロップ',desc:'ドイツ語の正確なテキスト、ミニマルデザイン、読みやすさ優先。'},
+    {icon:'🎵',title:'BGM',desc:'テクノ・エレクトロ・ロック・古典。'},
+    {icon:'⏱',title:'ペース',desc:'ミディアム。論理的な流れを大切にする。'},
+    {icon:'⚠️',title:'注意',desc:'プライバシー意識が高い。データ関連は慎重に。'}]},
+  'fr':{label:'🇫🇷 フランス',items:[
+    {icon:'🎬',title:'動画スタイル',desc:'エレガント・芸術的・ファッションと美食の洗練。ストーリーテリングを重視。'},
+    {icon:'📝',title:'テロップ',desc:'フランス語のセリフ体、モダンタイポグラフィ、落ち着いた色調。'},
+    {icon:'🎵',title:'BGM',desc:'シャンソン・エレクトロ・インディーポップ。'},
+    {icon:'⏱',title:'ペース',desc:'ミディアム。美しさと知性の両立。'},
+    {icon:'⚠️',title:'注意',desc:'直接的すぎる宣伝は嫌われる。洗練された表現を。'}]},
+  'es':{label:'🇪🇸 スペイン語圏',items:[
+    {icon:'🎬',title:'動画スタイル',desc:'情熱的・家族中心・カラフル。音楽とダンスの親和性。'},
+    {icon:'📝',title:'テロップ',desc:'明るいスペイン語テキスト、ボールドカラー、感情的。'},
+    {icon:'🎵',title:'BGM',desc:'レゲトン・ラテンポップ・フラメンコ系。'},
+    {icon:'⏱',title:'ペース',desc:'速くエネルギッシュ、リズム感重視。'},
+    {icon:'⚠️',title:'注意',desc:'地域差が大きい（スペイン vs 中南米）。ターゲットを絞る。'}]},
+  'pt-br':{label:'🇧🇷 ブラジル',items:[
+    {icon:'🎬',title:'動画スタイル',desc:'高エネルギー・情熱的・カラフル。ダンス・音楽・ユーモア・社会的コメンタリー。非常に表現力豊か。'},
+    {icon:'📝',title:'テロップ',desc:'太いポルトガル語テキスト、鮮やかな色、楽しいタイポグラフィ。'},
+    {icon:'🎵',title:'BGM',desc:'ファンクカリオカ・セルタネージョ・パゴジ・バイルファンク。'},
+    {icon:'⏱',title:'ペース',desc:'音楽のリズムに合わせた速くエネルギッシュな展開。'},
+    {icon:'⚠️',title:'注意',desc:'ブラジル人は非常に社交的。コミュニティエンゲージメントフックが効果的。'}]},
+  'it':{label:'🇮🇹 イタリア',items:[
+    {icon:'🎬',title:'動画スタイル',desc:'優雅・美食・ファッション・家族愛。ラ・ドルチェ・ヴィータの雰囲気。'},
+    {icon:'📝',title:'テロップ',desc:'イタリア語の洗練されたテキスト、セリフ体、アーティスティックなレイアウト。'},
+    {icon:'🎵',title:'BGM',desc:'イタリアンポップ・オペラ・オルタナティブロック。'},
+    {icon:'⏱',title:'ペース',desc:'ミディアム、美しさを堪能するテンポ。'},
+    {icon:'⚠️',title:'注意',desc:'食文化への敬意。パスタ料理法の誤りはバズり方が逆方向に。'}]},
+};
+
+function showBuzzStyle(){
+  const lang=localStorage.getItem('eleva_lang')||'ja';
+  const style=BUZZ_STYLES[lang]||BUZZ_STYLES['en-us'];
+  const titleSuffix=window.elevaT?elevaT('buzz_style_for'):'のバズり方';
+  document.getElementById('buzz-modal-title').textContent=style.label+' '+titleSuffix;
+  document.getElementById('buzz-modal-content').innerHTML=style.items.map(item=>`
+    <div style="margin-bottom:14px;padding:12px 14px;background:#0d0d0d;border-radius:10px;border-left:3px solid var(--gold);">
+      <div style="color:var(--gold);font-size:13px;font-weight:700;margin-bottom:6px;">${item.icon} ${item.title}</div>
+      <div style="color:#ccc;font-size:13px;line-height:1.6;">${item.desc}</div>
+    </div>`).join('');
+  document.getElementById('buzz-modal').style.display='block';
+}
+
 // ─ AI Proposal Flow ────────────────────────────────────
 let currentProposals = [];
 let selectedProposal = null;
@@ -832,7 +947,10 @@ async function getVideoProposals(){
 
     let trendingHashtags=[],trendingTopics=[];
     try{
-      const tr=await sb.from('sns_trends').select('hashtags,topics').eq('platform',platform).order('created_at',{ascending:false}).limit(1).single();
+      let tr=await sb.from('sns_trends').select('hashtags,topics').eq('platform',platform).eq('lang',lang).order('created_at',{ascending:false}).limit(1).maybeSingle();
+      if(!tr.data){
+        tr=await sb.from('sns_trends').select('hashtags,topics').eq('platform',platform).order('created_at',{ascending:false}).limit(1).maybeSingle();
+      }
       trendingHashtags=tr.data?.hashtags||[];
       trendingTopics=(tr.data?.topics||[]).map(t=>typeof t==='string'?t:(t.desc||t.name||'')).filter(Boolean);
     }catch(e){}
@@ -989,8 +1107,9 @@ async function fetchPostingMaterials(genre,platform,lang){
   const sb=ELEVA.getSupabase();
   let trendData={hashtags:[],music:[],topics:[]};
   try{
-    const {data}=await sb.from('sns_trends').select('hashtags,music,topics').eq('platform',platform).order('created_at',{ascending:false}).limit(1).single();
-    if(data)trendData=data;
+    let r=await sb.from('sns_trends').select('hashtags,music,topics').eq('platform',platform).eq('lang',lang).order('created_at',{ascending:false}).limit(1).maybeSingle();
+    if(!r.data)r=await sb.from('sns_trends').select('hashtags,music,topics').eq('platform',platform).order('created_at',{ascending:false}).limit(1).maybeSingle();
+    if(r.data)trendData=r.data;
   }catch(e){}
   const res=await fetch('/api/generate-caption',{
     method:'POST',headers:{'Content-Type':'application/json'},
