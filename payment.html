@@ -22,9 +22,7 @@ body{font-family:'Inter',sans-serif;background:var(--black);color:var(--text-pri
 .plan-trial{color:var(--gold);font-size:14px;font-weight:600;}
 .card{background:var(--black-card);border:1px solid var(--border-gold);border-radius:16px;padding:24px;margin-bottom:20px;}
 .card-title{color:var(--gold-light);font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
-/* Stripe element */
 .stripe-wrap{background:var(--black-border);border:1px solid var(--gold);border-radius:10px;padding:14px 16px;color:#fff;}
-/* Payment method buttons */
 .payment-methods{display:flex;flex-direction:column;gap:12px;margin-bottom:20px;}
 .pay-method{display:flex;align-items:center;gap:14px;background:var(--black-border);border:2px solid var(--border-gold);border-radius:12px;padding:16px;cursor:pointer;transition:all 0.2s;}
 .pay-method:hover{border-color:var(--gold);}
@@ -35,21 +33,17 @@ body{font-family:'Inter',sans-serif;background:var(--black);color:var(--text-pri
 .radio-circle{width:20px;height:20px;border-radius:50%;border:2px solid var(--border-gold);margin-left:auto;flex-shrink:0;transition:all 0.2s;display:flex;align-items:center;justify-content:center;}
 .pay-method.active .radio-circle{border-color:var(--gold);background:var(--gold);}
 .pay-method.active .radio-circle::after{content:'';width:8px;height:8px;background:#000;border-radius:50%;}
-/* Card form */
 #card-form{display:block;}
 .form-row{margin-bottom:14px;}
 .form-label{color:var(--text-secondary);font-size:12px;margin-bottom:6px;display:block;}
 #card-number-el,#card-expiry-el,#card-cvc-el{background:var(--black-border);border:1px solid var(--gold);border-radius:8px;padding:14px 16px;}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-/* Google Pay / Apple Pay */
-#gpay-btn,#apay-btn{width:100%;padding:14px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;border:none;margin-top:12px;display:none;}
+#gpay-btn,#apay-btn{width:100%;padding:14px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;border:none;margin-top:12px;}
 #gpay-btn{background:#fff;color:#000;}
 #apay-btn{background:#000;color:#fff;border:1px solid #444;}
-/* Submit */
 .btn-submit{width:100%;background:var(--gold);color:#000;border:none;padding:16px;border-radius:12px;font-weight:700;font-size:16px;cursor:pointer;transition:all 0.2s;margin-top:8px;}
 .btn-submit:hover{background:var(--gold-light);}
 .btn-submit:disabled{background:#333;color:#666;cursor:not-allowed;}
-/* Consent modal */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
 .modal-box{background:var(--black-card);border:1px solid var(--gold);border-radius:20px;padding:32px;max-width:480px;width:90%;max-height:80vh;overflow-y:auto;}
 .modal-title{color:var(--gold-light);font-size:18px;font-weight:700;margin-bottom:16px;}
@@ -74,17 +68,14 @@ body{font-family:'Inter',sans-serif;background:var(--black);color:var(--text-pri
 </div>
 
 <div class="page-wrap">
-  <!-- Plan Summary -->
   <div class="plan-summary">
     <div class="plan-name-badge" id="plan-badge">PRO</div>
     <div class="plan-price-big" id="plan-price">¥2,980<span>/月</span></div>
     <div class="plan-trial">✓ 2週間無料トライアル付き</div>
   </div>
 
-  <!-- Payment Method -->
   <div class="card">
     <div class="card-title">💳 <span data-i18n="payment_method">お支払い方法</span></div>
-
     <div class="payment-methods">
       <div class="pay-method active" id="method-card" onclick="selectMethod('card')">
         <span class="pay-method-icon">💳</span>
@@ -103,7 +94,6 @@ body{font-family:'Inter',sans-serif;background:var(--black);color:var(--text-pri
       </div>
     </div>
 
-    <!-- Card form -->
     <div id="card-form">
       <div class="form-row">
         <label class="form-label">カード番号</label>
@@ -121,7 +111,6 @@ body{font-family:'Inter',sans-serif;background:var(--black);color:var(--text-pri
       </div>
     </div>
 
-    <!-- Alternative pay buttons -->
     <div id="gpay-container" style="display:none;"><button id="gpay-btn">Google Pay で支払う</button></div>
     <div id="apay-container" style="display:none;"><button id="apay-btn">Apple Pay で支払う</button></div>
 
@@ -129,7 +118,6 @@ body{font-family:'Inter',sans-serif;background:var(--black);color:var(--text-pri
     <div class="secure-note">🔒 SSL/TLS暗号化 • Stripe powered • PCI DSS準拠</div>
   </div>
 
-  <!-- Plan features -->
   <div class="card" style="padding:20px;">
     <div class="card-title" style="margin-bottom:12px;">含まれる機能</div>
     <ul style="list-style:none;padding:0;display:flex;flex-direction:column;gap:8px;">
@@ -142,7 +130,6 @@ body{font-family:'Inter',sans-serif;background:var(--black);color:var(--text-pri
   </div>
 </div>
 
-<!-- Consent Modal -->
 <div class="modal-overlay" id="consent-modal" style="display:none;">
   <div class="modal-box">
     <div class="modal-title" data-i18n="consent_title">定期購読について</div>
@@ -171,9 +158,8 @@ body{font-family:'Inter',sans-serif;background:var(--black);color:var(--text-pri
 let stripe,cardNumber,cardExpiry,cardCvc;
 let selectedMethod='card';
 
-// Init Stripe
 try{
-  stripe=Stripe('pk_test_placeholder'); // Replace with actual publishable key
+  stripe=Stripe('pk_test_placeholder');
   const elements=stripe.elements({
     appearance:{theme:'night',variables:{colorPrimary:'#c9a84c',colorBackground:'#1a1a1a',colorText:'#ffffff',colorDanger:'#ff4444',fontFamily:'Inter,sans-serif',borderRadius:'8px'}}
   });
@@ -184,7 +170,6 @@ try{
   cardExpiry.mount('#card-expiry-el');
   cardCvc.mount('#card-cvc-el');
 
-  // Show Google Pay / Apple Pay if available
   const pr=stripe.paymentRequest({country:'JP',currency:'jpy',total:{label:'ELEVA PRO',amount:298000},requestPayerEmail:true});
   pr.canMakePayment().then(result=>{
     if(result?.googlePay){document.getElementById('method-gpay').style.display='flex';}
@@ -213,15 +198,13 @@ async function processPayment(){
   document.getElementById('consent-modal').style.display='none';
   const btn=document.getElementById('submit-btn');
   btn.disabled=true;btn.textContent='処理中...';
-  // In production: call your backend to create a payment intent, then confirm with Stripe
   setTimeout(()=>{
     alert('お支払いが完了しました！ELEVAへようこそ。');
     window.location.href='/dashboard.html';
   },1500);
 }
 
-// Plan label + price (price via /api/detect-region)
-const PLAN_ALIAS = { pro: 'growth', business: 'scale' };
+const PLAN_ALIAS = { free:'free', pro:'pro', business:'business', studio:'studio' };
 function resolvePlanKey(k){ return PLAN_ALIAS[k] || k; }
 
 async function loadRegionalPricing(planKey){
@@ -243,8 +226,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   ELEVA.initElevaPage({page:'payment'});
   ELEVA.applyLanguage(localStorage.getItem('eleva_lang')||'ja');
   const params=new URLSearchParams(window.location.search);
-  const plan=params.get('plan')||'growth';
-  const PLAN_NAMES = { free:'FREE', starter:'STARTER', growth:'GROWTH', scale:'SCALE', pro:'GROWTH', business:'SCALE' };
+  const plan=params.get('plan')||'pro';
+  const PLAN_NAMES = { free:'FREE', pro:'PRO', business:'BUSINESS', studio:'STUDIO' };
   document.getElementById('plan-badge').textContent = PLAN_NAMES[plan] || plan.toUpperCase();
   document.getElementById('plan-price').innerHTML = '<span style="color:var(--text-muted);font-size:14px;">...</span>';
   loadRegionalPricing(plan);
