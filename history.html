@@ -66,8 +66,8 @@ body{font-family:'Inter',sans-serif;background:var(--black);color:var(--text-pri
   </div>
 </div>
 
-<script src="/eleva-i18n.js"></script>
-<script src="/eleva-shared.js"></script>
+<script src="/eleva-i18n.js?v=20260418"></script>
+<script src="/eleva-shared.js?v=20260418"></script>
 <script>
 const sb=ELEVA.getSupabase();
 let currentUser=null;
@@ -158,10 +158,22 @@ document.addEventListener('DOMContentLoaded',async()=>{
   ELEVA.applyLanguage(localStorage.getItem('eleva_lang')||'ja');
   if(!currentUser)return;
   try{
-    const {data,error}=await sb.from('video_generations').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false}).limit(50);
+    const {data,error}=await sb.from('generations')
+      .select('*')
+      .eq('user_id',currentUser.id)
+      .eq('is_recut',false)
+      .order('created_at',{ascending:false})
+      .limit(50);
+    if(error){
+      console.error('[history] generations query error:',error);
+      document.getElementById('history-list').innerHTML=`<div style="color:#ff4444;text-align:center;padding:40px;">履歴の読み込みに失敗しました。<br/><small>${(error.message||'unknown')}</small></div>`;
+      return;
+    }
+    console.log('[history] loaded',data?.length||0,'rows for user',currentUser.id);
     renderHistory(data||[]);
   }catch(e){
-    document.getElementById('history-list').innerHTML='<div style="color:#ff4444;text-align:center;padding:40px;">履歴の読み込みに失敗しました。</div>';
+    console.error('[history] unexpected error:',e);
+    document.getElementById('history-list').innerHTML=`<div style="color:#ff4444;text-align:center;padding:40px;">履歴の読み込みに失敗しました。<br/><small>${(e.message||e)}</small></div>`;
   }
 });
 </script>
