@@ -6,11 +6,11 @@ export default async (req) => {
   };
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
 
-  const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-  const REDIRECT_URI = `${process.env.URL}/api/youtube-auth-callback`;
+  const CLIENT_ID = process.env.YOUTUBE_CLIENT_ID;
+  const REDIRECT_URI = `${process.env.URL}/auth/youtube/callback`;
 
   if (!CLIENT_ID) {
-    return new Response(JSON.stringify({ error: 'Google API未設定' }), {
+    return new Response(JSON.stringify({ error: 'YouTube OAuth未設定' }), {
       status: 500, headers: { ...cors, 'Content-Type': 'application/json' }
     });
   }

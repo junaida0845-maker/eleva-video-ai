@@ -2,9 +2,9 @@ import { createClient } from '@supabase/supabase-js';
 
 // YouTube OAuth コールバック
 export default async (req) => {
-  const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-  const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-  const REDIRECT_URI = `${process.env.URL}/api/youtube-auth-callback`;
+  const CLIENT_ID = process.env.YOUTUBE_CLIENT_ID;
+  const CLIENT_SECRET = process.env.YOUTUBE_CLIENT_SECRET;
+  const REDIRECT_URI = `${process.env.URL}/auth/youtube/callback`;
   const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
   const url = new URL(req.url);
@@ -63,4 +63,4 @@ export default async (req) => {
   }
 };
 
-export const config = { path: '/api/youtube-auth-callback' };
+export const config = { path: '/auth/youtube/callback' };

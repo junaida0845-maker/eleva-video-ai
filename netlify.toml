@@ -98,7 +98,7 @@
   status = 200
 
 [[redirects]]
-  from = "/api/youtube-auth-callback"
+  from = "/auth/youtube/callback"
   to = "/.netlify/functions/youtube-auth-callback"
   status = 200
 
