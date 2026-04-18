@@ -123,6 +123,7 @@ textarea::placeholder{color:var(--text-muted);}
 <div class="top-bar">
   <div class="top-bar-center">ELEVA Studio</div>
   <div class="top-badge" id="credits-badge"><span data-icon="lightning"></span> --</div>
+  <a id="admin-link" href="/admin.html" style="display:none;background:transparent;border:1px solid var(--gold);border-radius:6px;color:var(--gold);padding:6px 14px;font-size:12px;text-decoration:none;letter-spacing:.08em;" data-i18n="admin">管理画面</a>
   <button class="lang-btn-top" onclick="ELEVA.showLanguageModal()"><span data-icon="globe"></span></button>
   <button onclick="ELEVA.logout()" style="background:transparent;border:1px solid #333;border-radius:6px;color:#888;padding:6px 14px;font-size:12px;cursor:pointer;font-family:inherit;letter-spacing:.08em;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='#333';this.style.color='#888'" data-i18n="logout">LOGOUT</button>
 </div>
@@ -1290,8 +1291,12 @@ document.addEventListener('DOMContentLoaded',async()=>{
   hydrateDisclosureDefaults(currentUser);
   ELEVA.applyLanguage(localStorage.getItem('eleva_lang')||'ja');
   if(currentUser){
-    const {data:prof}=await sb.from('profiles').select('credits_remaining').eq('id',currentUser.id).single();
+    const {data:prof}=await sb.from('profiles').select('credits_remaining,is_admin').eq('id',currentUser.id).single();
     if(prof)document.getElementById('credits-badge').innerHTML=(window.ELEVA_ICONS?.lightning||'⚡')+' '+prof.credits_remaining;
+    if(prof?.is_admin){
+      const adminLink=document.getElementById('admin-link');
+      if(adminLink)adminLink.style.display='inline-block';
+    }
     loadPostingSchedule();
   }
   if(window.location.hash==='#generate'){
