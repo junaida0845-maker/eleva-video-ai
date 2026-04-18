@@ -63,12 +63,10 @@ function pickCountryFromAcceptLang(header) {
 function formatPrice(amount, symbol, locale) {
   if (amount === 0) return symbol + '0';
   try {
-    // Whole-number currencies (no decimals)
-    const wholeOnly = ['JPY', 'KRW', 'VND', 'IDR'];
-    const currency = PRICING[Object.keys(PRICING).find(k => PRICING[k].symbol === symbol)]?.currency;
+    const isInteger = Number.isInteger(amount);
     const formatter = new Intl.NumberFormat(locale, {
-      minimumFractionDigits: wholeOnly.includes(currency) ? 0 : 2,
-      maximumFractionDigits: wholeOnly.includes(currency) ? 0 : 2,
+      minimumFractionDigits: isInteger ? 0 : 2,
+      maximumFractionDigits: isInteger ? 0 : 2,
     });
     return symbol + formatter.format(amount);
   } catch {
