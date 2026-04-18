@@ -82,6 +82,16 @@
   to = "/.netlify/functions/detect-region"
   status = 200
 
+[[redirects]]
+  from = "/api/tiktok-auth-start"
+  to = "/.netlify/functions/tiktok-auth-start"
+  status = 200
+
+[[redirects]]
+  from = "/api/tiktok-auth-callback"
+  to = "/.netlify/functions/tiktok-auth-callback"
+  status = 200
+
 [functions."payment-reminders"]
   schedule = "0 9 * * *"
 
