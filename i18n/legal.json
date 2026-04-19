@@ -1,0 +1,47 @@
+{
+  "ja": {
+    "footer_commerce": "特定商取引法に基づく表記",
+    "footer_terms": "利用規約",
+    "footer_privacy": "プライバシーポリシー",
+    "footer_company": "会社情報",
+    "footer_contact": "お問い合わせ",
+    "back_top": "← トップに戻る",
+    "updated_label": "最終更新日"
+  },
+  "en": {
+    "footer_commerce": "Commerce Disclosure",
+    "footer_terms": "Terms of Service",
+    "footer_privacy": "Privacy Policy",
+    "footer_company": "Company",
+    "footer_contact": "Contact",
+    "back_top": "← Back to top",
+    "updated_label": "Last updated"
+  },
+  "zh-cn": {
+    "footer_commerce": "特定商业交易法表述",
+    "footer_terms": "服务条款",
+    "footer_privacy": "隐私政策",
+    "footer_company": "公司信息",
+    "footer_contact": "联系我们",
+    "back_top": "← 返回首页",
+    "updated_label": "最后更新"
+  },
+  "zh-tw": {
+    "footer_commerce": "特定商業交易法表述",
+    "footer_terms": "服務條款",
+    "footer_privacy": "隱私政策",
+    "footer_company": "公司資訊",
+    "footer_contact": "聯絡我們",
+    "back_top": "← 返回首頁",
+    "updated_label": "最後更新"
+  },
+  "ko": {
+    "footer_commerce": "특정상거래법 표기",
+    "footer_terms": "이용약관",
+    "footer_privacy": "개인정보처리방침",
+    "footer_company": "회사 정보",
+    "footer_contact": "문의",
+    "back_top": "← 홈으로 돌아가기",
+    "updated_label": "최종 업데이트"
+  }
+}
