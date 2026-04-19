@@ -1,8 +1,9 @@
 # Legacy URL → new URL
-/payment           /pricing.html  301
-/payment.html      /pricing.html  301
-/pricing           /pricing.html  301
-/mypage            /mypage.html   301
+/payment           /pricing.html       301
+/payment.html      /pricing.html       301
+/pricing           /pricing.html       301
+/mypage            /mypage.html        301
+/debug-buzz        /debug-buzz.html    200
 
 # Legacy detect-region API → new Supabase Edge Function
 /api/detect-region  https://syxctolgqhdtcoaothwi.supabase.co/functions/v1/get-regional-pricing  301
