@@ -139,7 +139,7 @@ textarea::placeholder{color:var(--text-muted);}
       <p style="color:#a8a8a8;font-size:13px;line-height:1.6;">現在のプラン: <span id="upgrade-current-plan" style="color:#d4af37;font-weight:600;">—</span></p>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:22px;">
-      <a href="/pricing.html#addons" style="display:block;text-align:center;background:linear-gradient(135deg,#d4af37,#b8941f);color:#0a0a0a;padding:14px 18px;border-radius:12px;font-weight:700;font-size:13px;letter-spacing:.5px;text-decoration:none;">追加購入する（15秒×10本）</a>
+      <button id="addon-buy-btn" onclick="purchaseAddon('addon_15s_10')" style="display:block;text-align:center;background:linear-gradient(135deg,#d4af37,#b8941f);color:#0a0a0a;padding:14px 18px;border-radius:12px;font-weight:700;font-size:13px;letter-spacing:.5px;border:none;cursor:pointer;font-family:inherit;">追加購入する（15秒×10本）</button>
       <a href="/pricing.html" style="display:block;text-align:center;background:transparent;color:#d4af37;border:1px solid #d4af37;padding:13px 18px;border-radius:12px;font-weight:700;font-size:13px;letter-spacing:.5px;text-decoration:none;">プランをアップグレード</a>
       <button onclick="closeUpgradeModal()" style="background:none;border:none;color:#6b6b6b;font-size:12px;padding:10px;cursor:pointer;font-family:inherit;">キャンセル</button>
     </div>
@@ -598,8 +598,9 @@ async function startScenarioGeneration(){
     const res=await fetch(SUPABASE_FN_BASE+'/scenario-generate',{method:'POST',headers,body:JSON.stringify({prompt})});
     if(!res.ok){const t=await res.text();throw new Error('scenario-generate '+res.status+': '+t);}
     _scenarioJob=await res.json();
-    renderSceneRows(_scenarioJob);
-    pollScenarioStatus(_scenarioJob.job_id||_scenarioJob.id);
+    const job=_scenarioJob.job||_scenarioJob;
+    renderSceneRows(job.scenario?.scenes||[]);
+    pollScenarioStatus(job.id||_scenarioJob.id||_scenarioJob.job_id);
   }catch(err){
     console.error('[scenario]',err);
     alert('シナリオ生成に失敗しました。\n'+(err.message||err));
@@ -610,8 +611,8 @@ async function startScenarioGeneration(){
 
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5eGN0b2xncWhkdGNvYW90aHdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MDk5NjksImV4cCI6MjA5MDM4NTk2OX0.h38gOPGOcdIw_w8p4AEYVLHCaWuC8k2XRrjLPcFAtUw';
 
-function renderSceneRows(job){
-  const scenes=job.scenes||job.scene_jobs||[{title:'シーン1'},{title:'シーン2'},{title:'シーン3'}];
+function renderSceneRows(scenes){
+  if(!Array.isArray(scenes)||!scenes.length)scenes=[{title:'シーン1'},{title:'シーン2'},{title:'シーン3'}];
   document.getElementById('scene-rows').innerHTML=scenes.slice(0,3).map((s,i)=>`
     <div class="scene-row" data-idx="${i}" style="display:flex;align-items:center;gap:10px;padding:10px;background:#0d0d0d;border:1px solid #1f1f1f;border-radius:8px;">
       <div style="width:24px;height:24px;border-radius:50%;background:rgba(212,175,55,0.15);color:var(--gold);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;">${i+1}</div>
@@ -623,34 +624,37 @@ function renderSceneRows(job){
 
 async function pollScenarioStatus(jobId){
   if(!jobId){console.warn('[scenario] no jobId');return;}
-  const {data:{session}}=await sb.auth.getSession();
-  const headers={apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+(session?.access_token||SUPABASE_ANON_KEY)};
   let attempts=0;
   const maxAttempts=120; // 10 min @ 5s
   const interval=setInterval(async()=>{
     attempts++;
     if(attempts>maxAttempts){clearInterval(interval);alert('シナリオ生成がタイムアウトしました。履歴から確認してください。');resetScenarioBtn();return;}
     try{
-      const res=await fetch(SUPABASE_FN_BASE+'/sync-generation-status?job_id='+encodeURIComponent(jobId),{headers});
-      if(!res.ok)return;
-      const data=await res.json();
-      const scenes=data.scenes||data.scene_jobs||[];
-      scenes.forEach((s,i)=>{
-        const row=document.querySelector('.scene-row[data-idx="'+i+'"] .scene-status');
-        if(row){
-          if(s.status==='completed'||s.video_url){row.textContent='完了';row.style.color='#7fbf7f';}
-          else if(s.status==='failed'){row.textContent='失敗';row.style.color='#bf7f7f';}
-          else row.textContent=s.status||'生成中…';
-        }
-      });
-      const allDone=scenes.length>0&&scenes.every(s=>s.status==='completed'||s.video_url);
-      if(allDone||data.status==='merging'){
-        document.getElementById('scenario-merge').style.display='block';
+      // Poll multi_scene_jobs row directly via PostgREST + child generations for per-scene status
+      const {data:jobRows}=await sb.from('multi_scene_jobs').select('id,status,total_scenes,completed_scenes,final_video_url,scenario,child_generation_ids').eq('id',jobId).limit(1);
+      const job=jobRows?.[0];
+      if(!job)return;
+      const childIds=job.child_generation_ids||[];
+      let children=[];
+      if(childIds.length){
+        const {data:gens}=await sb.from('generations').select('id,status,video_url').in('id',childIds);
+        children=gens||[];
       }
-      if(data.status==='completed'&&(data.final_video_url||data.video_url)){
+      // Merge scene definitions with child status, in array order
+      (job.scenario?.scenes||[]).forEach((_,i)=>{
+        const child=children[i];
+        const row=document.querySelector('.scene-row[data-idx="'+i+'"] .scene-status');
+        if(!row)return;
+        if(!child){row.textContent='待機中';row.style.color='var(--gold)';return;}
+        if(child.status==='completed'||child.video_url){row.textContent='完了';row.style.color='#7fbf7f';}
+        else if(child.status==='failed'){row.textContent='失敗';row.style.color='#bf7f7f';}
+        else row.textContent=child.status||'生成中…';
+      });
+      const merging=(job.completed_scenes>=job.total_scenes)&&job.status!=='completed';
+      if(merging)document.getElementById('scenario-merge').style.display='block';
+      if(job.status==='completed'&&job.final_video_url){
         clearInterval(interval);
-        const finalUrl=data.final_video_url||data.video_url;
-        showResult(finalUrl,data.generation_id||jobId);
+        showResult(job.final_video_url,job.id);
         resetScenarioBtn();
       }
     }catch(e){console.warn('[scenario] poll error',e);}
@@ -672,6 +676,27 @@ function showUpgradeModal(planType,_remaining){
 function closeUpgradeModal(){
   const m=document.getElementById('upgrade-modal');
   if(m)m.style.display='none';
+}
+async function purchaseAddon(addonType){
+  const btn=document.getElementById('addon-buy-btn');
+  const orig=btn.textContent;btn.disabled=true;btn.textContent='決済画面を開いています…';
+  try{
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session){location.href='/login.html?next=/dashboard.html';return;}
+    const res=await fetch(SUPABASE_FN_BASE+'/purchase-addon',{
+      method:'POST',
+      headers:{'Content-Type':'application/json',apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+session.access_token},
+      body:JSON.stringify({addon_type:addonType,success_url:location.origin+'/success.html?type=addon',cancel_url:location.origin+'/dashboard.html'}),
+    });
+    if(!res.ok){const t=await res.text();throw new Error('purchase-addon '+res.status+': '+t);}
+    const data=await res.json();
+    if(data.url)location.href=data.url;
+    else throw new Error('No checkout URL');
+  }catch(e){
+    console.error('[purchaseAddon]',e);
+    alert('追加購入の決済画面を開けませんでした。\n'+(e.message||e));
+    btn.disabled=false;btn.textContent=orig;
+  }
 }
 
 // ─ Genre (see single-select definition further below) ───

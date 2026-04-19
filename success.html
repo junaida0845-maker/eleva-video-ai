@@ -42,13 +42,24 @@ p{color:var(--text-2);font-size:14px;line-height:1.7;margin-bottom:8px;}
 <script>
 document.addEventListener('DOMContentLoaded',async()=>{
   if(window.ELEVA?.applyLanguage)ELEVA.applyLanguage(localStorage.getItem('eleva_lang')||'ja');
+  const params=new URLSearchParams(location.search);
+  const isAddon=params.get('type')==='addon';
+  if(isAddon){
+    document.querySelector('h1').textContent='追加購入が完了しました';
+    document.querySelector('p').textContent='クレジットを追加しました。すぐに動画生成を続けられます。';
+    document.querySelector('.btn').setAttribute('href','/dashboard.html');
+    document.querySelector('.btn').textContent='動画生成に戻る';
+  }
   const sb=ELEVA.getSupabase?.();
   if(sb){
     try{
       const {data:{session}}=await sb.auth.getSession();
       if(session){
-        const {data}=await sb.from('profiles').select('plan_type').eq('id',session.user.id).single();
-        if(data?.plan_type)document.getElementById('plan-name').textContent=String(data.plan_type).toUpperCase();
+        const {data}=await sb.from('profiles').select('plan_type,credits_remaining').eq('id',session.user.id).single();
+        if(data){
+          if(isAddon)document.getElementById('plan-name').textContent='残クレジット: '+(data.credits_remaining||0);
+          else if(data.plan_type)document.getElementById('plan-name').textContent=String(data.plan_type).toUpperCase();
+        }
       }
     }catch(e){}
   }
