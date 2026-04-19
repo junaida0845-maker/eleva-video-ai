@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<title>ELEVA — マイページ</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#0a0a0a;--bg-2:#0f0f0f;--bg-3:#161616;--border:#1f1f1f;
+  --gold:#d4af37;--gold-2:#b8941f;--gold-soft:rgba(212,175,55,0.12);
+  --text:#fff;--text-2:#a8a8a8;--text-3:#6b6b6b;--danger:#9b6f6f;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter','Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;padding-bottom:80px;}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+::-webkit-scrollbar{width:8px;}::-webkit-scrollbar-thumb{background:rgba(212,175,55,0.25);border-radius:4px;}
+
+.nav{position:sticky;top:0;z-index:50;background:rgba(10,10,10,0.85);backdrop-filter:saturate(180%) blur(12px);border-bottom:1px solid var(--border);}
+.nav-inner{max-width:880px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;}
+.brand{font-weight:800;font-size:18px;letter-spacing:2px;color:var(--gold);}
+.nav-link{color:var(--text-2);font-size:13px;padding:8px 14px;border-radius:8px;}
+.nav-link:hover{color:var(--gold);background:var(--bg-3);}
+
+.page{max-width:880px;margin:0 auto;padding:32px 24px;}
+.page-title{font-size:24px;font-weight:800;letter-spacing:1px;margin-bottom:6px;}
+.page-sub{color:var(--text-3);font-size:13px;margin-bottom:32px;}
+
+.card{background:var(--bg-2);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:18px;}
+.card-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:12px;}
+.card-title{font-size:13px;letter-spacing:2px;color:var(--gold);font-weight:700;text-transform:uppercase;}
+.card-action{font-size:12px;color:var(--gold);padding:6px 12px;border:1px solid var(--gold);border-radius:8px;transition:background .15s;}
+.card-action:hover{background:var(--gold-soft);}
+
+/* Profile rows */
+.row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:14px;}
+.row:last-child{border-bottom:none;}
+.row-label{color:var(--text-3);font-size:12px;}
+.row-value{color:var(--text);font-weight:500;}
+
+/* Plan card big */
+.plan-name-big{font-size:30px;font-weight:800;letter-spacing:1px;color:var(--gold);margin-bottom:8px;}
+.plan-meta{color:var(--text-2);font-size:13px;margin-bottom:18px;}
+.usage-bar{background:#161616;border-radius:6px;height:8px;overflow:hidden;margin:10px 0;}
+.usage-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold) 0%,var(--gold-2) 100%);transition:width .4s ease;}
+.usage-text{display:flex;justify-content:space-between;font-size:12px;color:var(--text-2);}
+
+.btn{display:inline-block;background:linear-gradient(135deg,var(--gold) 0%,var(--gold-2) 100%);color:#0a0a0a;font-weight:700;padding:12px 22px;border-radius:12px;font-size:13px;letter-spacing:.5px;text-decoration:none;transition:transform .15s,box-shadow .15s;}
+.btn:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(212,175,55,0.35);}
+.btn-outline{background:transparent;color:var(--gold);border:1px solid var(--gold);}
+.btn-outline:hover{background:var(--gold-soft);}
+.btn-grey{background:transparent;color:var(--text-3);border:1px solid var(--border);font-weight:500;}
+.btn-grey:hover{color:var(--text-2);border-color:var(--text-3);}
+
+.actions-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;}
+
+/* SNS connect grid */
+.sns-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;}
+.sns-item{background:#161616;border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.sns-item-name{font-size:13px;font-weight:600;letter-spacing:.5px;}
+.sns-status{font-size:11px;padding:3px 10px;border-radius:999px;}
+.sns-status.connected{color:var(--gold);background:var(--gold-soft);}
+.sns-status.off{color:var(--text-3);background:rgba(255,255,255,0.04);}
+
+footer{margin-top:60px;border-top:1px solid var(--border);padding:30px 20px;text-align:center;}
+.footer-links{display:flex;flex-wrap:wrap;justify-content:center;gap:18px;margin-bottom:12px;}
+.footer-links a{color:var(--text-3);font-size:12px;}
+.footer-links a:hover{color:var(--gold);}
+.footer-copy{color:var(--text-3);font-size:11px;letter-spacing:.5px;}
+
+/* Modal */
+.modal-mask{position:fixed;inset:0;background:rgba(0,0,0,0.78);backdrop-filter:blur(6px);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-mask.open{display:flex;}
+.modal{background:#0f0f0f;border:1px solid #1f1f1f;border-radius:16px;width:100%;max-width:420px;padding:30px 26px;text-align:center;}
+.modal h3{font-size:17px;font-weight:800;margin-bottom:10px;}
+.modal p{color:var(--text-2);font-size:13px;line-height:1.7;margin-bottom:22px;}
+
+@media (max-width:600px){
+  .page{padding:24px 16px;}
+  .card{padding:20px 18px;}
+  .plan-name-big{font-size:24px;}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/dashboard.html" class="brand">ELEVA</a>
+    <a href="/dashboard.html" class="nav-link" data-i18n="back_to_dashboard">ダッシュボード</a>
+  </div>
+</nav>
+
+<div class="page">
+  <h1 class="page-title" data-i18n="mypage_title">マイページ</h1>
+  <div class="page-sub" data-i18n="mypage_sub">アカウント情報・プラン・支払いの一括管理</div>
+
+  <!-- Profile -->
+  <div class="card">
+    <div class="card-h"><span class="card-title" data-i18n="profile">プロフィール</span></div>
+    <div class="row"><span class="row-label" data-i18n="email">メールアドレス</span><span class="row-value" id="prof-email">—</span></div>
+    <div class="row"><span class="row-label" data-i18n="name">お名前</span><span class="row-value" id="prof-name">—</span></div>
+    <div class="row"><span class="row-label" data-i18n="company">会社名</span><span class="row-value" id="prof-company">—</span></div>
+    <div class="row"><span class="row-label" data-i18n="member_since">登録日</span><span class="row-value" id="prof-since">—</span></div>
+  </div>
+
+  <!-- Plan -->
+  <div class="card">
+    <div class="card-h">
+      <span class="card-title" data-i18n="current_plan">現在のプラン</span>
+      <a href="/pricing.html" class="card-action" data-i18n="change_plan">プラン変更</a>
+    </div>
+    <div class="plan-name-big" id="plan-name">—</div>
+    <div class="plan-meta" id="plan-meta">—</div>
+
+    <div class="usage-bar"><div class="usage-bar-fill" id="usage-fill" style="width:0%"></div></div>
+    <div class="usage-text"><span id="usage-current" data-i18n="usage_label">今月の使用</span><span id="usage-stat">—</span></div>
+
+    <div class="row" style="margin-top:18px;"><span class="row-label" data-i18n="next_billing">次回請求日</span><span class="row-value" id="next-billing">—</span></div>
+  </div>
+
+  <!-- Card / Billing -->
+  <div class="card">
+    <div class="card-h"><span class="card-title" data-i18n="payment_method">お支払い方法</span></div>
+    <p style="color:var(--text-2);font-size:13px;line-height:1.6;margin-bottom:14px;" data-i18n="card_desc">クレジットカードの追加・変更、領収書のダウンロード、解約は Stripe のお客様ポータルで安全に行えます。</p>
+    <div class="actions-row">
+      <a href="#" class="btn" id="portal-btn" data-i18n="manage_card">カード情報を更新する</a>
+      <a href="#" class="btn-outline btn" id="portal-invoices-btn" data-i18n="view_invoices">請求書を確認する</a>
+    </div>
+  </div>
+
+  <!-- SNS -->
+  <div class="card">
+    <div class="card-h">
+      <span class="card-title" data-i18n="sns_accounts">SNS アカウント連携</span>
+      <a href="/settings.html" class="card-action" data-i18n="manage">管理</a>
+    </div>
+    <div class="sns-grid" id="sns-grid">
+      <div class="sns-item"><span class="sns-item-name">TikTok</span><span class="sns-status off" data-platform="tiktok" data-i18n="not_connected">未連携</span></div>
+      <div class="sns-item"><span class="sns-item-name">Instagram</span><span class="sns-status off" data-platform="instagram" data-i18n="not_connected">未連携</span></div>
+      <div class="sns-item"><span class="sns-item-name">YouTube</span><span class="sns-status off" data-platform="youtube" data-i18n="not_connected">未連携</span></div>
+      <div class="sns-item"><span class="sns-item-name">X</span><span class="sns-status off" data-platform="x" data-i18n="not_connected">未連携</span></div>
+    </div>
+  </div>
+
+  <!-- Cancellation -->
+  <div class="card">
+    <div class="card-h"><span class="card-title" data-i18n="danger_zone">プラン解約</span></div>
+    <p style="color:var(--text-2);font-size:13px;line-height:1.7;" data-i18n="cancel_desc">サブスクリプションをいつでも解約できます。違約金はありません。当月末まではご利用いただけます。</p>
+    <div class="actions-row">
+      <button class="btn-grey btn" onclick="openCancelModal()" data-i18n="cancel_plan_btn">プランを解約する</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-links">
+    <a href="/commerce.html" data-i18n="legal_commerce">特定商取引法に基づく表記</a>
+    <a href="/terms.html" data-i18n="legal_terms">利用規約</a>
+    <a href="/privacy.html" data-i18n="legal_privacy">プライバシーポリシー</a>
+    <a href="/company.html" data-i18n="legal_company">会社情報</a>
+    <a href="/contact.html" data-i18n="legal_contact">お問い合わせ</a>
+  </div>
+  <div class="footer-copy">© 2026 株式会社LETIZIA — All rights reserved.</div>
+</footer>
+
+<!-- Cancel modal -->
+<div class="modal-mask" id="cancel-modal">
+  <div class="modal">
+    <h3 data-i18n="cancel_modal_title">プラン解約の確認</h3>
+    <p data-i18n="cancel_modal_body">Stripe のお客様ポータルに移動して、解約手続きを行います。当月末まではご利用いただけます。</p>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button class="btn" onclick="goToPortal()" data-i18n="cancel_modal_proceed">ポータルへ進む</button>
+      <button class="btn-grey btn" onclick="closeCancelModal()" data-i18n="cancel_modal_cancel">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<script src="/eleva-i18n.js?v=20260419"></script>
+<script src="/eleva-shared.js?v=20260419"></script>
+<script>
+const SUPABASE_URL='https://syxctolgqhdtcoaothwi.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5eGN0b2xncWhkdGNvYW90aHdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MDk5NjksImV4cCI6MjA5MDM4NTk2OX0.h38gOPGOcdIw_w8p4AEYVLHCaWuC8k2XRrjLPcFAtUw';
+
+let user=null;
+
+async function openPortal(){
+  const sb=ELEVA.getSupabase();
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){alert('ログインが必要です。');location.href='/login.html';return;}
+  try{
+    const res=await fetch(SUPABASE_URL+'/functions/v1/stripe-customer-portal',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        apikey:SUPABASE_ANON_KEY,
+        Authorization:'Bearer '+session.access_token,
+      },
+      body:JSON.stringify({return_url:location.origin+'/mypage.html'}),
+    });
+    if(!res.ok){
+      const t=await res.text();
+      throw new Error('Portal API '+res.status+': '+t);
+    }
+    const data=await res.json();
+    if(data.url)location.href=data.url;
+    else throw new Error('No portal URL returned');
+  }catch(err){
+    console.error('[portal] error',err);
+    alert('ポータルを開けませんでした。\n'+(err.message||err));
+  }
+}
+
+function openCancelModal(){document.getElementById('cancel-modal').classList.add('open');}
+function closeCancelModal(){document.getElementById('cancel-modal').classList.remove('open');}
+function goToPortal(){closeCancelModal();openPortal();}
+
+document.getElementById('portal-btn').addEventListener('click',e=>{e.preventDefault();openPortal();});
+document.getElementById('portal-invoices-btn').addEventListener('click',e=>{e.preventDefault();openPortal();});
+
+document.getElementById('cancel-modal').addEventListener('click',e=>{if(e.target.id==='cancel-modal')closeCancelModal();});
+
+function fmtDate(d){if(!d)return '—';try{return new Date(d).toLocaleDateString(navigator.language||'ja-JP');}catch{return '—';}}
+
+async function loadProfile(){
+  const sb=ELEVA.getSupabase();
+  user=await ELEVA.initElevaPage({page:'mypage',onUser:u=>{user=u;}});
+  if(!user)return;
+  document.getElementById('prof-email').textContent=user.email||'—';
+  try{
+    const {data:p}=await sb.from('profiles').select('full_name,company,plan_type,credits_remaining,videos_per_month,created_at,current_period_end').eq('id',user.id).single();
+    if(p){
+      document.getElementById('prof-name').textContent=p.full_name||'—';
+      document.getElementById('prof-company').textContent=p.company||'—';
+      document.getElementById('prof-since').textContent=fmtDate(p.created_at);
+      document.getElementById('plan-name').textContent=String(p.plan_type||'free').toUpperCase();
+      document.getElementById('next-billing').textContent=fmtDate(p.current_period_end);
+      const limit=p.videos_per_month||0;
+      const remaining=p.credits_remaining||0;
+      const used=Math.max(0,limit-remaining);
+      document.getElementById('usage-stat').textContent=used+' / '+limit;
+      const pct=limit>0?Math.min(100,Math.round((used/limit)*100)):0;
+      document.getElementById('usage-fill').style.width=pct+'%';
+      document.getElementById('plan-meta').textContent=
+        (window.elevaT?elevaT('videos_per_month_meta'):'月間生成上限')+' '+limit+(window.elevaT?elevaT('videos_unit'):'本');
+    }
+  }catch(e){console.warn('[mypage] profile load failed',e);}
+
+  try{
+    const {data:sns}=await sb.from('user_sns_accounts').select('platform').eq('user_id',user.id);
+    (sns||[]).forEach(row=>{
+      const el=document.querySelector('.sns-status[data-platform="'+row.platform+'"]');
+      if(el){el.textContent=window.elevaT?elevaT('connected'):'連携済み';el.classList.remove('off');el.classList.add('connected');}
+    });
+  }catch(e){console.warn('[mypage] sns load failed',e);}
+}
+
+document.addEventListener('DOMContentLoaded',async()=>{
+  if(window.ELEVA?.applyLanguage)ELEVA.applyLanguage(localStorage.getItem('eleva_lang')||'ja');
+  await loadProfile();
+});
+</script>
+</body>
+</html>
