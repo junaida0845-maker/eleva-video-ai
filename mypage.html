@@ -64,6 +64,29 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .sns-status.connected{color:var(--gold);background:var(--gold-soft);}
 .sns-status.off{color:var(--text-3);background:rgba(255,255,255,0.04);}
 
+/* Toggle */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.toggle-row:last-child{border-bottom:none;}
+.toggle-label{font-size:14px;font-weight:600;color:var(--text);}
+.toggle-sub{color:var(--text-3);font-size:12px;line-height:1.5;margin-top:2px;}
+.switch{position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0;}
+.switch input{opacity:0;width:0;height:0;}
+.slider{position:absolute;cursor:pointer;inset:0;background:#1f1f1f;border:1px solid var(--border);transition:.2s;border-radius:34px;}
+.slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background:#6b6b6b;transition:.2s;border-radius:50%;}
+.switch input:checked + .slider{background:var(--gold-soft);border-color:var(--gold);}
+.switch input:checked + .slider:before{transform:translateX(20px);background:var(--gold);}
+.switch input:disabled + .slider{opacity:.5;cursor:not-allowed;}
+
+/* Affiliate */
+.affil-code{display:flex;align-items:center;gap:10px;background:#161616;border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin:14px 0;}
+.affil-code-text{flex:1;font-family:'Inter',monospace;font-size:13px;color:var(--text);overflow-wrap:anywhere;}
+.affil-copy{padding:8px 14px;background:var(--gold-soft);color:var(--gold);border:1px solid var(--gold);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s;font-family:inherit;}
+.affil-copy:hover{background:var(--gold);color:#0a0a0a;}
+.affil-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px;}
+.stat-cell{background:#161616;border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;}
+.stat-cell-label{color:var(--text-3);font-size:11px;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;}
+.stat-cell-value{color:var(--gold);font-size:22px;font-weight:800;}
+
 footer{margin-top:60px;border-top:1px solid var(--border);padding:30px 20px;text-align:center;}
 .footer-links{display:flex;flex-wrap:wrap;justify-content:center;gap:18px;margin-bottom:12px;}
 .footer-links a{color:var(--text-3);font-size:12px;}
@@ -143,6 +166,37 @@ footer{margin-top:60px;border-top:1px solid var(--border);padding:30px 20px;text
       <div class="sns-item"><span class="sns-item-name">YouTube</span><span class="sns-status off" data-platform="youtube" data-i18n="not_connected">未連携</span></div>
       <div class="sns-item"><span class="sns-item-name">X</span><span class="sns-status off" data-platform="x" data-i18n="not_connected">未連携</span></div>
     </div>
+  </div>
+
+  <!-- Security -->
+  <div class="card">
+    <div class="card-h"><span class="card-title" data-i18n="security">セキュリティ</span></div>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label" data-i18n="biometric_label">生体認証ログイン</div>
+        <div class="toggle-sub" data-i18n="biometric_sub">Face ID や指紋でパスワード入力を省略します。お使いのデバイスで対応していない場合は無効になります。</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="biometric-toggle"/>
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Affiliate -->
+  <div class="card">
+    <div class="card-h"><span class="card-title" data-i18n="affiliate">友達紹介</span></div>
+    <p style="color:var(--text-2);font-size:13px;line-height:1.7;" data-i18n="affiliate_desc">紹介リンク経由で登録されると、あなたと相手の両方にクレジットが付与されます。有料プラン契約時には現金報酬も加算されます。</p>
+    <div class="affil-code">
+      <div class="affil-code-text" id="affil-url">—</div>
+      <button class="affil-copy" id="affil-copy-btn" data-i18n="copy">コピー</button>
+    </div>
+    <div class="affil-stats">
+      <div class="stat-cell"><div class="stat-cell-label" data-i18n="signups">登録</div><div class="stat-cell-value" id="affil-signups">0</div></div>
+      <div class="stat-cell"><div class="stat-cell-label" data-i18n="paid">有料化</div><div class="stat-cell-value" id="affil-paid">0</div></div>
+      <div class="stat-cell"><div class="stat-cell-label" data-i18n="rewards">獲得クレジット</div><div class="stat-cell-value" id="affil-credits">0</div></div>
+    </div>
+    <p style="color:var(--text-3);font-size:11px;margin-top:12px;line-height:1.6;" id="affil-rewards-note">— / —</p>
   </div>
 
   <!-- Cancellation -->
@@ -257,9 +311,140 @@ async function loadProfile(){
   }catch(e){console.warn('[mypage] sns load failed',e);}
 }
 
+// ─ Biometric (WebAuthn) ──────────────────────────────
+async function loadPreferences(){
+  if(!user)return null;
+  const sb=ELEVA.getSupabase();
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session)return null;
+  try{
+    const res=await fetch(SUPABASE_URL+'/functions/v1/user-preferences',{
+      headers:{apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+session.access_token},
+    });
+    if(!res.ok)return null;
+    return await res.json();
+  }catch(e){console.warn('[prefs] load failed',e);return null;}
+}
+async function savePreferences(body){
+  const sb=ELEVA.getSupabase();
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session)throw new Error('no session');
+  const res=await fetch(SUPABASE_URL+'/functions/v1/user-preferences',{
+    method:'POST',
+    headers:{'Content-Type':'application/json',apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+session.access_token},
+    body:JSON.stringify(body),
+  });
+  if(!res.ok){const t=await res.text();throw new Error('user-preferences '+res.status+': '+t);}
+  return await res.json().catch(()=>({}));
+}
+
+async function setupBiometric(){
+  const toggle=document.getElementById('biometric-toggle');
+  if(!toggle)return;
+  if(!window.PublicKeyCredential){
+    toggle.disabled=true;
+    return;
+  }
+  const prefs=await loadPreferences();
+  toggle.checked=!!(prefs?.biometric?.enabled);
+  toggle.addEventListener('change',async e=>{
+    const enable=e.target.checked;
+    toggle.disabled=true;
+    try{
+      if(enable){
+        const userId=new TextEncoder().encode(user.id).slice(0,32);
+        const cred=await navigator.credentials.create({publicKey:{
+          challenge:crypto.getRandomValues(new Uint8Array(32)),
+          rp:{name:'ELEVA',id:location.hostname},
+          user:{id:userId,name:user.email||'user',displayName:user.email||'ELEVA user'},
+          pubKeyCredParams:[{alg:-7,type:'public-key'},{alg:-257,type:'public-key'}],
+          authenticatorSelection:{userVerification:'required',residentKey:'preferred'},
+          timeout:60000,
+          attestation:'none',
+        }});
+        await savePreferences({biometric_enabled:true,biometric_credentials:[{id:cred.id,type:cred.type}]});
+      }else{
+        await savePreferences({biometric_enabled:false});
+      }
+    }catch(err){
+      console.error('[biometric]',err);
+      alert((enable?'生体認証の有効化':'無効化')+'に失敗しました。\n'+(err.message||err));
+      toggle.checked=!enable;
+    }finally{
+      toggle.disabled=false;
+    }
+  });
+  // First-run prompt
+  if(prefs && prefs.biometric && !prefs.biometric.prompt_shown){
+    setTimeout(showBiometricPrompt,800);
+  }
+}
+
+function showBiometricPrompt(){
+  const m=document.createElement('div');
+  m.className='modal-mask open';
+  m.style.zIndex='10000';
+  m.innerHTML=`<div class="modal">
+    <h3>生体認証を有効にしますか？</h3>
+    <p>Face ID や指紋でログインを高速化できます。設定はマイページからいつでも変更可能です。</p>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button class="btn" id="bio-yes">有効化する</button>
+      <button class="btn-grey btn" id="bio-no">今はしない</button>
+    </div>
+  </div>`;
+  document.body.appendChild(m);
+  const close=async(opt)=>{
+    m.remove();
+    try{
+      await savePreferences({biometric_prompt_shown:true});
+    }catch(e){}
+    if(opt){
+      const t=document.getElementById('biometric-toggle');
+      if(t){t.checked=true;t.dispatchEvent(new Event('change'));}
+    }
+  };
+  m.querySelector('#bio-yes').addEventListener('click',()=>close(true));
+  m.querySelector('#bio-no').addEventListener('click',()=>close(false));
+}
+
+// ─ Affiliate ─────────────────────────────────────────
+async function loadAffiliate(){
+  const sb=ELEVA.getSupabase();
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session)return;
+  try{
+    const res=await fetch(SUPABASE_URL+'/functions/v1/affiliate-manager?action=info',{
+      headers:{apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+session.access_token},
+    });
+    if(!res.ok)return;
+    const a=await res.json();
+    if(a.referral_url)document.getElementById('affil-url').textContent=a.referral_url;
+    if(a.stats){
+      document.getElementById('affil-signups').textContent=a.stats.total_signups||0;
+      document.getElementById('affil-paid').textContent=a.stats.total_paid_conversions||0;
+      document.getElementById('affil-credits').textContent=a.stats.total_credits_earned||0;
+    }
+    if(a.credits_per_signup||a.cash_per_paid){
+      document.getElementById('affil-rewards-note').textContent=
+        '登録: +'+(a.credits_per_signup||0)+'クレジット / 有料化: +'+(a.credits_per_paid||0)+'クレジット + ¥'+(a.cash_per_paid||0);
+    }
+    document.getElementById('affil-copy-btn').addEventListener('click',()=>{
+      navigator.clipboard.writeText(a.referral_url||'').then(()=>{
+        const b=document.getElementById('affil-copy-btn');
+        const orig=b.textContent;b.textContent='コピーしました';
+        setTimeout(()=>{b.textContent=orig;},1500);
+      });
+    });
+  }catch(e){console.warn('[affiliate] load failed',e);}
+}
+
 document.addEventListener('DOMContentLoaded',async()=>{
   if(window.ELEVA?.applyLanguage)ELEVA.applyLanguage(localStorage.getItem('eleva_lang')||'ja');
   await loadProfile();
+  if(user){
+    setupBiometric();
+    loadAffiliate();
+  }
 });
 </script>
 </body>
