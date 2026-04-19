@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<title>ELEVA — Buzz Viewer</title>
+<meta name="robots" content="noindex, nofollow"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#0a0a0a;--bg-2:#161616;--bg-3:#0d0d0d;--border:#2a2a2a;
+  --gold:#d4af37;--gold-2:#b8941f;--gold-soft:rgba(212,175,55,0.12);
+  --gold-line:rgba(212,175,55,0.18);
+  --text:#e8e8e8;--text-2:#a8a8a8;--text-3:#6b6b6b;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter','Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;padding-bottom:60px;}
+a{color:var(--gold);text-decoration:none;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+
+.nav{position:sticky;top:0;z-index:50;background:rgba(10,10,10,0.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);}
+.nav-inner{max-width:1100px;margin:0 auto;padding:14px 22px;display:flex;align-items:center;justify-content:space-between;gap:14px;}
+.brand{font-weight:800;font-size:18px;letter-spacing:2px;color:var(--gold);}
+.nav-tag{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--gold);color:var(--gold);font-size:10px;letter-spacing:1.5px;border-radius:999px;text-transform:uppercase;}
+.nav-back{color:var(--text-3);font-size:12px;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;border:1px solid var(--border);}
+.nav-back:hover{border-color:var(--gold);color:var(--gold);}
+
+.page{max-width:1100px;margin:0 auto;padding:32px 22px;}
+
+/* List mode */
+.section-h{font-size:16px;font-weight:800;letter-spacing:1.5px;color:var(--gold);margin-bottom:8px;text-transform:uppercase;}
+.section-sub{color:var(--text-3);font-size:12px;margin-bottom:24px;}
+.list-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;}
+.list-card{background:var(--bg-2);border:1px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;transition:transform .15s,border-color .15s,box-shadow .15s;display:flex;flex-direction:column;}
+.list-card:hover{transform:translateY(-3px);border-color:var(--gold);box-shadow:0 4px 22px rgba(212,175,55,0.12);}
+.list-thumb{aspect-ratio:9/16;background:linear-gradient(135deg,#1a1a1a,#2a2a2a);position:relative;overflow:hidden;}
+.list-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.list-thumb .fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-3);font-size:11px;letter-spacing:1px;text-transform:uppercase;}
+.list-body{padding:14px 16px 16px;}
+.list-title{font-size:13px;font-weight:600;line-height:1.4;color:var(--text);margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.list-meta{display:flex;align-items:center;justify-content:space-between;color:var(--text-3);font-size:11px;}
+.list-meta .views{color:var(--gold);font-weight:600;}
+.list-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+.tag{font-size:10px;padding:2px 8px;border-radius:999px;background:var(--gold-soft);color:var(--gold);letter-spacing:.5px;}
+
+/* Detail mode */
+.detail-h{margin-bottom:28px;}
+.detail-title{font-size:24px;font-weight:800;letter-spacing:.5px;line-height:1.3;margin-bottom:10px;}
+.detail-sub{display:flex;flex-wrap:wrap;gap:14px;color:var(--text-2);font-size:12px;align-items:center;}
+.detail-sub .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--gold-line);color:var(--gold);border-radius:999px;font-weight:600;letter-spacing:.5px;}
+
+.divider{display:flex;align-items:center;gap:14px;margin:36px 0 20px;}
+.divider .line{flex:1;height:1px;background:var(--gold-line);}
+.divider .label{font-size:11px;letter-spacing:2px;color:var(--gold);font-weight:700;text-transform:uppercase;}
+
+.hook-card{background:var(--bg-2);border:1px solid var(--gold);border-radius:14px;padding:18px 22px;margin-bottom:24px;}
+.hook-key{font-size:11px;letter-spacing:1.5px;color:var(--gold);text-transform:uppercase;margin-bottom:6px;}
+.hook-text{font-size:15px;color:var(--text);line-height:1.6;}
+
+.scene{background:var(--bg-2);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:18px;display:grid;grid-template-columns:240px 1fr;gap:20px;}
+@media (max-width:720px){.scene{grid-template-columns:1fr;}}
+.scene-img-wrap{position:relative;border-radius:12px;overflow:hidden;background:linear-gradient(135deg,#1a1a1a,#2a2a2a);aspect-ratio:9/16;box-shadow:0 6px 28px rgba(0,0,0,0.55);}
+.scene-img-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
+.scene-img-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-3);font-size:11px;letter-spacing:1px;text-transform:uppercase;text-align:center;padding:20px;}
+.scene-body{display:flex;flex-direction:column;gap:10px;}
+.scene-time{font-size:11px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;font-weight:700;}
+.scene-stage{font-size:14px;font-weight:700;letter-spacing:.5px;color:var(--text);}
+.scene-row{display:flex;gap:10px;font-size:13px;color:var(--text);line-height:1.6;}
+.scene-row .icon{flex-shrink:0;width:14px;height:14px;color:var(--gold);margin-top:4px;}
+.scene-row .label{color:var(--text-3);font-size:11px;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:2px;}
+.scene-row .value{color:var(--text);font-size:13px;line-height:1.55;}
+.scene-row .sub{color:var(--text-3);font-size:11px;margin-top:2px;}
+
+/* Patterns / hashtags */
+.patterns-card,.hashtags-card{background:var(--bg-2);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:18px;}
+.pattern-item{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px;color:var(--text);font-family:'Inter',monospace;}
+.pattern-item .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0;}
+.hashtags-wrap{display:flex;flex-wrap:wrap;gap:8px;}
+.hashtags-wrap .tag{font-size:12px;padding:5px 12px;}
+
+/* CTA */
+.cta-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:32px;}
+@media (max-width:480px){.cta-row{grid-template-columns:1fr;}}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 22px;border-radius:12px;font-weight:700;font-size:14px;letter-spacing:.5px;text-decoration:none;transition:transform .15s,box-shadow .15s,opacity .15s;font-family:inherit;cursor:pointer;border:none;}
+.btn-solid{background:linear-gradient(135deg,var(--gold) 0%,var(--gold-2) 100%);color:#0a0a0a;}
+.btn-solid:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(212,175,55,0.35);}
+.btn-outline{background:transparent;color:var(--gold);border:1px solid var(--gold);}
+.btn-outline:hover{background:var(--gold-soft);}
+.btn:disabled,.btn.disabled{opacity:.5;cursor:not-allowed;pointer-events:auto;}
+.btn .tooltip{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#0d0d0d;color:var(--text-2);font-size:11px;padding:6px 10px;border-radius:6px;border:1px solid var(--border);white-space:nowrap;}
+.btn-wrap{position:relative;}
+.btn-wrap:hover .tooltip{display:block;}
+
+/* Skeleton / empty */
+.skel{background:linear-gradient(90deg,#161616 25%,#1f1f1f 50%,#161616 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:8px;}
+@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+.empty{text-align:center;padding:60px 20px;color:var(--text-3);}
+.empty .ic{margin:0 auto 14px;color:var(--gold);}
+.error-banner{background:rgba(191,127,127,0.1);border:1px solid rgba(191,127,127,0.3);color:#bf7f7f;padding:14px 18px;border-radius:10px;font-size:13px;margin-bottom:20px;font-family:'JetBrains Mono','Inter',monospace;word-break:break-all;}
+
+footer{margin-top:60px;border-top:1px solid var(--border);padding:24px 20px;text-align:center;color:var(--text-3);font-size:11px;letter-spacing:.5px;}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute;" aria-hidden="true">
+  <defs>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="1.6" fill="none"/><circle cx="12" cy="12" r="2.5" stroke="currentColor" stroke-width="1.6" fill="none"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l2-2h6l2 2h3a1 1 0 011 1v9a1 1 0 01-1 1H4a1 1 0 01-1-1V9a1 1 0 011-1z" stroke="currentColor" stroke-width="1.6" fill="none"/><circle cx="12" cy="13" r="3.5" stroke="currentColor" stroke-width="1.6" fill="none"/></symbol>
+    <symbol id="i-text" viewBox="0 0 24 24"><path d="M5 5h14M5 5v2M19 5v2M12 5v14M9 19h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l11-2v13M9 18a3 3 0 11-3-3 3 3 0 013 3zM20 16a3 3 0 11-3-3 3 3 0 013 3z" stroke="currentColor" stroke-width="1.6" fill="none"/></symbol>
+    <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2 2-6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" fill="none"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
+  </defs>
+</svg>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <span class="brand">ELEVA</span>
+    <span class="nav-tag">BUZZ VIEWER</span>
+    <a href="/buzz-viewer.html" id="nav-back" class="nav-back" style="display:none;"><svg width="11" height="11"><use href="#i-back"/></svg> 一覧へ</a>
+  </div>
+</nav>
+
+<div class="page" id="page">
+  <div class="empty"><div class="skel" style="height:200px;width:100%;max-width:500px;margin:0 auto;"></div></div>
+</div>
+
+<footer>© 2026 株式会社LETIZIA · admin viewer</footer>
+
+<script>
+const SUPABASE_URL='https://syxctolgqhdtcoaothwi.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5eGN0b2xncWhkdGNvYW90aHdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MDk5NjksImV4cCI6MjA5MDM4NTk2OX0.h38gOPGOcdIw_w8p4AEYVLHCaWuC8k2XRrjLPcFAtUw';
+const STUDIO_PLANS=['studio_v2','enterprise_lite','enterprise_standard','enterprise_premium'];
+
+function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function fmtViews(n){
+  n=Number(n||0);
+  if(n>=1e8)return (n/1e8).toFixed(1)+'億';
+  if(n>=1e4)return (n/1e4).toFixed(1)+'万';
+  if(n>=1e3)return (n/1e3).toFixed(1)+'k';
+  return String(n);
+}
+
+async function pgrest(path){
+  const res=await fetch(SUPABASE_URL+'/rest/v1/'+path,{
+    headers:{
+      apikey:SUPABASE_ANON_KEY,
+      Authorization:'Bearer '+SUPABASE_ANON_KEY,
+      Accept:'application/json',
+    },
+    cache:'no-store',
+  });
+  if(!res.ok)throw new Error('PostgREST '+res.status+': '+await res.text());
+  return await res.json();
+}
+
+function pickThumb(buzz){
+  // storyboard_urls: [{segment_index, url}, ...]  OR  [url, ...]
+  const sb=buzz.storyboard_urls;
+  if(!sb)return null;
+  if(Array.isArray(sb)){
+    if(typeof sb[0]==='string')return sb[0];
+    return sb[0]?.url||null;
+  }
+  return null;
+}
+
+function urlForSegment(buzz, segIdx){
+  const sb=buzz.storyboard_urls;
+  if(!Array.isArray(sb))return null;
+  const found=sb.find(s=>s&&typeof s==='object'&&Number(s.segment_index)===Number(segIdx));
+  if(found)return found.url||null;
+  if(typeof sb[segIdx]==='string')return sb[segIdx];
+  if(sb[segIdx]&&typeof sb[segIdx]==='object')return sb[segIdx].url||null;
+  return null;
+}
+
+// ───────── List Mode ─────────
+async function renderList(){
+  const page=document.getElementById('page');
+  page.innerHTML=`
+    <div class="section-h">分析済みバズ動画</div>
+    <div class="section-sub">タップで詳細（shooting_script + 絵コンテ）を表示します。</div>
+    <div class="list-grid" id="list-grid"></div>
+  `;
+  const grid=document.getElementById('list-grid');
+  // Skeletons
+  grid.innerHTML=Array.from({length:6}).map(()=>`
+    <div class="list-card"><div class="list-thumb skel"></div><div class="list-body"><div class="skel" style="height:14px;width:80%;margin-bottom:8px;"></div><div class="skel" style="height:11px;width:50%;"></div></div></div>
+  `).join('');
+
+  let rows;
+  try{
+    rows=await pgrest('global_buzz_data?analysis_status=eq.done&order=buzz_score.desc&limit=10&select=id,title,views,buzz_score,genre,platform,storyboard_urls,shooting_script');
+  }catch(e){
+    grid.innerHTML='';
+    page.insertAdjacentHTML('afterbegin','<div class="error-banner">取得失敗: '+escapeHtml(e.message||e)+'</div>');
+    return;
+  }
+
+  if(!rows||!rows.length){
+    grid.innerHTML='<div class="empty" style="grid-column:1/-1;"><svg width="32" height="32" class="ic"><use href="#i-eye"/></svg><div>分析済みのバズ動画はまだありません。</div></div>';
+    return;
+  }
+
+  grid.innerHTML=rows.map(b=>{
+    const thumb=pickThumb(b);
+    const tags=[];
+    if(b.genre)tags.push(b.genre);
+    if(b.platform)tags.push(b.platform);
+    return `
+    <div class="list-card" onclick="location.href='?id='+encodeURIComponent('${escapeHtml(b.id)}')">
+      <div class="list-thumb">
+        ${thumb?`<img src="${escapeHtml(thumb)}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='&lt;div class=\\'fallback\\'&gt;NO PREVIEW&lt;/div&gt;'"/>`:'<div class="fallback">NO PREVIEW</div>'}
+      </div>
+      <div class="list-body">
+        <div class="list-title">${escapeHtml(b.title||'(無題)')}</div>
+        <div class="list-meta">
+          <span class="views">${fmtViews(b.views)} views</span>
+          <span>Score ${escapeHtml(b.buzz_score||'—')}</span>
+        </div>
+        ${tags.length?`<div class="list-tags">${tags.map(t=>`<span class="tag">#${escapeHtml(t)}</span>`).join('')}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ───────── Detail Mode ─────────
+async function renderDetail(id){
+  const page=document.getElementById('page');
+  document.getElementById('nav-back').style.display='inline-flex';
+
+  // Skeleton
+  page.innerHTML=`
+    <div class="detail-h">
+      <div class="skel" style="height:24px;width:60%;margin-bottom:14px;"></div>
+      <div class="skel" style="height:14px;width:40%;"></div>
+    </div>
+    <div class="scene"><div class="scene-img-wrap skel"></div><div class="scene-body"><div class="skel" style="height:14px;width:30%;margin-bottom:10px;"></div><div class="skel" style="height:14px;width:90%;"></div></div></div>
+  `;
+
+  let rows;
+  try{
+    rows=await pgrest('global_buzz_data?id=eq.'+encodeURIComponent(id)+'&select=*&limit=1');
+  }catch(e){
+    page.innerHTML='<div class="error-banner">取得失敗: '+escapeHtml(e.message||e)+'</div>';
+    return;
+  }
+  const buzz=rows&&rows[0];
+  if(!buzz){
+    page.innerHTML='<div class="empty"><svg width="32" height="32" class="ic"><use href="#i-eye"/></svg><div>該当するバズ動画が見つかりませんでした。</div><a href="/buzz-viewer.html" style="display:inline-block;margin-top:14px;color:var(--gold);">← 一覧へ戻る</a></div>';
+    return;
+  }
+
+  // Plan check (best-effort, anonymous fetch may not see other users; use auth session if present)
+  let isStudio=false;
+  try{
+    const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    const {data:{session}}=await sb.auth.getSession();
+    if(session){
+      const {data:p}=await sb.from('profiles').select('plan_id').eq('id',session.user.id).single();
+      if(p&&STUDIO_PLANS.includes(p.plan_id))isStudio=true;
+    }
+  }catch{}
+
+  const script=buzz.shooting_script||{};
+  const segments=Array.isArray(script.segments)?script.segments:[];
+  const hookSeg=segments.find(s=>(s.stage||s.label||s.hook)==='hook')||segments[0];
+  const patterns=script.cross_genre_patterns||script.patterns||[];
+  const hashtags=script.hashtags||script.suggested_hashtags||buzz.hashtags||[];
+
+  page.innerHTML=`
+    <div class="detail-h">
+      <div class="detail-title">${escapeHtml(buzz.title||'(無題)')}</div>
+      <div class="detail-sub">
+        ${buzz.genre?`<span class="pill">#${escapeHtml(buzz.genre)}</span>`:''}
+        ${buzz.platform?`<span class="pill">${escapeHtml(buzz.platform)}</span>`:''}
+        <span><svg width="11" height="11" style="color:var(--gold);vertical-align:-1px;margin-right:4px;"><use href="#i-eye"/></svg>${fmtViews(buzz.views)} views</span>
+        ${buzz.buzz_score!=null?`<span>Score <strong style="color:var(--gold);">${escapeHtml(buzz.buzz_score)}</strong></span>`:''}
+      </div>
+    </div>
+
+    ${hookSeg?`
+    <div class="hook-card">
+      <div class="hook-key">フック ｜ ${escapeHtml(hookSeg.label||hookSeg.hook||hookSeg.stage||'opening')}</div>
+      <div class="hook-text">${escapeHtml(hookSeg.visual_jp||hookSeg.visual||hookSeg.description||'')}</div>
+    </div>`:''}
+
+    <div class="divider"><div class="line"></div><div class="label">Shooting Script</div><div class="line"></div></div>
+
+    <div id="scenes">
+      ${segments.map((seg,idx)=>renderScene(seg,idx,buzz)).join('')}
+    </div>
+
+    ${patterns.length?`
+    <div class="divider"><div class="line"></div><div class="label">クロスジャンル転用パターン</div><div class="line"></div></div>
+    <div class="patterns-card">
+      ${patterns.map(p=>`<div class="pattern-item"><span class="dot"></span><span>${escapeHtml(typeof p==='string'?p:(p.name||p.label||p.pattern||JSON.stringify(p)))}</span></div>`).join('')}
+    </div>`:''}
+
+    ${hashtags.length?`
+    <div class="divider"><div class="line"></div><div class="label">推奨ハッシュタグ</div><div class="line"></div></div>
+    <div class="hashtags-card">
+      <div class="hashtags-wrap">${hashtags.map(h=>`<span class="tag">#${escapeHtml(String(h).replace(/^#/,''))}</span>`).join('')}</div>
+    </div>`:''}
+
+    <div class="cta-row">
+      <a class="btn btn-solid" href="/dashboard.html?template=${encodeURIComponent(buzz.id)}">
+        <svg width="14" height="14"><use href="#i-sparkles"/></svg>
+        このテンプレで動画を生成
+      </a>
+      <span class="btn-wrap">
+        <button class="btn btn-outline ${isStudio?'':'disabled'}" id="pdf-btn" ${isStudio?'':'disabled'}>
+          PDF ダウンロード（Studio）
+        </button>
+        ${isStudio?'':'<span class="tooltip">Studio プラン以上で利用可能</span>'}
+      </span>
+    </div>
+  `;
+
+  if(isStudio){
+    document.getElementById('pdf-btn').addEventListener('click',()=>{
+      alert('PDF 生成は近日提供予定です。');
+    });
+  }
+}
+
+function renderScene(seg,idx,buzz){
+  const segIdx=seg.index!=null?seg.index:idx;
+  const url=urlForSegment(buzz,segIdx);
+  const t0=seg.time_start!=null?seg.time_start:seg.t_start;
+  const t1=seg.time_end!=null?seg.time_end:seg.t_end;
+  const time=t0!=null&&t1!=null?(Number(t0).toFixed(1)+' 〜 '+Number(t1).toFixed(1)+'秒'):'';
+  const stage=seg.stage||seg.label||seg.hook||('Scene '+(segIdx+1));
+  const visual=seg.visual_jp||seg.visual||seg.description||'';
+  const camera=seg.camera||seg.shot||'';
+  const telop=seg.telop||{};
+  const telopText=telop.text_jp||telop.text||seg.caption_jp||'';
+  const telopStyle=telop.style||telop.font||'';
+  const sound=seg.sound||seg.sfx||seg.bgm||'';
+
+  return `
+  <div class="scene">
+    <div class="scene-img-wrap">
+      ${url?`<img src="${escapeHtml(url)}" alt="Scene ${segIdx}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"/><div class="scene-img-fallback" style="display:none;">画像生成失敗<br/>(Pollinations)</div>`
+        :`<div class="scene-img-fallback">画像 URL なし</div>`}
+    </div>
+    <div class="scene-body">
+      <div class="scene-time">${escapeHtml(time)} ｜ ${escapeHtml(stage)}</div>
+      ${visual?`<div class="scene-row"><svg class="icon"><use href="#i-eye"/></svg><div><span class="label">視覚</span><span class="value">${escapeHtml(visual)}</span></div></div>`:''}
+      ${camera?`<div class="scene-row"><svg class="icon"><use href="#i-camera"/></svg><div><span class="label">カメラ</span><span class="value">${escapeHtml(camera)}</span></div></div>`:''}
+      ${telopText?`<div class="scene-row"><svg class="icon"><use href="#i-text"/></svg><div><span class="label">テロップ</span><span class="value">${escapeHtml(telopText)}</span>${telopStyle?`<span class="sub">スタイル: ${escapeHtml(telopStyle)}</span>`:''}</div></div>`:''}
+      ${sound?`<div class="scene-row"><svg class="icon"><use href="#i-music"/></svg><div><span class="label">サウンド</span><span class="value">${escapeHtml(sound)}</span></div></div>`:''}
+    </div>
+  </div>`;
+}
+
+// ───────── Boot ─────────
+const params=new URLSearchParams(location.search);
+const id=params.get('id');
+if(id)renderDetail(id);
+else renderList();
+</script>
+</body>
+</html>
