@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<title>ELEVA — Debug: Gemini Health Check</title>
+<meta name="robots" content="noindex, nofollow"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0a0a0a;--bg-2:#161616;--bg-3:#0d0d0d;--border:#2a2a2a;
+  --gold:#d4af37;--gold-2:#b8941f;--gold-soft:rgba(212,175,55,0.12);
+  --text:#e8e8e8;--text-2:#a8a8a8;--text-3:#6b6b6b;
+  --ok:#7fbf7f;--err:#bf7f7f;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter','Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;padding-bottom:80px;}
+
+.nav{position:sticky;top:0;z-index:50;background:rgba(10,10,10,0.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);}
+.nav-inner{max-width:980px;margin:0 auto;padding:14px 22px;display:flex;align-items:center;justify-content:space-between;}
+.brand{font-weight:800;font-size:18px;letter-spacing:2px;color:var(--gold);}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--gold);color:var(--gold);font-size:10px;letter-spacing:1.5px;border-radius:999px;text-transform:uppercase;}
+
+.page{max-width:980px;margin:0 auto;padding:32px 22px;}
+.h1{font-size:22px;font-weight:800;letter-spacing:.5px;color:var(--gold);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.lead{color:var(--text-2);font-size:13px;line-height:1.7;margin-bottom:24px;}
+
+.note{background:var(--gold-soft);border:1px solid var(--gold);border-radius:10px;padding:12px 16px;color:var(--text);font-size:12px;line-height:1.7;margin-bottom:20px;}
+.note strong{color:var(--gold);}
+
+.matrix{background:var(--bg-2);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:24px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:11px;}
+.matrix div{padding:6px 0;}
+.matrix .lbl{color:var(--text-3);letter-spacing:.5px;text-transform:uppercase;}
+.matrix .v{color:var(--gold);font-weight:600;}
+
+.step{background:var(--bg-2);border:1px solid var(--border);border-radius:16px;padding:22px;margin-bottom:18px;}
+.step-h{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px;}
+.step-title{display:flex;align-items:center;gap:12px;}
+.step-num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:1px solid var(--gold);color:var(--gold);font-weight:700;font-size:12px;border-radius:50%;letter-spacing:1px;}
+.step-name{font-weight:700;font-size:15px;letter-spacing:.5px;}
+.step-meta{color:var(--text-3);font-size:11px;font-family:'JetBrains Mono',monospace;word-break:break-all;}
+
+.btn{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--gold) 0%,var(--gold-2) 100%);color:#0a0a0a;padding:10px 20px;border-radius:10px;font-weight:700;font-size:13px;letter-spacing:.5px;border:none;cursor:pointer;font-family:inherit;transition:transform .15s,box-shadow .15s,opacity .15s;}
+.btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 4px 16px rgba(212,175,55,0.3);}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.btn .icon-spin{width:14px;height:14px;animation:spin 1s linear infinite;display:none;}
+.btn.loading .icon-spin{display:inline-block;}
+.btn.loading .icon-go{display:none;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.btn-ghost{background:transparent;color:var(--gold);border:1px solid var(--gold);padding:10px 16px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;}
+.btn-ghost:hover{background:var(--gold-soft);}
+
+.status-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.5px;}
+.status-pill.idle{background:rgba(255,255,255,0.04);color:var(--text-3);}
+.status-pill.run{background:var(--gold-soft);color:var(--gold);}
+.status-pill.ok{background:rgba(127,191,127,0.12);color:var(--ok);border:1px solid rgba(127,191,127,0.3);}
+.status-pill.err{background:rgba(191,127,127,0.12);color:var(--err);border:1px solid rgba(191,127,127,0.3);}
+
+pre.result{
+  white-space:pre-wrap;word-break:break-all;
+  background:#0d0d0d;color:#e8e8e8;
+  padding:16px;border-radius:8px;font-size:12px;
+  max-height:600px;overflow:auto;
+  font-family:'JetBrains Mono','SFMono-Regular',Menlo,monospace;
+  border:1px solid var(--border);
+  line-height:1.55;
+}
+.meta-row{display:flex;flex-wrap:wrap;gap:8px;font-size:11px;color:var(--text-3);font-family:'JetBrains Mono',monospace;margin-top:10px;}
+.meta-chip{background:var(--bg-3);border:1px solid var(--border);padding:3px 8px;border-radius:6px;}
+
+.advice{margin-top:24px;background:var(--bg-2);border:1px solid var(--border);border-radius:14px;padding:18px;color:var(--text-2);font-size:12px;line-height:1.85;}
+.advice h3{color:var(--gold);font-size:13px;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;}
+.advice code{background:var(--bg-3);padding:2px 6px;border-radius:4px;color:var(--gold);font-family:'JetBrains Mono',monospace;font-size:11px;}
+.advice ul{margin:8px 0 0 18px;}
+
+@media (max-width:640px){
+  .page{padding:24px 14px;}
+  .step{padding:18px;}
+  .step-h{flex-direction:column;align-items:flex-start;}
+  pre.result{font-size:11px;padding:12px;max-height:480px;}
+  .matrix{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute;" aria-hidden="true">
+  <defs>
+    <symbol id="i-bug" viewBox="0 0 24 24"><path d="M8 6V4a4 4 0 018 0v2M5 11h14M5 11v6a7 7 0 0014 0v-6M3 16h2M19 16h2M3 9h3M18 9h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="i-go" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
+    <symbol id="i-spin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" fill="none" stroke-dasharray="14 28" stroke-linecap="round"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2" stroke="currentColor" stroke-width="1.6" fill="none"/></symbol>
+  </defs>
+</svg>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <span class="brand">ELEVA</span>
+    <span class="tag"><svg width="11" height="11"><use href="#i-bug"/></svg> DEBUG · GEMINI</span>
+  </div>
+</nav>
+
+<div class="page">
+  <h1 class="h1"><svg width="22" height="22"><use href="#i-bug"/></svg> Gemini API Health Check</h1>
+  <p class="lead">Edge Function <code style="color:var(--gold);">gemini-health-check</code> 経由で Generative Language API を 3 段階テストします。鍵はサーバー側保管、ブラウザには露出しません。</p>
+
+  <div class="note">
+    <strong>noindex / no-cache</strong>。順番に <strong>TEST 1 → 2 → 3</strong> を実行し、各 <code>&lt;pre&gt;</code> の JSON 全文をスクショして共有してください。
+  </div>
+
+  <!-- Run-all + key/status overview -->
+  <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+    <button class="btn" onclick="runAll()">
+      <svg class="icon-go" width="14" height="14"><use href="#i-go"/></svg>
+      <svg class="icon-spin" width="14" height="14"><use href="#i-spin"/></svg>
+      3つ全部 順番に実行
+    </button>
+    <button class="btn-ghost" onclick="copyAll()">
+      <svg width="14" height="14"><use href="#i-copy"/></svg>
+      3レスポンスまとめてコピー
+    </button>
+  </div>
+
+  <!-- TEST 1 -->
+  <div class="step">
+    <div class="step-h">
+      <div class="step-title">
+        <span class="step-num">1</span>
+        <div>
+          <div class="step-name">キーで利用可能なモデル一覧</div>
+          <div class="step-meta">GET /v1beta/models — gemini-2.5-flash / -flash-image が含まれるか確認</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <span class="status-pill idle" id="status-1">IDLE</span>
+        <button class="btn" id="btn-1" onclick="runStep(1)">
+          <svg class="icon-go" width="14" height="14"><use href="#i-go"/></svg>
+          <svg class="icon-spin" width="14" height="14"><use href="#i-spin"/></svg>
+          実行
+        </button>
+        <button class="btn-ghost" onclick="copyResult(1)">
+          <svg width="14" height="14"><use href="#i-copy"/></svg>
+          コピー
+        </button>
+      </div>
+    </div>
+    <pre class="result" id="result-1">(未実行)</pre>
+    <div class="meta-row" id="meta-1"></div>
+  </div>
+
+  <!-- TEST 2 -->
+  <div class="step">
+    <div class="step-h">
+      <div class="step-title">
+        <span class="step-num">2</span>
+        <div>
+          <div class="step-name">Gemini 2.5 Flash 単純呼び出し</div>
+          <div class="step-meta">POST /v1beta/models/gemini-2.5-flash:generateContent</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <span class="status-pill idle" id="status-2">IDLE</span>
+        <button class="btn" id="btn-2" onclick="runStep(2)">
+          <svg class="icon-go" width="14" height="14"><use href="#i-go"/></svg>
+          <svg class="icon-spin" width="14" height="14"><use href="#i-spin"/></svg>
+          実行
+        </button>
+        <button class="btn-ghost" onclick="copyResult(2)">
+          <svg width="14" height="14"><use href="#i-copy"/></svg>
+          コピー
+        </button>
+      </div>
+    </div>
+    <pre class="result" id="result-2">(未実行)</pre>
+    <div class="meta-row" id="meta-2"></div>
+  </div>
+
+  <!-- TEST 3 -->
+  <div class="step">
+    <div class="step-h">
+      <div class="step-title">
+        <span class="step-num">3</span>
+        <div>
+          <div class="step-name">Gemini 2.5 Flash Image（画像生成）</div>
+          <div class="step-meta">POST /v1beta/models/gemini-2.5-flash-image:generateContent</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <span class="status-pill idle" id="status-3">IDLE</span>
+        <button class="btn" id="btn-3" onclick="runStep(3)">
+          <svg class="icon-go" width="14" height="14"><use href="#i-go"/></svg>
+          <svg class="icon-spin" width="14" height="14"><use href="#i-spin"/></svg>
+          実行
+        </button>
+        <button class="btn-ghost" onclick="copyResult(3)">
+          <svg width="14" height="14"><use href="#i-copy"/></svg>
+          コピー
+        </button>
+      </div>
+    </div>
+    <pre class="result" id="result-3">(未実行)</pre>
+    <div class="meta-row" id="meta-3"></div>
+  </div>
+
+  <div class="advice">
+    <h3>結果パターン別の対処</h3>
+    <ul>
+      <li><strong>A:</strong> TEST 1 のレスポンスに <code>gemini-2.5-flash</code> が無い → Generative Language API が新プロジェクトで未有効化。<br/>
+        <code>https://console.cloud.google.com/apis/library/generativelanguage.googleapis.com</code> を開き、<strong>Gemini Project</strong>（APIA ではない）を選択して「有効にする」。</li>
+      <li><strong>B:</strong> TEST 1 OK / TEST 2 が 403 → API キーに API restrictions がかかっている。Google AI Studio で「Don't restrict key」に変更。</li>
+      <li><strong>C:</strong> TEST 2 OK / TEST 3 が 403 → image モデルがリージョン制限されている。<code>gemini-3-flash-preview</code> または <code>imagen-4-fast</code> へのフォールバックを検討。</li>
+      <li><strong>D:</strong> 全部 OK → analyze-buzz-video 側のモデル名 / プロンプトの問題。生成パラメータを見直し。</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL='https://syxctolgqhdtcoaothwi.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5eGN0b2xncWhkdGNvYW90aHdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MDk5NjksImV4cCI6MjA5MDM4NTk2OX0.h38gOPGOcdIw_w8p4AEYVLHCaWuC8k2XRrjLPcFAtUw';
+const FN_URL=SUPABASE_URL+'/functions/v1/gemini-health-check';
+
+function setStatus(n,kind,label){
+  const el=document.getElementById('status-'+n);
+  el.className='status-pill '+kind;
+  el.textContent=label;
+}
+function setMeta(n,info){
+  const wrap=document.getElementById('meta-'+n);
+  wrap.innerHTML='';
+  Object.entries(info||{}).forEach(([k,v])=>{
+    const c=document.createElement('span');
+    c.className='meta-chip';
+    c.textContent=k+': '+v;
+    wrap.appendChild(c);
+  });
+}
+
+async function runStep(n){
+  if(![1,2,3].includes(n))return;
+  const btn=document.getElementById('btn-'+n);
+  btn.disabled=true;btn.classList.add('loading');
+  setStatus(n,'run','RUNNING');
+  document.getElementById('result-'+n).textContent='実行中…';
+  setMeta(n,{});
+
+  const t0=performance.now();
+  let status=0,raw='',data=null,err=null;
+  try{
+    const res=await fetch(FN_URL,{
+      method:'POST',
+      cache:'no-store',
+      headers:{
+        'Content-Type':'application/json',
+        'Cache-Control':'no-cache',
+        'Pragma':'no-cache',
+        apikey:SUPABASE_ANON_KEY,
+        Authorization:'Bearer '+SUPABASE_ANON_KEY,
+      },
+      body:JSON.stringify({test:n}),
+    });
+    status=res.status;
+    raw=await res.text();
+    try{data=JSON.parse(raw);}catch{data=null;}
+  }catch(e){
+    err=e;
+  }
+  const ms=Math.round(performance.now()-t0);
+
+  const pre=document.getElementById('result-'+n);
+  if(err){
+    pre.textContent='[fetch failed]\n'+(err.message||err)+'\n\n'+(err.stack||'');
+    setStatus(n,'err','ERROR');
+  }else{
+    const upstreamOk=data&&data.ok===true;
+    if(status>=200&&status<300&&upstreamOk){
+      setStatus(n,'ok','OK '+(data.status||status));
+    }else{
+      setStatus(n,'err','ERROR '+(data?.status||status));
+    }
+    pre.textContent=data?JSON.stringify(data,null,2):raw;
+  }
+  setMeta(n,{
+    fn:FN_URL,
+    test:n,
+    upstream_status:data?.status||'—',
+    edge_status:status||'fail',
+    elapsed:ms+'ms',
+    bytes:raw.length,
+  });
+
+  btn.disabled=false;btn.classList.remove('loading');
+}
+
+async function runAll(){
+  for(const n of [1,2,3]){
+    await runStep(n);
+  }
+}
+
+function copyResult(n){
+  const text=document.getElementById('result-'+n).textContent||'';
+  navigator.clipboard.writeText(text).catch(()=>{});
+}
+
+function copyAll(){
+  const out=[1,2,3].map(n=>'=== TEST '+n+' ===\n'+(document.getElementById('result-'+n).textContent||'')).join('\n\n');
+  navigator.clipboard.writeText(out).catch(()=>{});
+}
+</script>
+</body>
+</html>
