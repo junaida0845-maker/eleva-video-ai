@@ -76,6 +76,9 @@ function applyLanguage(code){
   });
   // Deep scan for non-tagged Japanese text (only for non-ja)
   if(win.elevaApplyDeep&&code!=='ja')win.elevaApplyDeep(code);
+  // Reset central UI translations cache; pages that opted in via
+  // data-uit can re-apply by calling ElevaUIT.loadAndApply(namespace).
+  if(win.ElevaUIT?.reset)win.ElevaUIT.reset();
   // Save to DB
   const sb=getSupabase();
   if(sb){sb.auth.getUser().then(({data:{user}})=>{
