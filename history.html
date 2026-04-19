@@ -66,13 +66,15 @@ body{font-family:'Inter',sans-serif;background:var(--black);color:var(--text-pri
   </div>
 </div>
 
-<script src="/eleva-i18n.js?v=20260418"></script>
-<script src="/eleva-shared.js?v=20260418"></script>
+<script src="/eleva-i18n.js?v=20260419"></script>
+<script src="/eleva-shared.js?v=20260419"></script>
+<script src="/eleva-tz.js?v=20260419"></script>
 <script>
 const sb=ELEVA.getSupabase();
 let currentUser=null;
 
 function relativeTime(dt){
+  if(window.ElevaTZ?.formatRelative)return window.ElevaTZ.formatRelative(dt);
   const sec=Math.floor((Date.now()-new Date(dt).getTime())/1000);
   if(sec<60)return '今';
   if(sec<3600)return Math.floor(sec/60)+'分前';

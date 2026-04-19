@@ -234,6 +234,7 @@ footer{margin-top:60px;border-top:1px solid var(--border);padding:30px 20px;text
 
 <script src="/eleva-i18n.js?v=20260419"></script>
 <script src="/eleva-shared.js?v=20260419"></script>
+<script src="/eleva-tz.js?v=20260419"></script>
 <script>
 const SUPABASE_URL='https://syxctolgqhdtcoaothwi.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5eGN0b2xncWhkdGNvYW90aHdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MDk5NjksImV4cCI6MjA5MDM4NTk2OX0.h38gOPGOcdIw_w8p4AEYVLHCaWuC8k2XRrjLPcFAtUw';
@@ -276,7 +277,11 @@ document.getElementById('portal-invoices-btn').addEventListener('click',e=>{e.pr
 
 document.getElementById('cancel-modal').addEventListener('click',e=>{if(e.target.id==='cancel-modal')closeCancelModal();});
 
-function fmtDate(d){if(!d)return '—';try{return new Date(d).toLocaleDateString(navigator.language||'ja-JP');}catch{return '—';}}
+function fmtDate(d){
+  if(window.ElevaTZ?.formatDate)return window.ElevaTZ.formatDate(d);
+  if(!d)return '—';
+  try{return new Date(d).toLocaleDateString(navigator.language||'ja-JP');}catch{return '—';}
+}
 
 async function loadProfile(){
   const sb=ELEVA.getSupabase();
