@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<title>ELEVA — Pricing</title>
+<meta name="description" content="ELEVA の料金プラン。AIで動画を量産しSNS自動投稿で集客を最適化。"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#0a0a0a;--bg-2:#0f0f0f;--bg-3:#161616;--border:#1f1f1f;
+  --gold:#d4af37;--gold-2:#b8941f;--gold-soft:rgba(212,175,55,0.12);
+  --text:#ffffff;--text-2:#a8a8a8;--text-3:#6b6b6b;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
+body{font-family:'Inter','Noto Sans JP',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;}
+::selection{background:var(--gold-soft);color:var(--gold);}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(212,175,55,0.25);border-radius:4px;}
+
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+
+/* ─ Top Nav ─────────────────────────────── */
+.nav{position:sticky;top:0;z-index:50;background:rgba(10,10,10,0.85);backdrop-filter:saturate(180%) blur(12px);-webkit-backdrop-filter:saturate(180%) blur(12px);border-bottom:1px solid var(--border);}
+.nav-inner{max-width:1200px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.brand{font-weight:800;font-size:18px;letter-spacing:2px;color:var(--gold);}
+.nav-right{display:flex;align-items:center;gap:10px;}
+.nav-link{color:var(--text-2);font-size:13px;padding:8px 14px;border-radius:8px;transition:all .15s;}
+.nav-link:hover{color:var(--gold);background:var(--bg-3);}
+.btn-cta{background:linear-gradient(135deg,var(--gold) 0%,var(--gold-2) 100%);color:#0a0a0a;font-weight:700;padding:10px 18px;border-radius:12px;font-size:13px;transition:transform .15s,box-shadow .15s;letter-spacing:.5px;}
+.btn-cta:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(212,175,55,0.35);}
+
+.lang-select{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;color:var(--text-2);font-size:12px;cursor:pointer;}
+.lang-select:hover{border-color:var(--gold);color:var(--gold);}
+
+/* ─ Hero ────────────────────────────────── */
+.hero{padding:64px 24px 24px;text-align:center;}
+.hero-eyebrow{font-size:11px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:14px;}
+.hero h1{font-size:clamp(28px,5vw,44px);font-weight:800;letter-spacing:1px;margin-bottom:14px;line-height:1.2;}
+.hero p{color:var(--text-2);max-width:560px;margin:0 auto;font-size:15px;}
+
+.region-pill{display:inline-flex;align-items:center;gap:8px;margin-top:22px;padding:8px 14px;background:var(--bg-3);border:1px solid var(--border);border-radius:999px;font-size:12px;color:var(--text-2);cursor:pointer;transition:all .15s;}
+.region-pill:hover{border-color:var(--gold);color:var(--gold);}
+.region-pill .icon-globe{width:14px;height:14px;color:var(--gold);}
+
+/* ─ Cycle tabs ──────────────────────────── */
+.cycle-tabs{display:inline-flex;background:var(--bg-3);border:1px solid var(--border);border-radius:14px;padding:4px;margin:32px auto 0;}
+.cycle-tab{padding:10px 18px;border-radius:10px;font-size:13px;color:var(--text-2);font-weight:500;display:inline-flex;align-items:center;gap:8px;transition:all .15s;position:relative;}
+.cycle-tab.active{background:var(--gold);color:#0a0a0a;font-weight:700;box-shadow:0 4px 16px rgba(212,175,55,0.25);}
+.cycle-tab .save-badge{font-size:10px;padding:2px 6px;border-radius:6px;background:var(--gold-soft);color:var(--gold);font-weight:600;}
+.cycle-tab.active .save-badge{background:rgba(0,0,0,0.15);color:#0a0a0a;}
+
+/* ─ Plans grid ──────────────────────────── */
+.plans-wrap{max-width:1200px;margin:32px auto 0;padding:0 20px;}
+.plans-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;}
+.plan-card{background:var(--bg-2);border:1px solid var(--border);border-radius:16px;padding:26px 22px 24px;display:flex;flex-direction:column;position:relative;transition:transform .2s,border-color .2s,box-shadow .2s;}
+.plan-card:hover{transform:translateY(-4px);border-color:rgba(212,175,55,0.35);}
+.plan-card.featured{border-color:var(--gold);box-shadow:0 4px 28px rgba(212,175,55,0.18);}
+.plan-badge{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--gold) 0%,var(--gold-2) 100%);color:#0a0a0a;padding:4px 14px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:1.5px;white-space:nowrap;}
+.plan-name{font-size:13px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;font-weight:700;margin-bottom:6px;}
+.plan-tagline{color:var(--text-3);font-size:12px;min-height:32px;margin-bottom:18px;}
+.plan-price{display:flex;align-items:baseline;gap:6px;margin-bottom:6px;}
+.plan-price .amt{font-size:34px;font-weight:800;color:#fff;letter-spacing:-.5px;font-family:'Inter',sans-serif;}
+.plan-price .cycle{color:var(--text-3);font-size:12px;}
+.plan-price-sub{color:var(--text-3);font-size:11px;min-height:16px;margin-bottom:18px;}
+.plan-features{list-style:none;margin:0 0 24px;flex:1;}
+.plan-features li{display:flex;gap:10px;padding:8px 0;font-size:13px;color:var(--text);border-bottom:1px solid rgba(255,255,255,0.04);}
+.plan-features li:last-child{border-bottom:none;}
+.plan-features .icon-check{flex-shrink:0;width:14px;height:14px;color:var(--gold);margin-top:3px;}
+.plan-features .muted{color:var(--text-3);}
+.plan-cta{width:100%;padding:13px 18px;border-radius:12px;font-weight:700;font-size:13px;letter-spacing:.5px;transition:transform .15s,box-shadow .15s,background .15s;}
+.plan-cta.solid{background:linear-gradient(135deg,var(--gold) 0%,var(--gold-2) 100%);color:#0a0a0a;}
+.plan-cta.solid:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(212,175,55,0.35);}
+.plan-cta.outline{background:transparent;color:var(--gold);border:1px solid var(--gold);}
+.plan-cta.outline:hover{background:var(--gold-soft);}
+.plan-cta:disabled{opacity:.5;cursor:not-allowed;}
+
+/* ─ Skeleton ────────────────────────────── */
+.skel{background:linear-gradient(90deg,#161616 25%,#1f1f1f 50%,#161616 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:6px;}
+@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+
+/* ─ Add-ons ─────────────────────────────── */
+.section{max-width:1100px;margin:64px auto 0;padding:0 20px;}
+.section-h{font-size:22px;font-weight:800;letter-spacing:1px;margin-bottom:18px;text-align:center;}
+.section-sub{color:var(--text-2);font-size:13px;text-align:center;max-width:560px;margin:0 auto 32px;}
+.addons-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;}
+.addon{background:var(--bg-2);border:1px solid var(--border);border-radius:14px;padding:20px;}
+.addon-name{font-weight:700;font-size:14px;color:var(--gold);letter-spacing:1px;margin-bottom:6px;}
+.addon-desc{color:var(--text-2);font-size:12px;line-height:1.55;}
+
+/* ─ FAQ ─────────────────────────────────── */
+.faq{max-width:760px;margin:64px auto 0;padding:0 20px;}
+.faq-item{background:var(--bg-2);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden;}
+.faq-q{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;font-size:14px;font-weight:600;cursor:pointer;}
+.faq-q .icon-chev{width:14px;height:14px;color:var(--gold);transition:transform .2s;}
+.faq-item.open .icon-chev{transform:rotate(180deg);}
+.faq-a{padding:0 20px 16px;color:var(--text-2);font-size:13px;line-height:1.7;display:none;}
+.faq-item.open .faq-a{display:block;}
+
+/* ─ Footer ──────────────────────────────── */
+footer{margin-top:80px;border-top:1px solid var(--border);padding:36px 20px 28px;text-align:center;}
+.footer-links{display:flex;flex-wrap:wrap;justify-content:center;gap:18px;margin-bottom:14px;}
+.footer-links a{color:var(--text-3);font-size:12px;transition:color .15s;}
+.footer-links a:hover{color:var(--gold);}
+.footer-copy{color:var(--text-3);font-size:11px;letter-spacing:.5px;}
+
+/* ─ Region modal ────────────────────────── */
+.modal-mask{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:100;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-mask.open{display:flex;}
+.modal{background:var(--bg-2);border:1px solid var(--border);border-radius:16px;width:100%;max-width:420px;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;}
+.modal-h{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-h h3{font-size:14px;letter-spacing:1px;color:var(--gold);font-weight:700;text-transform:uppercase;}
+.modal-close{color:var(--text-3);font-size:22px;line-height:1;padding:4px;border-radius:6px;}
+.modal-close:hover{color:var(--gold);}
+.modal-body{padding:14px 18px;overflow-y:auto;}
+.country-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;cursor:pointer;font-size:14px;transition:background .15s;}
+.country-row:hover{background:var(--bg-3);}
+.country-row.active{background:var(--gold-soft);color:var(--gold);}
+.country-flag{width:24px;text-align:center;}
+
+/* ─ Responsive ──────────────────────────── */
+@media (max-width:640px){
+  .nav-inner{padding:12px 16px;}
+  .hero{padding:40px 16px 16px;}
+  .hero h1{font-size:26px;letter-spacing:.5px;}
+  .nav-link{padding:6px 8px;font-size:12px;}
+  .cycle-tab{padding:9px 12px;font-size:12px;}
+  .plan-card{padding:22px 18px;}
+  .plan-price .amt{font-size:30px;}
+}
+</style>
+</head>
+<body>
+
+<!-- Inline SVG sprite -->
+<svg width="0" height="0" style="position:absolute;" aria-hidden="true">
+  <defs>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18" stroke="currentColor" stroke-width="1.6" fill="none"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2 2-6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" fill="none"/></symbol>
+  </defs>
+</svg>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="brand">ELEVA</a>
+    <div class="nav-right">
+      <button class="lang-select" id="lang-btn" aria-label="言語切替">
+        <svg width="13" height="13" style="color:var(--gold);"><use href="#i-globe"/></svg>
+        <span id="lang-label">日本語</span>
+      </button>
+      <a href="/login.html" class="nav-link" data-i18n="login">ログイン</a>
+      <a href="/login.html#signup" class="btn-cta" data-i18n="start_free">無料で始める</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-eyebrow" data-i18n="pricing_eyebrow">PRICING</div>
+  <h1 data-i18n="pricing_title">あなたの規模に合うプランを</h1>
+  <p data-i18n="pricing_sub">広告費を AI 動画の量産に置き換える。月途中の解約も差額返金もかんたん。</p>
+  <button class="region-pill" id="region-pill">
+    <svg class="icon-globe"><use href="#i-globe"/></svg>
+    <span id="region-label">— 自動判定中…</span>
+  </button>
+  <div class="cycle-tabs" role="tablist">
+    <button class="cycle-tab active" data-cycle="monthly" data-i18n="cycle_monthly">月払い</button>
+    <button class="cycle-tab" data-cycle="yearly">
+      <span data-i18n="cycle_yearly">年払い</span>
+      <span class="save-badge" data-i18n="save_10">10% OFF</span>
+    </button>
+    <button class="cycle-tab" data-cycle="two_year">
+      <span data-i18n="cycle_two_year">2年払い</span>
+      <span class="save-badge" data-i18n="save_15">15% OFF</span>
+    </button>
+  </div>
+</section>
+
+<section class="plans-wrap">
+  <div class="plans-grid" id="plans-grid">
+    <!-- Skeleton placeholders -->
+    <div class="plan-card"><div class="skel" style="height:18px;width:60%;margin-bottom:14px;"></div><div class="skel" style="height:36px;width:50%;margin-bottom:14px;"></div><div class="skel" style="height:120px;"></div></div>
+    <div class="plan-card"><div class="skel" style="height:18px;width:60%;margin-bottom:14px;"></div><div class="skel" style="height:36px;width:50%;margin-bottom:14px;"></div><div class="skel" style="height:120px;"></div></div>
+    <div class="plan-card"><div class="skel" style="height:18px;width:60%;margin-bottom:14px;"></div><div class="skel" style="height:36px;width:50%;margin-bottom:14px;"></div><div class="skel" style="height:120px;"></div></div>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-h" data-i18n="addons_title">追加オプション</h2>
+  <p class="section-sub" data-i18n="addons_sub">月の上限を超えそうな時に必要な分だけ追加できます。</p>
+  <div class="addons-grid">
+    <div class="addon">
+      <div class="addon-name" data-i18n="addon_15s">15秒 × 10本パック</div>
+      <div class="addon-desc" data-i18n="addon_15s_desc">短尺の追加生成枠。当月内利用、繰越なし。</div>
+    </div>
+    <div class="addon">
+      <div class="addon-name" data-i18n="addon_30s">30秒 × 10本パック</div>
+      <div class="addon-desc" data-i18n="addon_30s_desc">長尺の追加生成枠。Pro 以上のプランでご利用可能。</div>
+    </div>
+    <div class="addon">
+      <div class="addon-name" data-i18n="addon_account">追加投稿アカウント</div>
+      <div class="addon-desc" data-i18n="addon_account_desc">複数 SNS 運用向け。1 アカウントから追加可能（Pro 以上）。</div>
+    </div>
+  </div>
+</section>
+
+<section class="faq">
+  <h2 class="section-h" data-i18n="faq_title">よくある質問</h2>
+  <div class="faq-item">
+    <div class="faq-q"><span data-i18n="faq_q_cancel">いつでも解約できますか？</span><svg class="icon-chev"><use href="#i-chev"/></svg></div>
+    <div class="faq-a" data-i18n="faq_a_cancel">はい、マイページから 24 時間いつでも自動解約できます。違約金はありません。月途中で解約された場合、当月末まではご利用いただけます。</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q"><span data-i18n="faq_q_carry">本数は翌月に繰り越せますか？</span><svg class="icon-chev"><use href="#i-chev"/></svg></div>
+    <div class="faq-a" data-i18n="faq_a_carry">いいえ。各プランの月間本数は月次でリセットされ、繰越はありません。</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q"><span data-i18n="faq_q_change">プラン変更はできますか？</span><svg class="icon-chev"><use href="#i-chev"/></svg></div>
+    <div class="faq-a" data-i18n="faq_a_change">マイページからいつでも変更可能。アップグレードは即時反映、ダウングレードは次回請求サイクルから適用されます。</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q"><span data-i18n="faq_q_pay">支払い方法は？</span><svg class="icon-chev"><use href="#i-chev"/></svg></div>
+    <div class="faq-a" data-i18n="faq_a_pay">クレジットカード（Visa / MasterCard / American Express / JCB）に対応しています。決済は Stripe で安全に処理されます。</div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-links">
+    <a href="/commerce.html" data-i18n="legal_commerce">特定商取引法に基づく表記</a>
+    <a href="/terms.html" data-i18n="legal_terms">利用規約</a>
+    <a href="/privacy.html" data-i18n="legal_privacy">プライバシーポリシー</a>
+    <a href="/company.html" data-i18n="legal_company">会社情報</a>
+    <a href="/contact.html" data-i18n="legal_contact">お問い合わせ</a>
+  </div>
+  <div class="footer-copy">© 2026 株式会社LETIZIA — All rights reserved.</div>
+</footer>
+
+<!-- Region modal -->
+<div class="modal-mask" id="region-modal" role="dialog">
+  <div class="modal">
+    <div class="modal-h">
+      <h3 data-i18n="region_select">通貨・地域</h3>
+      <button class="modal-close" id="region-close" aria-label="閉じる">×</button>
+    </div>
+    <div class="modal-body" id="region-body"></div>
+  </div>
+</div>
+
+<script src="/eleva-i18n.js?v=20260419"></script>
+<script src="/eleva-shared.js?v=20260419"></script>
+<script>
+const SUPABASE_URL='https://syxctolgqhdtcoaothwi.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5eGN0b2xncWhkdGNvYW90aHdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MDk5NjksImV4cCI6MjA5MDM4NTk2OX0.h38gOPGOcdIw_w8p4AEYVLHCaWuC8k2XRrjLPcFAtUw';
+
+const COUNTRIES=[
+  {code:'JP',flag:'🇯🇵',name:'日本',cur:'JPY'},
+  {code:'US',flag:'🇺🇸',name:'United States',cur:'USD'},
+  {code:'GB',flag:'🇬🇧',name:'United Kingdom',cur:'GBP'},
+  {code:'DE',flag:'🇩🇪',name:'Deutschland',cur:'EUR'},
+  {code:'FR',flag:'🇫🇷',name:'France',cur:'EUR'},
+  {code:'IT',flag:'🇮🇹',name:'Italia',cur:'EUR'},
+  {code:'ES',flag:'🇪🇸',name:'España',cur:'EUR'},
+  {code:'KR',flag:'🇰🇷',name:'한국',cur:'KRW'},
+  {code:'TW',flag:'🇹🇼',name:'台灣',cur:'TWD'},
+  {code:'CN',flag:'🇨🇳',name:'中国',cur:'CNY'},
+  {code:'TH',flag:'🇹🇭',name:'ไทย',cur:'THB'},
+  {code:'VN',flag:'🇻🇳',name:'Việt Nam',cur:'VND'},
+  {code:'ID',flag:'🇮🇩',name:'Indonesia',cur:'IDR'},
+  {code:'IN',flag:'🇮🇳',name:'India',cur:'INR'},
+  {code:'AU',flag:'🇦🇺',name:'Australia',cur:'AUD'},
+  {code:'CA',flag:'🇨🇦',name:'Canada',cur:'CAD'},
+  {code:'BR',flag:'🇧🇷',name:'Brasil',cur:'BRL'},
+];
+
+let pricingData=null;
+let currentCycle='monthly';
+let manualCountry=localStorage.getItem('eleva_country')||null;
+
+function fmtPrice(amount,currency){
+  if(amount==null)return '—';
+  const noDecimals=['JPY','KRW','VND','IDR','TWD','CNY'].includes(currency);
+  try{
+    return new Intl.NumberFormat(navigator.language||'en-US',{
+      style:'currency',currency,minimumFractionDigits:noDecimals?0:2,maximumFractionDigits:noDecimals?0:2,
+    }).format(amount);
+  }catch{return currency+' '+amount;}
+}
+
+async function loadPricing(){
+  const url=new URL(SUPABASE_URL+'/functions/v1/get-regional-pricing');
+  if(manualCountry)url.searchParams.set('country_code',manualCountry);
+  try{
+    const res=await fetch(url,{
+      method:'GET',
+      headers:{
+        'Content-Type':'application/json',
+        apikey:SUPABASE_ANON_KEY,
+        Authorization:'Bearer '+SUPABASE_ANON_KEY,
+      },
+    });
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    pricingData=await res.json();
+  }catch(err){
+    console.error('[pricing] load failed',err);
+    document.getElementById('plans-grid').innerHTML=
+      '<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--text-3);">'+
+      '料金情報の読み込みに失敗しました。少し時間を空けて再度お試しください。<br/><small>'+(err.message||'')+'</small></div>';
+    return;
+  }
+  renderRegion();
+  renderPlans();
+}
+
+function renderRegion(){
+  if(!pricingData)return;
+  const cc=pricingData.country_code||'JP';
+  const cur=pricingData.currency?.toUpperCase()||'JPY';
+  const country=COUNTRIES.find(c=>c.code===cc)||{flag:'',name:cc};
+  document.getElementById('region-label').innerHTML=
+    (country.flag?country.flag+' ':'')+country.name+' ('+cur+')'+(manualCountry?'':' · '+(window.elevaT?elevaT('region_auto'):'自動判定'));
+}
+
+function planFeatures(plan){
+  const lang=localStorage.getItem('eleva_lang')||'ja';
+  const t=(k,fallback)=>(window.elevaT?elevaT(k,lang):fallback)||fallback;
+  const list=[];
+  list.push({label:t('feat_videos','動画 ')+ (plan.videos_per_month||0) + t('feat_videos_unit','本/月')});
+  if(plan.sns_count!=null)list.push({label:t('feat_sns','SNS ')+ plan.sns_count + t('feat_sns_unit','アカウント')});
+  if(plan.resolution)list.push({label:t('feat_res','解像度 ')+ plan.resolution});
+  if(plan.enable_audio)list.push({label:t('feat_audio','音声付き生成')});
+  if(plan.priority_generation)list.push({label:t('feat_priority','優先生成キュー')});
+  if(plan.watermark_size==='small'||plan.watermark_size==='hidden')list.push({label:t('feat_wm_small','ELEVAロゴ小')});
+  if(plan.watermark_size==='hidden')list.push({label:t('feat_wm_none','ロゴ非表示')});
+  return list;
+}
+
+function renderPlans(){
+  if(!pricingData||!Array.isArray(pricingData.plans))return;
+  const lang=localStorage.getItem('eleva_lang')||'ja';
+  const cur=pricingData.currency?.toUpperCase()||'JPY';
+  const cycleLabel={monthly:'/月',yearly:'/年',two_year:'/2年'};
+  const cycleLabelI18n={monthly:'cycle_per_month',yearly:'cycle_per_year',two_year:'cycle_per_two_year'};
+  const sorted=[...pricingData.plans].sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  const grid=document.getElementById('plans-grid');
+  grid.innerHTML=sorted.map(plan=>{
+    const isFeatured=(plan.plan_id||'').toLowerCase()==='pro';
+    const name=(plan.name_i18n&&(plan.name_i18n[lang]||plan.name_i18n.en))||plan.plan_name||plan.plan_id;
+    const tagline=(plan.description_i18n&&(plan.description_i18n[lang]||plan.description_i18n.en))||'';
+    const cycleData=plan.pricing?.[currentCycle];
+    const amount=cycleData?.amount;
+    const isFree=(plan.plan_id||'').toLowerCase()==='free'||(amount===0);
+    const cycleSuffix=window.elevaT?elevaT(cycleLabelI18n[currentCycle],lang):cycleLabel[currentCycle];
+    const features=planFeatures(plan);
+    const ctaLabel=isFree?(window.elevaT?elevaT('cta_start_free',lang):'無料で始める'):(window.elevaT?elevaT('cta_select',lang):'このプランを選ぶ');
+    const ctaClass=isFeatured?'solid':(isFree?'outline':'solid');
+    const priceId=cycleData?.stripe_price_id||'';
+    const discountBadge=cycleData?.discount_percent?(' <span style="color:var(--gold);font-size:12px;font-weight:600;">'+cycleData.discount_percent+'% OFF</span>'):'';
+
+    return `
+      <div class="plan-card${isFeatured?' featured':''}">
+        ${isFeatured?'<div class="plan-badge" data-i18n="badge_popular">人気</div>':''}
+        <div class="plan-name">${escapeHtml(name)}</div>
+        <div class="plan-tagline">${escapeHtml(tagline)}</div>
+        <div class="plan-price">
+          <span class="amt">${amount==null?'—':fmtPrice(amount,cur)}</span>
+          <span class="cycle">${cycleSuffix}</span>
+        </div>
+        <div class="plan-price-sub">${plan.initial_fee?(window.elevaT?elevaT('initial_fee',lang):'初期費用')+' '+fmtPrice(plan.initial_fee,cur):'&nbsp;'}${discountBadge}</div>
+        <ul class="plan-features">
+          ${features.map(f=>`<li><svg class="icon-check"><use href="#i-check"/></svg><span>${escapeHtml(f.label)}</span></li>`).join('')}
+        </ul>
+        <button class="plan-cta ${ctaClass}" ${(!priceId&&!isFree)?'disabled':''} onclick="onPlanCta('${escapeAttr(plan.plan_id||'')}','${escapeAttr(priceId)}',${isFree})">${escapeHtml(ctaLabel)}</button>
+      </div>
+    `;
+  }).join('');
+  if(window.ELEVA?.applyLanguage)ELEVA.applyLanguage(lang);
+}
+
+function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function escapeAttr(s){return String(s||'').replace(/['"\\]/g,'\\$&');}
+
+async function onPlanCta(planId,priceId,isFree){
+  if(isFree){
+    location.href='/login.html#signup';
+    return;
+  }
+  const sb=ELEVA.getSupabase();
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){
+    sessionStorage.setItem('eleva_pending_price',priceId);
+    location.href='/login.html?next=/pricing.html';
+    return;
+  }
+  if(!priceId){alert('このプランは現在ご利用いただけません。');return;}
+  try{
+    const res=await fetch(SUPABASE_URL+'/functions/v1/stripe-checkout',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        apikey:SUPABASE_ANON_KEY,
+        Authorization:'Bearer '+session.access_token,
+      },
+      body:JSON.stringify({
+        stripe_price_id:priceId,
+        success_url:location.origin+'/success.html?session_id={CHECKOUT_SESSION_ID}',
+        cancel_url:location.origin+'/pricing.html',
+      }),
+    });
+    if(!res.ok){
+      const txt=await res.text();
+      throw new Error('Checkout API '+res.status+': '+txt);
+    }
+    const data=await res.json();
+    if(data.url)location.href=data.url;
+    else throw new Error('No checkout URL returned');
+  }catch(err){
+    console.error('[checkout] error',err);
+    alert('決済画面への遷移に失敗しました。\n'+(err.message||err));
+  }
+}
+
+// ─ Cycle tab handler ──────────────────────
+document.querySelectorAll('.cycle-tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.cycle-tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    currentCycle=tab.dataset.cycle;
+    renderPlans();
+  });
+});
+
+// ─ FAQ accordion ──────────────────────────
+document.querySelectorAll('.faq-q').forEach(q=>{
+  q.addEventListener('click',()=>q.parentElement.classList.toggle('open'));
+});
+
+// ─ Region modal ───────────────────────────
+function openRegionModal(){
+  const body=document.getElementById('region-body');
+  body.innerHTML=COUNTRIES.map(c=>`
+    <div class="country-row${manualCountry===c.code?' active':''}" onclick="selectCountry('${c.code}')">
+      <span class="country-flag">${c.flag}</span>
+      <div style="flex:1;">${escapeHtml(c.name)}</div>
+      <div style="color:var(--text-3);font-size:11px;">${c.cur}</div>
+    </div>`).join('');
+  document.getElementById('region-modal').classList.add('open');
+}
+function selectCountry(code){
+  manualCountry=code;
+  localStorage.setItem('eleva_country',code);
+  document.getElementById('region-modal').classList.remove('open');
+  loadPricing();
+}
+document.getElementById('region-pill').addEventListener('click',openRegionModal);
+document.getElementById('region-close').addEventListener('click',()=>document.getElementById('region-modal').classList.remove('open'));
+document.getElementById('region-modal').addEventListener('click',e=>{if(e.target.id==='region-modal')e.target.classList.remove('open');});
+
+// ─ Lang button ────────────────────────────
+document.getElementById('lang-btn').addEventListener('click',()=>{
+  if(window.ELEVA?.showLanguageModal)ELEVA.showLanguageModal();
+});
+
+// ─ Init ───────────────────────────────────
+document.addEventListener('DOMContentLoaded',async()=>{
+  if(window.ELEVA?.applyLanguage){
+    const lang=localStorage.getItem('eleva_lang')||'ja';
+    ELEVA.applyLanguage(lang);
+    const names=window.ELEVA_LANG_NAMES||{};
+    if(names[lang])document.getElementById('lang-label').textContent=names[lang].native||lang;
+  }
+  loadPricing();
+});
+</script>
+</body>
+</html>
