@@ -105,6 +105,7 @@ textarea:focus{border-color:var(--gold);}
     <a class="nav-item" onclick="showSection('invites')" href="#"><span class="icon">✉️</span><span>テスト招待</span></a>
     <a class="nav-item" onclick="showSection('logs')" href="#"><span class="icon">📋</span><span>操作ログ</span></a>
     <a class="nav-item" onclick="showSection('cancellations')" href="#"><span class="icon">⚠️</span><span>解約申請</span></a>
+    <a class="nav-item" onclick="showSection('trends')" href="#"><span class="icon">🌍</span><span>トレンドDB</span></a>
   </nav>
 </aside>
 
@@ -249,6 +250,54 @@ textarea:focus{border-color:var(--gold);}
       </table>
     </div>
   </div>
+
+  <!-- Trends DB -->
+  <div class="section-page" id="section-trends">
+    <div class="page-title">トレンドDB</div>
+
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:20px;">
+      <button class="btn-gold" id="trends-collect-btn" onclick="runCollectWorldTrends()">今すぐ収集実行</button>
+      <span id="trends-collect-status" style="color:var(--text-muted);font-size:12px;"></span>
+      <a href="/trends.html" target="_blank" class="action-btn" style="text-decoration:none;">ユーザー画面で確認</a>
+    </div>
+
+    <div class="kpi-grid" id="trends-kpi">
+      <div class="kpi-card"><div class="kpi-icon">📦</div><div class="kpi-body"><div class="kpi-label">総件数</div><div class="kpi-value" id="trends-total">—</div></div></div>
+      <div class="kpi-card"><div class="kpi-icon">🌍</div><div class="kpi-body"><div class="kpi-label">対象国</div><div class="kpi-value" id="trends-country-count">—</div></div></div>
+      <div class="kpi-card"><div class="kpi-icon">🏷️</div><div class="kpi-body"><div class="kpi-label">ジャンル</div><div class="kpi-value" id="trends-genre-count">—</div></div></div>
+      <div class="kpi-card"><div class="kpi-icon">⏱️</div><div class="kpi-body"><div class="kpi-label">最終収集</div><div class="kpi-value" id="trends-latest" style="font-size:15px;">—</div></div></div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-header">
+        <span class="table-header-title">国別×ジャンル別 件数</span>
+      </div>
+      <table>
+        <thead><tr><th>COUNTRY</th><th>GENRE</th><th>ROWS</th><th>LATEST</th></tr></thead>
+        <tbody id="trends-summary-tbody"><tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:32px;">読み込み中...</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-header">
+        <span class="table-header-title">最新トレンド(上位50)</span>
+      </div>
+      <div class="table-controls" style="display:flex;gap:10px;flex-wrap:wrap;">
+        <select id="trends-country-filter" class="plan-select"><option value="">全国</option></select>
+        <select id="trends-genre-filter" class="plan-select"><option value="">全ジャンル</option></select>
+        <select id="trends-platform-filter" class="plan-select">
+          <option value="">全SNS</option>
+          <option value="tiktok">TikTok</option>
+          <option value="instagram">Instagram</option>
+          <option value="youtube">YouTube</option>
+        </select>
+      </div>
+      <table>
+        <thead><tr><th>PLATFORM</th><th>COUNTRY</th><th>GENRE</th><th>TITLE</th><th>VIEWS</th><th>COLLECTED</th></tr></thead>
+        <tbody id="trends-rows-tbody"><tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:32px;">読み込み中...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
 </main>
 
 <script src="/eleva-i18n.js"></script>
@@ -268,6 +317,7 @@ function showSection(id){
   if(id==='cancellations')loadCancellations();
   if(id==='logs')loadLogs();
   if(id==='invites')loadInvites();
+  if(id==='trends')loadAdminTrends();
 }
 
 async function callAdmin(action,params={}){
@@ -279,6 +329,101 @@ async function callAdmin(action,params={}){
     body:JSON.stringify({action,...params})
   });
   return res.json();
+}
+
+// ─ Trends DB ────────────────────────────────────────
+let _adminTrendsCache=null;
+async function loadAdminTrends(){
+  const [summaryRes,rowsRes]=await Promise.all([
+    sb.from('world_trends').select('country_code,genre,collected_at'),
+    sb.from('world_trends').select('id,platform,country_code,genre,title,author,view_count,collected_at,content_url').order('collected_at',{ascending:false}).limit(50),
+  ]).catch(e=>{console.error('[admin-trends]',e);return [{error:e},{error:e}];});
+
+  const summary=summaryRes?.data||[];
+  const rows=rowsRes?.data||[];
+  _adminTrendsCache={summary,rows};
+
+  // KPI
+  document.getElementById('trends-total').textContent=(summary||[]).length;
+  const countries=new Set((summary||[]).map(r=>r.country_code).filter(Boolean));
+  const genres=new Set((summary||[]).map(r=>r.genre).filter(Boolean));
+  document.getElementById('trends-country-count').textContent=countries.size;
+  document.getElementById('trends-genre-count').textContent=genres.size;
+  const latest=(summary||[]).reduce((max,r)=>{
+    const t=r.collected_at?new Date(r.collected_at).getTime():0;
+    return t>max?t:max;
+  },0);
+  document.getElementById('trends-latest').textContent=latest?new Date(latest).toLocaleString('ja-JP'):'—';
+
+  // Summary table: country × genre
+  const key=r=>`${r.country_code||'-'}__${r.genre||'-'}`;
+  const bucket={};
+  (summary||[]).forEach(r=>{
+    const k=key(r);
+    if(!bucket[k])bucket[k]={country:r.country_code||'-',genre:r.genre||'-',count:0,latest:0};
+    bucket[k].count++;
+    const t=r.collected_at?new Date(r.collected_at).getTime():0;
+    if(t>bucket[k].latest)bucket[k].latest=t;
+  });
+  const summaryRows=Object.values(bucket).sort((a,b)=>b.count-a.count);
+  const stbody=document.getElementById('trends-summary-tbody');
+  if(!summaryRows.length){stbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:24px;">データなし</td></tr>';}
+  else{stbody.innerHTML=summaryRows.map(r=>`<tr>
+    <td>${r.country}</td><td>${r.genre}</td><td>${r.count}</td><td class="secondary" style="font-size:11px;">${r.latest?new Date(r.latest).toLocaleString('ja-JP'):'—'}</td>
+  </tr>`).join('');}
+
+  // Populate filter options
+  const cSel=document.getElementById('trends-country-filter');
+  const gSel=document.getElementById('trends-genre-filter');
+  cSel.innerHTML='<option value="">全国</option>'+[...countries].sort().map(c=>`<option value="${c}">${c}</option>`).join('');
+  gSel.innerHTML='<option value="">全ジャンル</option>'+[...genres].sort().map(g=>`<option value="${g}">${g}</option>`).join('');
+  cSel.onchange=gSel.onchange=document.getElementById('trends-platform-filter').onchange=renderAdminTrendsRows;
+
+  renderAdminTrendsRows();
+}
+
+function renderAdminTrendsRows(){
+  const rows=_adminTrendsCache?.rows||[];
+  const c=document.getElementById('trends-country-filter').value;
+  const g=document.getElementById('trends-genre-filter').value;
+  const p=document.getElementById('trends-platform-filter').value;
+  const filtered=rows.filter(r=>
+    (!c||r.country_code===c)&&(!g||r.genre===g)&&(!p||r.platform===p)
+  );
+  const body=document.getElementById('trends-rows-tbody');
+  if(!filtered.length){body.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px;">データなし</td></tr>';return;}
+  body.innerHTML=filtered.map(r=>`<tr>
+    <td><span class="badge badge-plan" style="background:rgba(201,168,76,0.15);color:var(--gold);">${r.platform||'-'}</span></td>
+    <td>${r.country_code||'-'}</td>
+    <td class="secondary">${r.genre||'-'}</td>
+    <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.content_url?`<a href="${r.content_url}" target="_blank" style="color:inherit;">${r.title||'(無題)'}</a>`:(r.title||'(無題)')}</td>
+    <td>${Number(r.view_count||0).toLocaleString()}</td>
+    <td class="secondary" style="font-size:11px;">${r.collected_at?new Date(r.collected_at).toLocaleString('ja-JP'):'—'}</td>
+  </tr>`).join('');
+}
+
+async function runCollectWorldTrends(){
+  const btn=document.getElementById('trends-collect-btn');
+  const status=document.getElementById('trends-collect-status');
+  btn.disabled=true;const orig=btn.textContent;btn.textContent='収集中…';status.textContent='';
+  try{
+    const {data:{session}}=await sb.auth.getSession();
+    const token=session?.access_token||ADMIN_TOKEN;
+    const res=await fetch(ELEVA.SUPABASE_URL+'/functions/v1/collect-world-trends',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':ELEVA.SUPABASE_ANON_KEY,'Authorization':'Bearer '+token},
+    });
+    const text=await res.text();
+    if(!res.ok)throw new Error('HTTP '+res.status+': '+text.slice(0,120));
+    btn.textContent='収集完了';status.textContent='ステータス '+res.status+' · '+new Date().toLocaleTimeString('ja-JP');
+    setTimeout(()=>{btn.textContent=orig;btn.disabled=false;},3000);
+    loadAdminTrends();
+  }catch(e){
+    console.error('[collect-world-trends]',e);
+    btn.textContent=orig;btn.disabled=false;
+    status.textContent='エラー: '+(e.message||e);
+    status.style.color='#ff4444';
+  }
 }
 
 async function loadDashboard(){

@@ -8,6 +8,7 @@
 /buzz-viewer       /buzz-viewer.html   200
 /sns-apply         /sns-apply.html     200
 /onboarding        /onboarding.html    200
+/trends            /trends.html        200
 
 # Legacy detect-region API → new Supabase Edge Function
 /api/detect-region  https://syxctolgqhdtcoaothwi.supabase.co/functions/v1/get-regional-pricing  301

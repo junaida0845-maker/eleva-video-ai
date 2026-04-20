@@ -123,6 +123,10 @@ textarea::placeholder{color:var(--text-muted);}
 <div class="top-bar">
   <div class="top-bar-center">ELEVA Studio</div>
   <div class="top-badge" id="credits-badge"><span data-icon="lightning"></span> --</div>
+  <a href="/trends.html" style="background:transparent;border:1px solid #333;border-radius:6px;color:#aaa;padding:6px 12px;font-size:12px;text-decoration:none;letter-spacing:.05em;display:inline-flex;align-items:center;gap:5px;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='#333';this.style.color='#aaa'">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="color:var(--gold);"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18" stroke="currentColor" stroke-width="1.6"/></svg>
+    世界のトレンド
+  </a>
   <a id="admin-link" href="/admin.html" style="display:none;background:transparent;border:1px solid var(--gold);border-radius:6px;color:var(--gold);padding:6px 14px;font-size:12px;text-decoration:none;letter-spacing:.08em;" data-i18n="admin">管理画面</a>
   <button class="lang-btn-top" onclick="ELEVA.showLanguageModal()"><span data-icon="globe"></span></button>
   <button onclick="ELEVA.logout()" style="background:transparent;border:1px solid #333;border-radius:6px;color:#888;padding:6px 14px;font-size:12px;cursor:pointer;font-family:inherit;letter-spacing:.08em;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='#333';this.style.color='#888'" data-i18n="logout">LOGOUT</button>
