@@ -156,6 +156,18 @@ textarea::placeholder{color:var(--text-muted);}
 </div>
 
 <div class="page-wrap">
+  <!-- SNS apply banner (shown only when user has zero connected SNS accounts) -->
+  <a id="sns-apply-banner" href="/sns-apply.html" style="display:none;align-items:center;justify-content:space-between;gap:14px;background:linear-gradient(135deg,rgba(201,168,76,0.10),rgba(201,168,76,0.04));border:1px solid rgba(201,168,76,0.35);padding:16px 20px;border-radius:14px;margin-bottom:20px;text-decoration:none;transition:border-color .15s,transform .15s;">
+    <div style="flex:1;min-width:0;">
+      <div style="color:var(--gold);font-weight:700;font-size:13px;letter-spacing:.3px;margin-bottom:4px;display:flex;align-items:center;gap:8px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        SNS 成長診断を無料で受けませんか？
+      </div>
+      <div style="color:var(--text-secondary);font-size:12px;line-height:1.6;">SNS アカウントを連携すると AI がフォロワー増加の障壁を分析します。申請中も動画生成は使えます。</div>
+    </div>
+    <span style="background:var(--gold);color:#050505;padding:9px 20px;border-radius:8px;font-size:12.5px;font-weight:700;letter-spacing:.5px;white-space:nowrap;">診断する（無料）</span>
+  </a>
+
   <h1 class="page-title">動画を生成</h1>
 
   <!-- SNS Selector -->
@@ -1492,6 +1504,12 @@ document.addEventListener('DOMContentLoaded',async()=>{
       const adminLink=document.getElementById('admin-link');
       if(adminLink)adminLink.style.display='inline-block';
     }
+    // SNS apply banner: show when the user has no connected accounts
+    try{
+      const {count}=await sb.from('user_sns_accounts').select('id',{count:'exact',head:true}).eq('user_id',currentUser.id);
+      const banner=document.getElementById('sns-apply-banner');
+      if(banner&&(count==null||count===0))banner.style.display='flex';
+    }catch(e){/* ignore; banner stays hidden on error */}
     loadPostingSchedule();
   }
   if(window.location.hash==='#generate'){
