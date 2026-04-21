@@ -201,11 +201,34 @@ textarea::placeholder{color:var(--text-muted);}
     </div>
   </div>
 
-  <!-- Media Upload + Text -->
+  <!-- Prompt + Upload -->
   <div class="card" id="generate-section">
-    <div class="card-title"><span data-icon="video"></span> <span data-i18n="upload_material">動画素材を選択（任意）</span></div>
+    <div class="card-title"><span data-icon="sparkle"></span> どんな動画を作りたい？</div>
+
+    <!-- Theme / Purpose -->
+    <label style="color:var(--text-secondary);font-size:12px;display:block;margin-bottom:6px;">動画のテーマ・目的</label>
+    <textarea id="prompt-input" data-i18n-ph="input_prompt_ph" placeholder="例：自宅で簡単に作れる時短パスタのレシピを紹介したい" rows="3" style="width:100%;background:var(--black-border);border:1px solid rgba(201,168,76,0.3);color:#fff;padding:12px;border-radius:10px;font-family:inherit;font-size:14px;resize:vertical;outline:none;margin-bottom:14px;"></textarea>
+
+    <!-- Target audience -->
+    <label style="color:var(--text-secondary);font-size:12px;display:block;margin-bottom:6px;">ターゲット（任意）</label>
+    <input type="text" id="target-input" placeholder="例：20代女性、料理初心者" style="width:100%;background:var(--black-border);border:1px solid rgba(201,168,76,0.3);color:#fff;padding:10px 12px;border-radius:10px;font-family:inherit;font-size:13px;outline:none;margin-bottom:14px;"/>
+
+    <!-- Style / mood -->
+    <label style="color:var(--text-secondary);font-size:12px;display:block;margin-bottom:6px;">スタイル・雰囲気（任意）</label>
+    <select id="style-input" style="width:100%;background:var(--black-border);border:1px solid rgba(201,168,76,0.3);color:#fff;padding:10px 12px;border-radius:10px;font-family:inherit;font-size:13px;outline:none;margin-bottom:18px;">
+      <option value="">選択してください</option>
+      <option value="明るく元気">明るく元気</option>
+      <option value="落ち着いた・おしゃれ">落ち着いた・おしゃれ</option>
+      <option value="エモーショナル">エモーショナル</option>
+      <option value="ASMR・静か">ASMR・静か</option>
+      <option value="コミカル・面白い">コミカル・面白い</option>
+      <option value="高級感・ラグジュアリー">高級感・ラグジュアリー</option>
+      <option value="ドキュメンタリー風">ドキュメンタリー風</option>
+      <option value="チュートリアル・解説">チュートリアル・解説</option>
+    </select>
 
     <!-- Upload Buttons -->
+    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">参考素材（任意）</div>
     <div class="upload-area">
       <div class="upload-btns">
         <button class="upload-btn" onclick="openCamera()"><span data-icon="camera"></span> <span data-i18n="camera">カメラ</span></button>
@@ -229,63 +252,6 @@ textarea::placeholder{color:var(--text-muted);}
         <img id="preview-img" style="display:none"/>
         <video id="preview-video" controls style="display:none"></video>
         <button class="preview-remove" onclick="clearMedia()">×</button>
-      </div>
-
-      <textarea id="prompt-input" data-i18n-ph="input_prompt_ph" placeholder="投稿内容や動画のイメージを入力してください..." rows="4" style="display:none;"></textarea>
-    </div>
-  </div>
-
-  <!-- ── Photo → Video flow (background removal) ── -->
-  <div class="card" id="photo-video-card" style="border:1px solid var(--gold);background:linear-gradient(135deg,rgba(201,168,76,0.04),transparent);">
-    <div class="card-title" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-      <span data-icon="photo"></span>
-      <span>写真から動画を作る</span>
-      <span style="background:var(--gold);color:#000;font-size:9px;font-weight:800;letter-spacing:1px;padding:2px 8px;border-radius:999px;">NEW</span>
-      <button id="pv-toggle" onclick="togglePhotoVideo()" style="margin-left:auto;background:none;border:none;color:var(--gold);font-size:13px;cursor:pointer;">展開</button>
-    </div>
-    <div id="pv-body" style="display:none;margin-top:12px;">
-      <p style="color:var(--text-secondary);font-size:13px;line-height:1.7;margin-bottom:14px;">商品やペット、バイクなど被写体の写真を1枚アップロード。AI が被写体を認識し、背景を切り替えた動画を生成します。</p>
-
-      <!-- Step 1: upload -->
-      <div id="pv-step-upload">
-        <button class="btn-gold" onclick="document.getElementById('pv-photo-input').click()" style="width:100%;padding:14px;font-size:14px;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:8px;">
-          <span data-icon="photo"></span> 写真をアップロード
-        </button>
-        <input type="file" id="pv-photo-input" accept="image/*" capture="environment" style="display:none;" onchange="pvHandleUpload(this)"/>
-      </div>
-
-      <!-- Step 2: detected subject + bg-removal preview -->
-      <div id="pv-step-analyze" style="display:none;margin-top:14px;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-          <div>
-            <div style="font-size:11px;color:var(--text-muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">元画像</div>
-            <img id="pv-orig-img" style="width:100%;aspect-ratio:1/1;object-fit:cover;background:#161616;border-radius:10px;border:1px solid var(--border-gold);"/>
-          </div>
-          <div>
-            <div style="font-size:11px;color:var(--text-muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">背景除去後</div>
-            <div id="pv-bg-removed-wrap" style="position:relative;width:100%;aspect-ratio:1/1;background:repeating-conic-gradient(#1a1a1a 0% 25%,#222 0% 50%) 0 0 / 16px 16px;border-radius:10px;border:1px solid var(--border-gold);overflow:hidden;display:flex;align-items:center;justify-content:center;">
-              <span id="pv-bg-loading" style="color:var(--text-muted);font-size:11px;letter-spacing:1px;">処理中…</span>
-              <img id="pv-bg-img" style="display:none;max-width:100%;max-height:100%;object-fit:contain;"/>
-            </div>
-          </div>
-        </div>
-        <div id="pv-vision-result" style="margin-top:10px;padding:10px 14px;background:rgba(201,168,76,0.06);border:1px solid var(--border-gold);border-radius:10px;font-size:13px;color:var(--text);"></div>
-      </div>
-
-      <!-- Step 3: background presets -->
-      <div id="pv-step-bg" style="display:none;margin-top:18px;">
-        <div style="font-size:11px;color:var(--text-muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;">背景を選ぶ</div>
-        <div id="pv-bg-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;"></div>
-        <div id="pv-custom-wrap" style="display:none;margin-top:10px;">
-          <input type="text" id="pv-custom-bg" placeholder="例: 雪山の頂上、夕暮れの海、ネオンの街並み..." style="width:100%;padding:11px 14px;background:var(--black-border);border:1px solid var(--gold);border-radius:8px;color:#fff;font-size:13px;outline:none;font-family:inherit;"/>
-        </div>
-      </div>
-
-      <!-- Step 4: generate -->
-      <div id="pv-step-gen" style="display:none;margin-top:18px;">
-        <div id="pv-final-prompt" style="padding:12px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--black-border);border-radius:10px;color:var(--text);font-size:13px;line-height:1.6;margin-bottom:12px;"></div>
-        <button class="btn-gold" id="pv-generate-btn" onclick="pvGenerate()" style="width:100%;padding:14px;font-size:14px;border-radius:14px;font-weight:700;letter-spacing:.5px;">この背景で動画を生成</button>
-        <button onclick="pvReset()" style="width:100%;background:transparent;border:none;color:var(--text-muted);font-size:12px;padding:10px;cursor:pointer;font-family:inherit;margin-top:6px;">最初からやり直す</button>
       </div>
     </div>
   </div>
@@ -1351,10 +1317,12 @@ async function getVideoProposals(){
   btn.disabled=true;btn.innerHTML='⏳ '+(window.elevaT?elevaT('analyzing_trends'):'トレンドを分析中...');
 
   try{
-    updateSelectedGenres&&updateSelectedGenres();
     const genre=selectedGenres[0]||'general';
     const platform=selectedSNS[0]||'tiktok';
     const lang=localStorage.getItem('eleva_lang')||'ja';
+    const userPrompt=(document.getElementById('prompt-input')?.value||'').trim();
+    const target=(document.getElementById('target-input')?.value||'').trim();
+    const style=(document.getElementById('style-input')?.value||'').trim();
 
     let trendingHashtags=[],trendingTopics=[];
     try{
@@ -1364,18 +1332,23 @@ async function getVideoProposals(){
       }
       trendingHashtags=tr.data?.hashtags||[];
       trendingTopics=(tr.data?.topics||[]).map(t=>typeof t==='string'?t:(t.desc||t.name||'')).filter(Boolean);
-    }catch(e){}
+    }catch(e){console.warn('[proposals] sns_trends lookup failed',e);}
 
     const res=await fetch('/api/generate-proposals',{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({genre,platform,lang,trendingHashtags,trendingTopics,hasMedia:!!(inputImageUrl||inputVideoUrl||selectedPhotos.length)})
+      body:JSON.stringify({genre,platform,lang,userPrompt,target,style,trendingHashtags,trendingTopics,hasMedia:!!(inputImageUrl||inputVideoUrl||selectedPhotos.length)})
     });
+    if(!res.ok){
+      const t=await res.text();
+      throw new Error('HTTP '+res.status+': '+t.slice(0,200));
+    }
     const data=await res.json();
     if(data.error)throw new Error(data.error);
     currentProposals=data.proposals||[];
     if(!currentProposals.length)throw new Error('提案が生成されませんでした');
     displayProposals(currentProposals);
   }catch(e){
+    console.error('[proposals]',e);
     alert((window.elevaT?elevaT('proposal_failed'):'提案の取得に失敗しました')+': '+e.message);
   }finally{
     btn.disabled=false;btn.innerHTML=orig;

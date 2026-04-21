@@ -29,13 +29,13 @@ export default async (req) => {
   }
 
   try {
-    const { genre, platform, lang, trendingHashtags = [], trendingTopics = [], hasMedia = false } = await req.json();
+    const { genre, platform, lang, userPrompt = '', target = '', style = '', trendingHashtags = [], trendingTopics = [], hasMedia = false } = await req.json();
     const langName = LANG_NAMES[lang] || LANG_NAMES['ja'];
     const langInstruction = lang && lang !== 'ja'
       ? `\nAll text fields (title/concept/reason/prompt_localized) must be written in ${langName}. JSON keys stay in English.`
       : '';
 
-    const system = `あなたはSNS動画のプロデューサーです。ユーザーのジャンルとトレンドデータを元に、バズりやすい動画コンセプトを3案提案してください。${langInstruction}
+    const system = `あなたはSNS動画のプロデューサーです。ユーザーのテーマ・ターゲット・スタイルとトレンドデータを元に、バズりやすい動画コンセプトを3案提案してください。ユーザーが具体的なテーマを入力している場合は、その意図を最優先してください。${langInstruction}
 返答は以下のJSON形式のみ（説明文不要）:
 {
   "proposals": [
@@ -51,6 +51,9 @@ export default async (req) => {
     const userMsg = `ジャンル: ${genre || 'general'}
 プラットフォーム: ${platform || 'tiktok'}
 言語: ${langName}
+${userPrompt ? `ユーザーのテーマ・目的: ${userPrompt}` : ''}
+${target ? `ターゲット: ${target}` : ''}
+${style ? `希望スタイル・雰囲気: ${style}` : ''}
 トレンドハッシュタグ: ${trendingHashtags.slice(0, 5).join(', ') || 'なし'}
 トレンドトピック: ${trendingTopics.slice(0, 3).join(' / ') || 'なし'}
 ${hasMedia ? '※ユーザーは参考画像/動画をアップロード済み' : ''}`;
