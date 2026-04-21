@@ -209,21 +209,39 @@ function genrePlaceholder(platform, genre){
   </div>`;
 }
 
-// Deep-link handler: try to open the native app first, fall back to web URL after 1s.
-// Uses window.location.href per product spec. If the app opens, the tab is replaced with the
-// deep-link URL (which the app intercepts); the scheduled fallback navigation is cancelled
-// when the page becomes hidden (app took focus).
+// Detect platform OS so we can pick the right custom URL scheme.
+// iPadOS 13+ masquerades as macOS but has touch points, so we test for that too.
+function detectMobileOS(){
+  const ua=navigator.userAgent||'';
+  const isIOS=/iPad|iPhone|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  const isAndroid=/android/i.test(ua);
+  return { isIOS, isAndroid };
+}
+
+// Deep-link handler: try the native app first, fall back to web URL after 1s.
+// Uses window.location.href per product spec. The scheduled fallback is
+// cancelled when the page becomes hidden (the app took focus).
 function openTrendLink(platform, videoId, fallbackUrl){
   const raw=rawVideoId(videoId);
   const fb=fallbackUrl||'';
+  const { isIOS, isAndroid }=detectMobileOS();
   let deep='';
-  if(platform==='tiktok'&&raw)deep='snssdk1233://aweme/detail/'+raw;
-  else if(platform==='instagram'&&raw)deep='instagram://reels/'+raw;
-  else if(platform==='youtube'&&raw)deep='youtube://watch?v='+raw;
+  if(raw){
+    if(platform==='tiktok'){
+      // snssdk1233 = TikTok iOS app ID; snssdk1128 = TikTok international Android app ID
+      if(isIOS)deep='snssdk1233://aweme/detail/'+raw;
+      else if(isAndroid)deep='snssdk1128://aweme/detail/'+raw;
+    } else if(platform==='instagram'){
+      // Same scheme on both OSes
+      deep='instagram://reels/'+raw;
+    } else if(platform==='youtube'){
+      if(isIOS)deep='youtube://watch?v='+raw;
+      else if(isAndroid)deep='vnd.youtube://'+raw;
+    }
+  }
+  // Desktop or unknown OS: skip the native attempt and open the web URL directly.
   if(!deep){if(fb)window.location.href=fb;return;}
-  // Schedule web fallback
   const t=setTimeout(()=>{if(fb)window.location.href=fb;},1000);
-  // Cancel if the native app took focus
   const onHide=()=>{if(document.hidden)clearTimeout(t);};
   document.addEventListener('visibilitychange',onHide,{once:true});
   window.location.href=deep;
