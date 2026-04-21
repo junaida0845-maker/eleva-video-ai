@@ -196,13 +196,15 @@ async function loadTrends(){
   // Primary: query the table directly (RLS policy "public_read_global_buzz" allows anon SELECT).
   // Include pending rows so titles / genre / platform are visible while analysis catches up.
   const params=new URLSearchParams();
-  params.set('archived','not.eq.true');
+  params.set('archived','eq.false');
   params.set('order','views.desc.nullslast,buzz_score.desc.nullslast,buzz_detected_at.desc.nullslast');
   params.set('limit','30');
-  params.set('select','id,platform,video_id,video_url,country_code,title,genre,views,likes,music_title,music_artist,buzz_score,analysis_status,storyboard_urls,buzz_detected_at');
+  params.set('select','id,platform,video_id,video_url,country_code,title,genre,duration_sec,views,likes,music_title,music_artist,buzz_score,analysis_status,storyboard_urls,buzz_detected_at');
   if(state.country)params.append('country_code','eq.'+state.country);
   if(state.platform)params.append('platform','eq.'+state.platform);
   if(state.genre)params.append('genre','eq.'+state.genre);
+  // YouTube rows must be Shorts (1..60s, known duration). Non-YouTube rows pass through.
+  params.append('or','(platform.neq.youtube,and(duration_sec.gt.0,duration_sec.lte.60))');
 
   let rows;
   try{
