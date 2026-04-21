@@ -288,7 +288,7 @@ async function loadTrends(){
   const params=new URLSearchParams();
   params.set('archived','eq.false');
   params.set('order','views.desc.nullslast,buzz_score.desc.nullslast,buzz_detected_at.desc.nullslast');
-  params.set('limit','30');
+  params.set('limit','100');
   params.set('select','id,platform,video_id,video_url,country_code,title,genre,duration_sec,views,likes,music_title,music_artist,buzz_score,analysis_status,storyboard_urls,buzz_detected_at');
   if(state.country)params.append('country_code','eq.'+state.country);
   if(state.platform)params.append('platform','eq.'+state.platform);
