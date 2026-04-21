@@ -58,6 +58,7 @@ input::placeholder{color:var(--text-muted);}
 .btn-send:hover{background:var(--gold-light);}
 .btn-send:disabled{background:#333;color:#666;cursor:not-allowed;}
 </style>
+<!-- eleva-sw-register --><script>if('serviceWorker' in navigator){window.addEventListener('load',async()=>{try{const reg=await navigator.serviceWorker.register('/sw.js');reg.addEventListener('updatefound',()=>{const nw=reg.installing;nw.addEventListener('statechange',()=>{if(nw.state==='installed'&&navigator.serviceWorker.controller){nw.postMessage('skipWaiting');navigator.serviceWorker.addEventListener('controllerchange',()=>window.location.reload());}});});setInterval(()=>reg.update(),30*60*1000);}catch(e){console.log('SW registration failed:',e);}});}</script>
 </head>
 <body>
 

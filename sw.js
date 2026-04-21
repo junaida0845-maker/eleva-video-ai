@@ -1,0 +1,49 @@
+// Service Worker — auto-update, network-first
+const CACHE_VERSION = 'v' + Date.now();
+const CACHE_NAME = 'app-cache-' + CACHE_VERSION;
+
+// Install: activate immediately
+self.addEventListener('install', event => {
+  self.skipWaiting();
+});
+
+// Activate: purge every old cache, take control of open tabs
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(
+        keys
+          .filter(key => key !== CACHE_NAME)
+          .map(key => caches.delete(key))
+      )
+    ).then(() => self.clients.claim())
+  );
+});
+
+// Fetch: network-first; HTML must always be fresh.
+self.addEventListener('fetch', event => {
+  // Navigation requests (HTML) — always network, fall back to cache offline.
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
+    return;
+  }
+  // Everything else — network preferred, cache the fresh response.
+  event.respondWith(
+    fetch(event.request)
+      .then(response => {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        return response;
+      })
+      .catch(() => caches.match(event.request))
+  );
+});
+
+// Apply update immediately when a new SW signals skipWaiting.
+self.addEventListener('message', event => {
+  if (event.data === 'skipWaiting') {
+    self.skipWaiting();
+  }
+});

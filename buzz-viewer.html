@@ -102,6 +102,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 
 footer{margin-top:60px;border-top:1px solid var(--border);padding:24px 20px;text-align:center;color:var(--text-3);font-size:11px;letter-spacing:.5px;}
 </style>
+<!-- eleva-sw-register --><script>if('serviceWorker' in navigator){window.addEventListener('load',async()=>{try{const reg=await navigator.serviceWorker.register('/sw.js');reg.addEventListener('updatefound',()=>{const nw=reg.installing;nw.addEventListener('statechange',()=>{if(nw.state==='installed'&&navigator.serviceWorker.controller){nw.postMessage('skipWaiting');navigator.serviceWorker.addEventListener('controllerchange',()=>window.location.reload());}});});setInterval(()=>reg.update(),30*60*1000);}catch(e){console.log('SW registration failed:',e);}});}</script>
 </head>
 <body>
 

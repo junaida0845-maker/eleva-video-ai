@@ -21,6 +21,7 @@ p{color:var(--text-2);font-size:14px;line-height:1.7;margin-bottom:8px;}
 .btn:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(212,175,55,0.35);}
 .muted{color:var(--text-3);font-size:12px;margin-top:18px;}
 </style>
+<!-- eleva-sw-register --><script>if('serviceWorker' in navigator){window.addEventListener('load',async()=>{try{const reg=await navigator.serviceWorker.register('/sw.js');reg.addEventListener('updatefound',()=>{const nw=reg.installing;nw.addEventListener('statechange',()=>{if(nw.state==='installed'&&navigator.serviceWorker.controller){nw.postMessage('skipWaiting');navigator.serviceWorker.addEventListener('controllerchange',()=>window.location.reload());}});});setInterval(()=>reg.update(),30*60*1000);}catch(e){console.log('SW registration failed:',e);}});}</script>
 </head>
 <body>
 <div class="card">

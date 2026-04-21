@@ -30,6 +30,7 @@ li{margin-bottom:6px;}
 footer{text-align:center;padding:24px 16px;margin-top:60px;border-top:1px solid #1A1A1A;color:#555;font-size:11px;}
 footer a{color:#666;text-decoration:none;margin:0 10px;}
 </style>
+<!-- eleva-sw-register --><script>if('serviceWorker' in navigator){window.addEventListener('load',async()=>{try{const reg=await navigator.serviceWorker.register('/sw.js');reg.addEventListener('updatefound',()=>{const nw=reg.installing;nw.addEventListener('statechange',()=>{if(nw.state==='installed'&&navigator.serviceWorker.controller){nw.postMessage('skipWaiting');navigator.serviceWorker.addEventListener('controllerchange',()=>window.location.reload());}});});setInterval(()=>reg.update(),30*60*1000);}catch(e){console.log('SW registration failed:',e);}});}</script>
 </head>
 <body>
 <div class="top-bar">
