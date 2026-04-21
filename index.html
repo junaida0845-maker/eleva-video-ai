@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="/icons/icon-180.png"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png"/>
+<meta name="theme-color" content="#0a0a0a"/>
 <title>ELEVA - AIが動画を作り、アルゴリズムが届ける。</title>
 <meta name="description" content="テキスト入力だけでAIがSNS用4K動画を自動生成。TikTok・Instagram・YouTubeのフォロワーを増やすAIサービス。"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -119,7 +123,7 @@ footer{padding:40px 20px;border-top:1px solid var(--border-gold);text-align:cent
 <nav class="top-nav">
   <a href="/" class="nav-logo">ELEVA</a>
   <div class="nav-right">
-    <button onclick="ELEVA.showLanguageModal()" class="nav-btn" id="lang-switcher-nav">🌐</button>
+    <button onclick="ELEVA.showLanguageModal()" class="nav-btn" id="lang-switcher-nav" aria-label="Language" style="display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></button>
     <a href="/login.html" class="nav-btn" data-i18n="login">ログイン</a>
     <a href="/login.html#signup" class="nav-btn nav-btn-primary" data-i18n="start_free">無料で試す</a>
   </div>
@@ -314,7 +318,7 @@ footer{padding:40px 20px;border-top:1px solid var(--border-gold);text-align:cent
       <a href="/privacy.html" target="_blank">プライバシーポリシー</a>
       <a href="/terms.html" target="_blank">利用規約</a>
       <a href="mailto:support@letiziainc.com">お問い合わせ</a>
-      <a href="#" onclick="ELEVA.showLanguageModal();return false;">🌐 言語を変更</a>
+      <a href="#" onclick="ELEVA.showLanguageModal();return false;" style="display:inline-flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>言語を変更</a>
     </div>
     <div class="footer-copy">© 2025 株式会社LETIZIA All rights reserved.</div>
   </div>
@@ -378,8 +382,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   const lang=localStorage.getItem('eleva_lang')||'ja';
   ELEVA.applyLanguage(lang);
   const names=window.ELEVA_LANG_NAMES||{};
-  const btnLang=document.getElementById('lang-switcher-nav');
-  if(btnLang&&names[lang])btnLang.textContent='🌐 '+names[lang].flag;
+  // lang-switcher-nav now uses an SVG globe; leave its innerHTML alone
 });
 </script>
 </body>

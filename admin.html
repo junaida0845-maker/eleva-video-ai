@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="/icons/icon-180.png"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png"/>
+<meta name="theme-color" content="#0a0a0a"/>
 <title>ELEVA Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -23,7 +27,10 @@ body{font-family:var(--sans);background:var(--black);color:var(--text-primary);m
 .nav-item{display:flex;align-items:center;gap:12px;padding:12px 22px;color:var(--text-secondary);cursor:pointer;font-size:13px;font-weight:500;transition:all 0.2s;text-decoration:none;border-left:2px solid transparent;}
 .nav-item:hover{color:#fff;background:rgba(201,168,76,0.04);}
 .nav-item.active{color:var(--gold);background:rgba(201,168,76,0.10);border-left-color:var(--gold);}
-.nav-item .icon{width:18px;text-align:center;flex-shrink:0;}
+.nav-item .icon{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--gold);}
+.nav-item .icon svg{width:18px;height:18px;stroke:var(--gold);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;fill:none;}
+.kpi-icon svg{width:22px;height:22px;stroke:var(--gold);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;fill:none;}
+.btn-gold svg{stroke:#0a0a0a;stroke-width:2;fill:none;vertical-align:middle;}
 /* Sidebar language switcher */
 .sidebar-lang{border-top:1px solid var(--border-gold);padding:14px 16px;background:#0b0b0b;}
 .lang-trigger{width:100%;display:flex;align-items:center;gap:10px;background:transparent;border:1px solid rgba(201,168,76,0.3);color:var(--gold);padding:10px 12px;border-radius:10px;cursor:pointer;font-family:var(--sans);font-size:13px;font-weight:500;transition:all 0.2s;}
@@ -142,15 +149,15 @@ textarea:focus{border-color:var(--gold);}
     <span class="admin-tag">ADMIN PANEL</span>
   </div>
   <nav class="sidebar-nav">
-    <a class="nav-item active" onclick="showSection('dashboard',event)" href="#"><span class="icon">📊</span><span>ダッシュボード</span></a>
-    <a class="nav-item" onclick="showSection('users',event)" href="#"><span class="icon">👥</span><span>ユーザー管理</span></a>
-    <a class="nav-item" onclick="showSection('generations',event)" href="#"><span class="icon">🎬</span><span>動画生成ログ</span></a>
-    <a class="nav-item" onclick="showSection('notices',event)" href="#"><span class="icon">📢</span><span>お知らせ</span></a>
-    <a class="nav-item" onclick="showSection('codes',event)" href="#"><span class="icon">🎁</span><span>紹介コード</span></a>
-    <a class="nav-item" onclick="showSection('invites',event)" href="#"><span class="icon">✉️</span><span>テスト招待</span></a>
-    <a class="nav-item" onclick="showSection('logs',event)" href="#"><span class="icon">📋</span><span>操作ログ</span></a>
-    <a class="nav-item" onclick="showSection('cancellations',event)" href="#"><span class="icon">⚠️</span><span>解約申請</span></a>
-    <a class="nav-item" onclick="showSection('trends',event)" href="#"><span class="icon">🌍</span><span>トレンドDB</span></a>
+    <a class="nav-item active" onclick="showSection('dashboard',event)" href="#"><span class="icon"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg></span><span>ダッシュボード</span></a>
+    <a class="nav-item" onclick="showSection('users',event)" href="#"><span class="icon"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span>ユーザー管理</span></a>
+    <a class="nav-item" onclick="showSection('generations',event)" href="#"><span class="icon"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg></span><span>動画生成ログ</span></a>
+    <a class="nav-item" onclick="showSection('notices',event)" href="#"><span class="icon"><svg viewBox="0 0 24 24"><path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg></span><span>お知らせ</span></a>
+    <a class="nav-item" onclick="showSection('codes',event)" href="#"><span class="icon"><svg viewBox="0 0 24 24"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg></span><span>紹介コード</span></a>
+    <a class="nav-item" onclick="showSection('invites',event)" href="#"><span class="icon"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span><span>テスト招待</span></a>
+    <a class="nav-item" onclick="showSection('logs',event)" href="#"><span class="icon"><svg viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="16" y2="16"/></svg></span><span>操作ログ</span></a>
+    <a class="nav-item" onclick="showSection('cancellations',event)" href="#"><span class="icon"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span><span>解約申請</span></a>
+    <a class="nav-item" onclick="showSection('trends',event)" href="#"><span class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span><span>トレンドDB</span></a>
   </nav>
   <div class="sidebar-lang">
     <button class="lang-trigger" id="lang-trigger" onclick="toggleLangInline()" aria-expanded="false">
@@ -167,7 +174,7 @@ textarea:focus{border-color:var(--gold);}
 <main class="main">
   <!-- Access check -->
   <div id="access-denied" style="display:none;text-align:center;padding:80px;">
-    <div style="font-size:48px;margin-bottom:20px;">🚫</div>
+    <div style="margin-bottom:20px;display:flex;justify-content:center;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
     <h2 style="color:var(--gold-light);margin-bottom:12px;">アクセス拒否</h2>
     <p style="color:var(--text-secondary);">このページは管理者のみアクセスできます。</p>
     <a href="/" style="color:var(--gold);margin-top:16px;display:inline-block;">ホームへ戻る</a>
@@ -177,12 +184,12 @@ textarea:focus{border-color:var(--gold);}
   <div class="section-page active" id="section-dashboard">
     <div class="page-title">管理者ダッシュボード</div>
     <div class="kpi-grid">
-      <div class="kpi-card"><div class="kpi-icon">👥</div><div class="kpi-body"><div class="kpi-label">TOTAL USERS</div><div class="kpi-value" id="kpi-users">—</div><div class="kpi-sub kpi-up" id="kpi-users-sub">↑ —</div></div></div>
-      <div class="kpi-card"><div class="kpi-icon">🎬</div><div class="kpi-body"><div class="kpi-label">GENERATIONS TODAY</div><div class="kpi-value" id="kpi-gens">—</div><div class="kpi-sub">本日</div></div></div>
-      <div class="kpi-card"><div class="kpi-icon">💰</div><div class="kpi-body"><div class="kpi-label">MONTHLY REVENUE</div><div class="kpi-value" id="kpi-rev">—</div><div class="kpi-sub">今月</div></div></div>
-      <div class="kpi-card"><div class="kpi-icon">📈</div><div class="kpi-body"><div class="kpi-label">ACTIVE PRO USERS</div><div class="kpi-value" id="kpi-pro">—</div><div class="kpi-sub">有料会員</div></div></div>
-      <div class="kpi-card"><div class="kpi-icon">⚠️</div><div class="kpi-body"><div class="kpi-label">CANCELLATION REQUESTS</div><div class="kpi-value" id="kpi-cancel">—</div><div class="kpi-sub">未対応</div></div></div>
-      <div class="kpi-card"><div class="kpi-icon">🌐</div><div class="kpi-body"><div class="kpi-label">TOP LANGUAGE</div><div class="kpi-value" id="kpi-lang" style="font-size:18px;">—</div><div class="kpi-sub">最多使用言語</div></div></div>
+      <div class="kpi-card"><div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="kpi-body"><div class="kpi-label">TOTAL USERS</div><div class="kpi-value" id="kpi-users">—</div><div class="kpi-sub kpi-up" id="kpi-users-sub">↑ —</div></div></div>
+      <div class="kpi-card"><div class="kpi-icon"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg></div><div class="kpi-body"><div class="kpi-label">GENERATIONS TODAY</div><div class="kpi-value" id="kpi-gens">—</div><div class="kpi-sub">本日</div></div></div>
+      <div class="kpi-card"><div class="kpi-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="kpi-body"><div class="kpi-label">MONTHLY REVENUE</div><div class="kpi-value" id="kpi-rev">—</div><div class="kpi-sub">今月</div></div></div>
+      <div class="kpi-card"><div class="kpi-icon"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div><div class="kpi-body"><div class="kpi-label">ACTIVE PRO USERS</div><div class="kpi-value" id="kpi-pro">—</div><div class="kpi-sub">有料会員</div></div></div>
+      <div class="kpi-card"><div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="kpi-body"><div class="kpi-label">CANCELLATION REQUESTS</div><div class="kpi-value" id="kpi-cancel">—</div><div class="kpi-sub">未対応</div></div></div>
+      <div class="kpi-card"><div class="kpi-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><div class="kpi-body"><div class="kpi-label">TOP LANGUAGE</div><div class="kpi-value" id="kpi-lang" style="font-size:18px;">—</div><div class="kpi-sub">最多使用言語</div></div></div>
     </div>
 
     <div class="section-title">プラン分布</div>
@@ -267,7 +274,7 @@ textarea:focus{border-color:var(--gold);}
     <div class="notice-form">
       <div class="section-title">招待リンクを発行</div>
       <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">招待リンクを踏んだユーザーが登録すると、自動的にテストユーザー（is_test_user=true）になります。1回限り・7日間有効。</p>
-      <button class="btn-gold" onclick="generateInviteCode()">✉️ 招待リンクを発行・コピー</button>
+      <button class="btn-gold" onclick="generateInviteCode()" style="display:inline-flex;align-items:center;gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>招待リンクを発行・コピー</button>
       <div id="invite-result" style="display:none;margin-top:12px;padding:12px;background:rgba(68,255,136,0.08);border:1px solid rgba(68,255,136,0.3);border-radius:8px;color:#44ff88;font-size:13px;word-break:break-all;"></div>
     </div>
     <div class="section-title" style="margin-top:24px;">発行済み招待コード</div>
@@ -317,9 +324,9 @@ textarea:focus{border-color:var(--gold);}
 
     <div class="kpi-grid" id="trends-kpi">
       <div class="kpi-card"><div class="kpi-icon">📦</div><div class="kpi-body"><div class="kpi-label">総件数</div><div class="kpi-value" id="trends-total">—</div></div></div>
-      <div class="kpi-card"><div class="kpi-icon">🌍</div><div class="kpi-body"><div class="kpi-label">対象国</div><div class="kpi-value" id="trends-country-count">—</div></div></div>
-      <div class="kpi-card"><div class="kpi-icon">🏷️</div><div class="kpi-body"><div class="kpi-label">ジャンル</div><div class="kpi-value" id="trends-genre-count">—</div></div></div>
-      <div class="kpi-card"><div class="kpi-icon">⏱️</div><div class="kpi-body"><div class="kpi-label">最終収集</div><div class="kpi-value" id="trends-latest" style="font-size:15px;">—</div></div></div>
+      <div class="kpi-card"><div class="kpi-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><div class="kpi-body"><div class="kpi-label">対象国</div><div class="kpi-value" id="trends-country-count">—</div></div></div>
+      <div class="kpi-card"><div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M20.59 13.41L13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div><div class="kpi-body"><div class="kpi-label">ジャンル</div><div class="kpi-value" id="trends-genre-count">—</div></div></div>
+      <div class="kpi-card"><div class="kpi-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="kpi-body"><div class="kpi-label">最終収集</div><div class="kpi-value" id="trends-latest" style="font-size:15px;">—</div></div></div>
     </div>
 
     <div class="table-wrap">
@@ -402,7 +409,8 @@ function renderLangInline(){
   el.innerHTML=Object.keys(names).map(code=>{
     const n=names[code]||{};
     const active=code===cur?'active':'';
-    return `<button class="${active}" onclick="pickLang('${code}')"><span class="flag">${n.flag||'🌐'}</span><span>${n.native||code}</span>${code===cur?'<span style="margin-left:auto;color:var(--gold);">✓</span>':''}</button>`;
+    const flagFallback='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>';
+    return `<button class="${active}" onclick="pickLang('${code}')"><span class="flag">${n.flag||flagFallback}</span><span>${n.native||code}</span>${code===cur?'<span style="margin-left:auto;color:var(--gold);">✓</span>':''}</button>`;
   }).join('');
 }
 function pickLang(code){
