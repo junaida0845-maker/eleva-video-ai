@@ -4,41 +4,64 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>ELEVA Admin</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--gold:#c9a84c;--gold-light:#f0d070;--black:#0a0a0a;--black-card:#111111;--black-border:#1a1a1a;--border-gold:rgba(201,168,76,0.2);--text-primary:#fff;--text-secondary:#aaa;--text-muted:#666;}
+:root{--gold:#c9a84c;--gold-light:#f0d070;--black:#0a0a0a;--black-card:#111111;--black-border:#1a1a1a;--border-gold:rgba(201,168,76,0.2);--text-primary:#fff;--text-secondary:#aaa;--text-muted:#666;--serif:'Cormorant Garamond',serif;--sans:'DM Sans','Inter',sans-serif;}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Inter',sans-serif;background:var(--black);color:var(--text-primary);min-height:100vh;display:flex;}
+html,body{overflow-x:hidden;max-width:100vw;}
+body{font-family:var(--sans);background:var(--black);color:var(--text-primary);min-height:100vh;display:flex;letter-spacing:0.01em;}
 ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-thumb{background:rgba(201,168,76,0.3);}
 /* Sidebar */
-.sidebar{width:220px;min-height:100vh;background:#0d0d0d;border-right:1px solid var(--border-gold);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100;}
-.sidebar-logo{padding:20px 24px;border-bottom:1px solid var(--border-gold);}
-.sidebar-logo span{color:var(--gold-light);font-size:18px;font-weight:900;letter-spacing:0.1em;}
-.sidebar-logo .admin-tag{display:block;color:var(--text-muted);font-size:10px;letter-spacing:0.15em;margin-top:2px;}
-.sidebar-nav{padding:12px 0;flex:1;overflow-y:auto;}
-.nav-item{display:flex;align-items:center;gap:10px;padding:12px 20px;color:var(--text-secondary);cursor:pointer;font-size:13px;transition:all 0.2s;text-decoration:none;}
-.nav-item:hover{color:#fff;background:rgba(255,255,255,0.03);}
-.nav-item.active{color:var(--gold);background:rgba(201,168,76,0.08);}
-.nav-item .icon{width:16px;text-align:center;}
+.sidebar{width:240px;min-height:100vh;background:#0d0d0d;border-right:1px solid var(--border-gold);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100;transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);}
+.sidebar-logo{padding:22px 22px 18px;border-bottom:1px solid var(--border-gold);}
+.sidebar-logo .brand{font-family:var(--serif);color:var(--gold-light);font-size:22px;font-weight:700;letter-spacing:0.22em;display:block;line-height:1;}
+.sidebar-logo .admin-tag{display:block;color:var(--text-muted);font-size:10px;letter-spacing:0.22em;margin-top:6px;font-family:var(--sans);}
+.sidebar-nav{padding:10px 0;flex:1;overflow-y:auto;}
+.nav-item{display:flex;align-items:center;gap:12px;padding:12px 22px;color:var(--text-secondary);cursor:pointer;font-size:13px;font-weight:500;transition:all 0.2s;text-decoration:none;border-left:2px solid transparent;}
+.nav-item:hover{color:#fff;background:rgba(201,168,76,0.04);}
+.nav-item.active{color:var(--gold);background:rgba(201,168,76,0.10);border-left-color:var(--gold);}
+.nav-item .icon{width:18px;text-align:center;flex-shrink:0;}
+/* Sidebar language switcher */
+.sidebar-lang{border-top:1px solid var(--border-gold);padding:14px 16px;background:#0b0b0b;}
+.lang-trigger{width:100%;display:flex;align-items:center;gap:10px;background:transparent;border:1px solid rgba(201,168,76,0.3);color:var(--gold);padding:10px 12px;border-radius:10px;cursor:pointer;font-family:var(--sans);font-size:13px;font-weight:500;transition:all 0.2s;}
+.lang-trigger:hover{border-color:var(--gold);background:rgba(201,168,76,0.06);}
+.lang-trigger svg{flex-shrink:0;color:var(--gold);}
+.lang-trigger .lang-current{color:#fff;font-size:12px;margin-left:auto;}
+.lang-trigger .lang-caret{color:var(--gold);font-size:10px;margin-left:4px;transition:transform 0.2s;}
+.lang-trigger.open .lang-caret{transform:rotate(180deg);}
+.lang-inline{margin-top:10px;display:none;max-height:220px;overflow-y:auto;border:1px solid var(--border-gold);border-radius:10px;background:#0d0d0d;}
+.lang-inline.open{display:block;}
+.lang-inline button{width:100%;display:flex;align-items:center;gap:10px;padding:10px 14px;background:none;border:none;border-bottom:1px solid rgba(255,255,255,0.04);color:#fff;font-family:var(--sans);font-size:13px;cursor:pointer;text-align:left;transition:background 0.15s;}
+.lang-inline button:last-child{border-bottom:none;}
+.lang-inline button:hover{background:rgba(201,168,76,0.06);}
+.lang-inline button.active{color:var(--gold);background:rgba(201,168,76,0.1);}
+.lang-inline button .flag{font-size:16px;line-height:1;}
+/* Hamburger + mobile scrim */
+.hamburger{display:none;position:fixed;top:12px;left:12px;z-index:200;background:rgba(10,10,10,0.92);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid var(--border-gold);color:var(--gold);width:42px;height:42px;border-radius:10px;cursor:pointer;align-items:center;justify-content:center;flex-direction:column;gap:4px;padding:0;}
+.hamburger span{display:block;width:20px;height:2px;background:var(--gold);border-radius:2px;}
+.sidebar-scrim{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99;}
+.sidebar-scrim.open{display:block;}
 /* Main */
-.main{margin-left:220px;flex:1;padding:28px;min-height:100vh;}
-.page-title{color:var(--gold-light);font-size:22px;font-weight:800;margin-bottom:24px;}
-.section-title{color:var(--gold);font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:16px;}
+.main{margin-left:240px;flex:1;padding:28px;min-height:100vh;}
+.page-title{font-family:var(--serif);color:var(--gold-light);font-size:30px;font-weight:700;letter-spacing:0.03em;margin-bottom:24px;line-height:1.2;}
+.section-title{color:var(--gold);font-size:12px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:16px;font-family:var(--sans);}
 /* KPI Cards */
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:32px;}
 .kpi-card{background:var(--black-card);border:1px solid var(--border-gold);border-radius:14px;padding:20px;display:flex;align-items:flex-start;gap:14px;}
 .kpi-icon{font-size:28px;width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:rgba(201,168,76,0.1);border-radius:10px;color:var(--gold);flex-shrink:0;}
 .kpi-body {}
 .kpi-label{color:var(--text-secondary);font-size:11px;margin-bottom:4px;letter-spacing:0.05em;}
-.kpi-value{color:#fff;font-size:26px;font-weight:800;line-height:1;}
+.kpi-value{font-family:var(--serif);color:#fff;font-size:30px;font-weight:700;line-height:1;letter-spacing:0.01em;}
 .kpi-sub{color:var(--text-muted);font-size:11px;margin-top:4px;}
 .kpi-up{color:#44ff88;}
 .kpi-down{color:#ff4444;}
 /* Table */
 .table-wrap{background:var(--black-card);border:1px solid var(--border-gold);border-radius:16px;overflow:hidden;margin-bottom:28px;}
 .table-header{padding:16px 20px;border-bottom:1px solid var(--border-gold);display:flex;justify-content:space-between;align-items:center;}
-.table-header-title{color:var(--gold-light);font-size:15px;font-weight:700;}
+.table-header-title{font-family:var(--serif);color:var(--gold-light);font-size:19px;font-weight:600;letter-spacing:0.02em;}
 table{width:100%;border-collapse:collapse;}
 thead th{color:var(--gold);font-size:11px;font-weight:600;letter-spacing:0.05em;padding:10px 16px;text-align:left;background:#0d0d0d;border-bottom:1px solid rgba(201,168,76,0.2);}
 tbody tr{background:var(--black-card);}
@@ -82,32 +105,52 @@ textarea:focus{border-color:var(--gold);}
 .btn-gold:hover{background:var(--gold-light);}
 /* Responsive */
 @media(max-width:768px){
-  .sidebar{width:60px;}
-  .sidebar .nav-item span:last-child,.sidebar-logo span:last-child,.admin-tag{display:none;}
-  .main{margin-left:60px;padding:16px;}
+  .sidebar{transform:translateX(-100%);width:82vw;max-width:300px;box-shadow:0 0 40px rgba(0,0,0,0.6);}
+  .sidebar.open{transform:translateX(0);}
+  .hamburger{display:flex;}
+  .main{margin-left:0;padding:64px 16px 24px;}
+  .page-title{font-size:24px;margin-bottom:18px;}
+  .kpi-value{font-size:24px;}
+  .table-wrap{border-radius:12px;overflow-x:auto;}
+  .sidebar-logo{padding-left:64px;}
+  .kpi-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
+  .kpi-card{padding:14px;}
 }
 </style>
 <!-- eleva-sw-register --><script>if('serviceWorker' in navigator){window.addEventListener('load',async()=>{try{const reg=await navigator.serviceWorker.register('/sw.js');reg.addEventListener('updatefound',()=>{const nw=reg.installing;nw.addEventListener('statechange',()=>{if(nw.state==='installed'&&navigator.serviceWorker.controller){nw.postMessage('skipWaiting');navigator.serviceWorker.addEventListener('controllerchange',()=>window.location.reload());}});});setInterval(()=>reg.update(),30*60*1000);}catch(e){console.log('SW registration failed:',e);}});}</script>
 </head>
 <body>
 
+<!-- Hamburger (mobile only) -->
+<button class="hamburger" id="admin-hamburger" onclick="toggleSidebar()" aria-label="メニュー"><span></span><span></span><span></span></button>
+<div class="sidebar-scrim" id="sidebar-scrim" onclick="toggleSidebar()"></div>
+
 <!-- Sidebar -->
-<aside class="sidebar">
+<aside class="sidebar" id="admin-sidebar">
   <div class="sidebar-logo">
-    <span>ELEVA</span>
+    <span class="brand">ELEVA</span>
     <span class="admin-tag">ADMIN PANEL</span>
   </div>
   <nav class="sidebar-nav">
-    <a class="nav-item active" onclick="showSection('dashboard')" href="#"><span class="icon">📊</span><span>ダッシュボード</span></a>
-    <a class="nav-item" onclick="showSection('users')" href="#"><span class="icon">👥</span><span>ユーザー管理</span></a>
-    <a class="nav-item" onclick="showSection('generations')" href="#"><span class="icon">🎬</span><span>動画生成ログ</span></a>
-    <a class="nav-item" onclick="showSection('notices')" href="#"><span class="icon">📢</span><span>お知らせ</span></a>
-    <a class="nav-item" onclick="showSection('codes')" href="#"><span class="icon">🎁</span><span>紹介コード</span></a>
-    <a class="nav-item" onclick="showSection('invites')" href="#"><span class="icon">✉️</span><span>テスト招待</span></a>
-    <a class="nav-item" onclick="showSection('logs')" href="#"><span class="icon">📋</span><span>操作ログ</span></a>
-    <a class="nav-item" onclick="showSection('cancellations')" href="#"><span class="icon">⚠️</span><span>解約申請</span></a>
-    <a class="nav-item" onclick="showSection('trends')" href="#"><span class="icon">🌍</span><span>トレンドDB</span></a>
+    <a class="nav-item active" onclick="showSection('dashboard',event)" href="#"><span class="icon">📊</span><span>ダッシュボード</span></a>
+    <a class="nav-item" onclick="showSection('users',event)" href="#"><span class="icon">👥</span><span>ユーザー管理</span></a>
+    <a class="nav-item" onclick="showSection('generations',event)" href="#"><span class="icon">🎬</span><span>動画生成ログ</span></a>
+    <a class="nav-item" onclick="showSection('notices',event)" href="#"><span class="icon">📢</span><span>お知らせ</span></a>
+    <a class="nav-item" onclick="showSection('codes',event)" href="#"><span class="icon">🎁</span><span>紹介コード</span></a>
+    <a class="nav-item" onclick="showSection('invites',event)" href="#"><span class="icon">✉️</span><span>テスト招待</span></a>
+    <a class="nav-item" onclick="showSection('logs',event)" href="#"><span class="icon">📋</span><span>操作ログ</span></a>
+    <a class="nav-item" onclick="showSection('cancellations',event)" href="#"><span class="icon">⚠️</span><span>解約申請</span></a>
+    <a class="nav-item" onclick="showSection('trends',event)" href="#"><span class="icon">🌍</span><span>トレンドDB</span></a>
   </nav>
+  <div class="sidebar-lang">
+    <button class="lang-trigger" id="lang-trigger" onclick="toggleLangInline()" aria-expanded="false">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></svg>
+      <span>Language</span>
+      <span class="lang-current" id="lang-current">—</span>
+      <span class="lang-caret">▾</span>
+    </button>
+    <div class="lang-inline" id="lang-inline"></div>
+  </div>
 </aside>
 
 <!-- Main -->
@@ -308,18 +351,66 @@ const sb=ELEVA.getSupabase();
 const ADMIN_TOKEN=ELEVA.SUPABASE_ANON_KEY;
 let allUsers=[];
 
-function showSection(id){
+function showSection(id,ev){
   document.querySelectorAll('.section-page').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
   document.getElementById('section-'+id).classList.add('active');
-  event.currentTarget?.classList.add('active');
+  (ev&&ev.currentTarget)?.classList.add('active');
   if(id==='users')loadUsers();
   if(id==='generations')loadGenerations();
   if(id==='cancellations')loadCancellations();
   if(id==='logs')loadLogs();
   if(id==='invites')loadInvites();
   if(id==='trends')loadAdminTrends();
+  if(window.matchMedia('(max-width:768px)').matches)closeSidebar();
 }
+
+function toggleSidebar(){
+  const s=document.getElementById('admin-sidebar');
+  const sc=document.getElementById('sidebar-scrim');
+  const open=s.classList.toggle('open');
+  sc.classList.toggle('open',open);
+  document.body.style.overflow=open?'hidden':'';
+}
+function closeSidebar(){
+  document.getElementById('admin-sidebar').classList.remove('open');
+  document.getElementById('sidebar-scrim').classList.remove('open');
+  document.body.style.overflow='';
+}
+function toggleLangInline(){
+  const el=document.getElementById('lang-inline');
+  const tr=document.getElementById('lang-trigger');
+  const open=el.classList.toggle('open');
+  tr.classList.toggle('open',open);
+  tr.setAttribute('aria-expanded',open?'true':'false');
+  if(open)renderLangInline();
+}
+function renderLangInline(){
+  const el=document.getElementById('lang-inline');
+  const names=window.ELEVA_LANG_NAMES||{ja:{native:'日本語',flag:'🇯🇵'},en:{native:'English',flag:'🇺🇸'}};
+  const cur=localStorage.getItem('eleva_lang')||'ja';
+  el.innerHTML=Object.keys(names).map(code=>{
+    const n=names[code]||{};
+    const active=code===cur?'active':'';
+    return `<button class="${active}" onclick="pickLang('${code}')"><span class="flag">${n.flag||'🌐'}</span><span>${n.native||code}</span>${code===cur?'<span style="margin-left:auto;color:var(--gold);">✓</span>':''}</button>`;
+  }).join('');
+}
+function pickLang(code){
+  if(window.ELEVA&&ELEVA.applyLanguage)ELEVA.applyLanguage(code);
+  else localStorage.setItem('eleva_lang',code);
+  updateLangCurrent();
+  document.getElementById('lang-inline').classList.remove('open');
+  document.getElementById('lang-trigger').classList.remove('open');
+}
+function updateLangCurrent(){
+  const cur=localStorage.getItem('eleva_lang')||'ja';
+  const names=window.ELEVA_LANG_NAMES||{};
+  const n=names[cur]||{};
+  const label=(n.flag?n.flag+' ':'')+(n.native||cur);
+  const cEl=document.getElementById('lang-current');
+  if(cEl)cEl.textContent=label;
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSidebar();const li=document.getElementById('lang-inline');if(li&&li.classList.contains('open'))toggleLangInline();}});
 
 async function callAdmin(action,params={}){
   const {data:{session}}=await sb.auth.getSession();
@@ -648,6 +739,7 @@ async function loadInvites(){
 }
 
 document.addEventListener('DOMContentLoaded',async()=>{
+  updateLangCurrent();
   const {data:{session}}=await ELEVA.getSupabase().auth.getSession();
   if(!session){document.getElementById('access-denied').style.display='block';document.querySelector('.main').querySelectorAll('.section-page').forEach(el=>el.style.display='none');return;}
   // Check admin
