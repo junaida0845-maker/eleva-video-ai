@@ -14,19 +14,21 @@
 <script src="/eleva-icons.js"></script>
 <style>
 :root{--gold:#c9a84c;--gold-light:#f0d070;--gold-dark:#a07830;--black:#0a0a0a;--black-card:#111111;--black-border:#1a1a1a;--border-gold:rgba(201,168,76,0.22);--text-primary:#fff;--text-secondary:#aaa;--text-muted:#666;--text-gold:#c9a84c;--red:#e05a5a;}
-*{margin:0;padding:0;box-sizing:border-box;}
-html,body{overflow-x:hidden;max-width:100vw;}
-body{font-family:'Inter','Noto Sans JP',sans-serif;background:var(--black);color:var(--text-primary);min-height:100vh;padding-top:56px;padding-bottom:130px;-webkit-font-smoothing:antialiased;}
+/* --- Horizontal overflow hard-lock --- */
+*,*::before,*::after{box-sizing:border-box;}
+html{overflow-x:hidden;width:100%;}
+body{overflow-x:hidden;width:100%;max-width:100vw;font-family:'Inter','Noto Sans JP',sans-serif;background:var(--black);color:var(--text-primary);min-height:100vh;padding-top:56px;padding-bottom:130px;-webkit-font-smoothing:antialiased;margin:0;}
+img,video,canvas,iframe,table{max-width:100%;}
 a{color:inherit;text-decoration:none;}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
 ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-thumb{background:rgba(201,168,76,0.3);}
 
-.top-bar{position:fixed;top:0;left:0;right:0;height:56px;background:rgba(10,10,10,0.95);border-bottom:1px solid var(--border-gold);display:flex;align-items:center;justify-content:flex-end;padding:0 20px 0 64px;gap:12px;z-index:100;backdrop-filter:blur(8px);}
+.top-bar{position:fixed;top:0;left:0;right:0;height:56px;background:rgba(10,10,10,0.95);border-bottom:1px solid var(--border-gold);display:flex;align-items:center;justify-content:flex-end;padding:0 20px 0 64px;gap:12px;z-index:100;backdrop-filter:blur(8px);max-width:100vw;}
 .top-bar-center{position:absolute;left:50%;transform:translateX(-50%);font-size:16px;font-weight:800;color:var(--gold-light);letter-spacing:0.1em;}
 .top-badge{background:rgba(201,168,76,0.15);border:1px solid var(--border-gold);color:var(--gold);padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;}
 @media (max-width:767px){.top-bar-center{font-size:14px;}}
 
-.page-wrap{max-width:760px;margin:0 auto;padding:28px 18px 40px;}
+.page-wrap{max-width:760px;width:100%;margin:0 auto;padding:28px 18px 40px;}
 .page-title{color:var(--gold-light);font-size:24px;font-weight:800;margin-bottom:8px;letter-spacing:.02em;}
 .page-sub{color:var(--text-secondary);font-size:13px;line-height:1.7;margin-bottom:24px;}
 
@@ -55,8 +57,8 @@ textarea{resize:vertical;min-height:110px;}
 textarea:focus,input[type=text]:focus{border-color:var(--gold);}
 textarea::placeholder,input[type=text]::placeholder{color:var(--text-muted);}
 
-.opt-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;}
-.opt-btn{background:var(--black-border);border:1px solid var(--border-gold);color:#cfcfcf;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;transition:all .15s;flex:1;min-width:92px;}
+.opt-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;max-width:100%;}
+.opt-btn{background:var(--black-border);border:1px solid var(--border-gold);color:#cfcfcf;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:600;transition:all .15s;flex:1 1 90px;min-width:0;}
 .opt-btn:hover{border-color:var(--gold);color:#fff;}
 .opt-btn.active{background:var(--gold);color:#000;border-color:var(--gold);font-weight:700;}
 
@@ -78,6 +80,22 @@ textarea::placeholder,input[type=text]::placeholder{color:var(--text-muted);}
 .scene-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.05);}
 .scene-meta div{font-size:12px;color:var(--text-secondary);line-height:1.5;}
 .scene-meta strong{color:var(--gold);display:block;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;}
+
+/* Material upload (STEP 1) */
+.upload-sec{margin-top:20px;padding:16px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:12px;}
+.upload-sec-title{color:var(--gold);font-size:12px;font-weight:700;letter-spacing:.06em;margin-bottom:10px;}
+.upload-sec-hint{color:var(--text-muted);font-size:11.5px;line-height:1.55;margin-bottom:12px;}
+.upload-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;max-width:100%;}
+.upload-row .btn{background:var(--black-border);border:1px solid var(--border-gold);color:var(--gold);padding:10px 14px;border-radius:10px;font-size:12.5px;font-weight:600;flex:1 1 120px;min-width:0;display:inline-flex;align-items:center;justify-content:center;gap:6px;}
+.upload-row .btn:hover{border-color:var(--gold);background:rgba(201,168,76,0.08);}
+.url-row input{width:100%;}
+.thumbs{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;max-width:100%;}
+.thumb{position:relative;width:72px;height:72px;border-radius:10px;overflow:hidden;border:1px solid var(--border-gold);background:#000;flex-shrink:0;}
+.thumb img,.thumb video{width:100%;height:100%;object-fit:cover;display:block;}
+.thumb .badge{position:absolute;top:2px;left:2px;background:rgba(0,0,0,0.7);color:#fff;font-size:9px;padding:1px 5px;border-radius:4px;letter-spacing:.05em;}
+.thumb .x{position:absolute;top:3px;right:3px;width:20px;height:20px;background:rgba(0,0,0,0.8);color:#fff;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px;line-height:1;cursor:pointer;}
+.ai-only-btn{width:100%;margin-top:10px;background:transparent;border:1px dashed var(--border-gold);color:var(--gold);padding:12px;border-radius:10px;font-size:12.5px;font-weight:600;letter-spacing:.02em;}
+.ai-only-btn:hover{border-style:solid;background:rgba(201,168,76,0.06);}
 
 /* Chat */
 .chat-wrap{margin-top:18px;padding:16px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:12px;}
@@ -106,9 +124,9 @@ textarea::placeholder,input[type=text]::placeholder{color:var(--text-muted);}
 .alert.info{background:rgba(201,168,76,0.08);border:1px solid var(--border-gold);color:#e6cb7f;}
 
 /* Fixed bottom bar */
-.generate-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:linear-gradient(to top,rgba(10,10,10,0.98) 0%,rgba(10,10,10,0.92) 70%,rgba(10,10,10,0) 100%);padding:18px 16px 20px;backdrop-filter:blur(8px);display:none;}
+.generate-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:linear-gradient(to top,rgba(10,10,10,0.98) 0%,rgba(10,10,10,0.92) 70%,rgba(10,10,10,0) 100%);padding:18px 16px 20px;backdrop-filter:blur(8px);display:none;max-width:100vw;overflow:hidden;}
 .generate-bar.show{display:block;}
-.generate-bar-inner{max-width:760px;margin:0 auto;}
+.generate-bar-inner{max-width:760px;width:100%;margin:0 auto;}
 .generate-bar-btn{width:100%;background:var(--gold);color:#000;border:none;padding:16px;border-radius:14px;font-weight:800;font-size:16px;letter-spacing:0.05em;box-shadow:0 6px 20px rgba(201,168,76,0.28);transition:all 0.15s;}
 .generate-bar-btn:hover{background:var(--gold-light);transform:translateY(-1px);box-shadow:0 8px 28px rgba(201,168,76,0.42);}
 .generate-bar-btn:disabled{background:#2a2a2a;color:#666;cursor:not-allowed;box-shadow:none;transform:none;}
@@ -162,6 +180,28 @@ textarea::placeholder,input[type=text]::placeholder{color:var(--text-muted);}
 
     <label for="intent-input">どんな動画を作りたいですか？</label>
     <textarea id="intent-input" placeholder="例：自宅で簡単に作れる時短パスタのレシピを紹介したい。見た目がおしゃれで、忙しい20代女性にハマる内容にしたい。"></textarea>
+
+    <!-- Material upload (optional) -->
+    <div class="upload-sec">
+      <div class="upload-sec-title">素材をアップロード（任意）</div>
+      <div class="upload-sec-hint">写真・動画・参考URLを最大5件まで追加できます。素材なしでも AI が全て考えて作成します。</div>
+
+      <div class="upload-row">
+        <button class="btn" type="button" onclick="document.getElementById('file-picker').click()">📷 画像・動画を選択</button>
+      </div>
+      <input type="file" id="file-picker" accept="image/*,video/*" multiple style="display:none;" onchange="handleFilePick(this)"/>
+
+      <div class="url-row" style="margin-top:10px;">
+        <input type="text" id="url-input" placeholder="参考URLを貼り付け（YouTube・画像URL等）" onkeypress="if(event.key==='Enter'){event.preventDefault();handleUrlAdd();}"/>
+        <div style="text-align:right;margin-top:6px;">
+          <button class="btn-outline" type="button" onclick="handleUrlAdd()" style="font-size:12px;padding:6px 14px;">URL追加</button>
+        </div>
+      </div>
+
+      <div class="thumbs" id="thumbs"></div>
+
+      <button class="ai-only-btn" type="button" onclick="clearMaterials()">✨ AIに全て考えてもらう（素材なし）</button>
+    </div>
 
     <div style="margin-top:18px;">
       <label>プラットフォーム</label>
@@ -267,6 +307,10 @@ let currentTaskId = null;
 let currentGenId = null;
 let pollingInterval = null;
 
+// Material uploads (STEP 1). Each item: {kind:'image'|'video'|'url', name, dataUrl?, url?}
+let materials = [];
+const MAX_MATERIALS = 5;
+
 // ---- Utils ----
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function showAlert(msg, type){
@@ -318,6 +362,87 @@ document.querySelectorAll('#duration-grid .opt-btn').forEach(b=>{
   });
 });
 
+// ---- Material upload handlers ----
+function fileToDataUrl(file){
+  return new Promise((resolve,reject)=>{
+    const r = new FileReader();
+    r.onload = ()=>resolve(r.result);
+    r.onerror = ()=>reject(new Error('ファイルの読み込みに失敗しました'));
+    r.readAsDataURL(file);
+  });
+}
+
+async function handleFilePick(input){
+  const files = Array.from(input.files || []);
+  input.value = '';
+  for(const f of files){
+    if(materials.length >= MAX_MATERIALS){
+      showAlert('素材は最大 ' + MAX_MATERIALS + ' 件までです');
+      break;
+    }
+    // 15 MB cap per file to avoid oversized base64 payloads
+    if(f.size > 15 * 1024 * 1024){
+      showAlert(esc(f.name) + ' はサイズが大きすぎます（15MB以下にしてください）');
+      continue;
+    }
+    try{
+      const dataUrl = await fileToDataUrl(f);
+      const kind = f.type.startsWith('video/') ? 'video' : 'image';
+      materials.push({kind, name: f.name, dataUrl});
+    }catch(e){
+      showAlert(e.message || String(e));
+    }
+  }
+  renderThumbs();
+}
+
+function handleUrlAdd(){
+  const input = document.getElementById('url-input');
+  const url = (input.value || '').trim();
+  if(!url) return;
+  if(materials.length >= MAX_MATERIALS){
+    showAlert('素材は最大 ' + MAX_MATERIALS + ' 件までです');
+    return;
+  }
+  try{ new URL(url); }catch(_){ showAlert('有効なURLを入力してください'); return; }
+  materials.push({kind:'url', name:url, url});
+  input.value = '';
+  renderThumbs();
+  clearAlert();
+}
+
+function clearMaterials(){
+  materials = [];
+  renderThumbs();
+  clearAlert();
+}
+
+function removeMaterial(idx){
+  materials.splice(idx, 1);
+  renderThumbs();
+}
+
+function renderThumbs(){
+  const wrap = document.getElementById('thumbs');
+  if(!materials.length){ wrap.innerHTML = ''; return; }
+  wrap.innerHTML = materials.map((m,i)=>{
+    const badge = m.kind === 'video' ? '動画' : m.kind === 'url' ? 'URL' : '画像';
+    let body;
+    if(m.kind === 'image'){
+      body = '<img src="' + esc(m.dataUrl) + '" alt=""/>';
+    }else if(m.kind === 'video'){
+      body = '<video src="' + esc(m.dataUrl) + '" muted></video>';
+    }else{
+      body = '<div style="padding:6px;font-size:9.5px;color:#ccc;word-break:break-all;line-height:1.3;">' + esc(m.name.slice(0,40)) + '</div>';
+    }
+    return '<div class="thumb" title="' + esc(m.name) + '">'
+      + body
+      + '<span class="badge">' + badge + '</span>'
+      + '<span class="x" onclick="removeMaterial(' + i + ')">×</span>'
+      + '</div>';
+  }).join('');
+}
+
 // ---- STEP 1: create scenario via scenario-generate ----
 async function step1Submit(){
   clearAlert();
@@ -338,6 +463,16 @@ async function step1Submit(){
   btn.textContent = '⏳ プロンプトを作成中...';
 
   try{
+    // Resolve current userId from the live Supabase session so the Edge Function
+    // always sees the correct caller even if currentUser is stale.
+    const {data:{session}} = await sb.auth.getSession();
+    const resolvedUserId = session?.user?.id || currentUser?.id;
+
+    // Split uploaded materials into base64 image array + URL array (spec shape).
+    const images = materials.filter(m=>m.kind==='image').map(m=>m.dataUrl);
+    const videos = materials.filter(m=>m.kind==='video').map(m=>m.dataUrl);
+    const urls   = materials.filter(m=>m.kind==='url').map(m=>m.url);
+
     const headers = await authHeaders();
     const res = await fetch(SUPABASE_FN_BASE + '/scenario-generate', {
       method:'POST',
@@ -348,7 +483,10 @@ async function step1Submit(){
         target_duration_sec: selectedDuration,
         aspect_ratio: '9:16',
         genre: 'general',
-        userId: currentUser.id,
+        userId: resolvedUserId,
+        images,
+        videos,
+        urls,
       })
     });
     const data = await res.json();
@@ -444,7 +582,12 @@ async function step2SendChat(){
     const newPrompt = refined.updated_prompt || currentIntent;
     currentIntent = newPrompt;
     addChat('bot', (refined.reply || '了解しました。シナリオを作り直します。') + '\n\n（シナリオを再生成しています...）');
-    // Re-run scenario-generate with the refined prompt
+    // Re-run scenario-generate with the refined prompt, carrying materials forward
+    const {data:{session}} = await sb.auth.getSession();
+    const resolvedUserId = session?.user?.id || currentUser?.id;
+    const images = materials.filter(m=>m.kind==='image').map(m=>m.dataUrl);
+    const videos = materials.filter(m=>m.kind==='video').map(m=>m.dataUrl);
+    const urls   = materials.filter(m=>m.kind==='url').map(m=>m.url);
     const headers = await authHeaders();
     const res = await fetch(SUPABASE_FN_BASE + '/scenario-generate',{
       method:'POST', headers,
@@ -454,7 +597,10 @@ async function step2SendChat(){
         target_duration_sec: selectedDuration,
         aspect_ratio: '9:16',
         genre: 'general',
-        userId: currentUser?.id,
+        userId: resolvedUserId,
+        images,
+        videos,
+        urls,
       })
     });
     const data = await res.json();
@@ -586,7 +732,10 @@ function restartFlow(){
   currentIntent = '';
   currentTaskId = null;
   currentGenId = null;
+  materials = [];
+  renderThumbs();
   document.getElementById('intent-input').value = '';
+  document.getElementById('url-input').value = '';
   document.getElementById('result-video').removeAttribute('src');
   clearAlert();
   goToStep(1);
