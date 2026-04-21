@@ -231,6 +231,61 @@ textarea::placeholder{color:var(--text-muted);}
     </div>
   </div>
 
+  <!-- ── Photo → Video flow (background removal) ── -->
+  <div class="card" id="photo-video-card" style="border:1px solid var(--gold);background:linear-gradient(135deg,rgba(201,168,76,0.04),transparent);">
+    <div class="card-title" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span data-icon="photo"></span>
+      <span>写真から動画を作る</span>
+      <span style="background:var(--gold);color:#000;font-size:9px;font-weight:800;letter-spacing:1px;padding:2px 8px;border-radius:999px;">NEW</span>
+      <button id="pv-toggle" onclick="togglePhotoVideo()" style="margin-left:auto;background:none;border:none;color:var(--gold);font-size:13px;cursor:pointer;">展開</button>
+    </div>
+    <div id="pv-body" style="display:none;margin-top:12px;">
+      <p style="color:var(--text-secondary);font-size:13px;line-height:1.7;margin-bottom:14px;">商品やペット、バイクなど被写体の写真を1枚アップロード。AI が被写体を認識し、背景を切り替えた動画を生成します。</p>
+
+      <!-- Step 1: upload -->
+      <div id="pv-step-upload">
+        <button class="btn-gold" onclick="document.getElementById('pv-photo-input').click()" style="width:100%;padding:14px;font-size:14px;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:8px;">
+          <span data-icon="photo"></span> 写真をアップロード
+        </button>
+        <input type="file" id="pv-photo-input" accept="image/*" capture="environment" style="display:none;" onchange="pvHandleUpload(this)"/>
+      </div>
+
+      <!-- Step 2: detected subject + bg-removal preview -->
+      <div id="pv-step-analyze" style="display:none;margin-top:14px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <div style="font-size:11px;color:var(--text-muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">元画像</div>
+            <img id="pv-orig-img" style="width:100%;aspect-ratio:1/1;object-fit:cover;background:#161616;border-radius:10px;border:1px solid var(--border-gold);"/>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text-muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;">背景除去後</div>
+            <div id="pv-bg-removed-wrap" style="position:relative;width:100%;aspect-ratio:1/1;background:repeating-conic-gradient(#1a1a1a 0% 25%,#222 0% 50%) 0 0 / 16px 16px;border-radius:10px;border:1px solid var(--border-gold);overflow:hidden;display:flex;align-items:center;justify-content:center;">
+              <span id="pv-bg-loading" style="color:var(--text-muted);font-size:11px;letter-spacing:1px;">処理中…</span>
+              <img id="pv-bg-img" style="display:none;max-width:100%;max-height:100%;object-fit:contain;"/>
+            </div>
+          </div>
+        </div>
+        <div id="pv-vision-result" style="margin-top:10px;padding:10px 14px;background:rgba(201,168,76,0.06);border:1px solid var(--border-gold);border-radius:10px;font-size:13px;color:var(--text);"></div>
+      </div>
+
+      <!-- Step 3: background presets -->
+      <div id="pv-step-bg" style="display:none;margin-top:18px;">
+        <div style="font-size:11px;color:var(--text-muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;">背景を選ぶ</div>
+        <div id="pv-bg-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;"></div>
+        <div id="pv-custom-wrap" style="display:none;margin-top:10px;">
+          <input type="text" id="pv-custom-bg" placeholder="例: 雪山の頂上、夕暮れの海、ネオンの街並み..." style="width:100%;padding:11px 14px;background:var(--black-border);border:1px solid var(--gold);border-radius:8px;color:#fff;font-size:13px;outline:none;font-family:inherit;"/>
+        </div>
+      </div>
+
+      <!-- Step 4: generate -->
+      <div id="pv-step-gen" style="display:none;margin-top:18px;">
+        <div id="pv-final-prompt" style="padding:12px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--black-border);border-radius:10px;color:var(--text);font-size:13px;line-height:1.6;margin-bottom:12px;"></div>
+        <button class="btn-gold" id="pv-generate-btn" onclick="pvGenerate()" style="width:100%;padding:14px;font-size:14px;border-radius:14px;font-weight:700;letter-spacing:.5px;">この背景で動画を生成</button>
+        <button onclick="pvReset()" style="width:100%;background:transparent;border:none;color:var(--text-muted);font-size:12px;padding:10px;cursor:pointer;font-family:inherit;margin-top:6px;">最初からやり直す</button>
+      </div>
+    </div>
+  </div>
+
   <!-- New AI Proposal Flow -->
   <div class="card" id="proposal-card">
     <div class="card-title"><span data-icon="sparkle"></span> <span data-i18n="ai_proposal_title">ELEVAに動画を提案してもらう</span></div>
@@ -625,8 +680,6 @@ async function startScenarioGeneration(){
   }
 }
 
-const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5eGN0b2xncWhkdGNvYW90aHdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MDk5NjksImV4cCI6MjA5MDM4NTk2OX0.h38gOPGOcdIw_w8p4AEYVLHCaWuC8k2XRrjLPcFAtUw';
-
 function renderSceneRows(scenes){
   if(!Array.isArray(scenes)||!scenes.length)scenes=[{title:'シーン1'},{title:'シーン2'},{title:'シーン3'}];
   document.getElementById('scene-rows').innerHTML=scenes.slice(0,3).map((s,i)=>`
@@ -680,6 +733,142 @@ async function pollScenarioStatus(jobId){
 function resetScenarioBtn(){
   const btn=document.getElementById('scenario-gen-btn');
   if(btn){btn.disabled=false;btn.style.opacity='';}
+}
+
+// ─ Photo → Video (background removal) ────────────────
+const PV_BG_PRESETS=[
+  {key:'circuit',label:'サーキット',prompt:'a professional race track with blurred stands and dramatic lighting'},
+  {key:'desert',label:'砂漠',prompt:'a vast desert at golden hour with sand dunes and warm light'},
+  {key:'city_night',label:'夜の都市',prompt:'a neon-lit city skyline at night with reflections on wet streets'},
+  {key:'mountain',label:'山岳',prompt:'a dramatic mountain range with clouds and crisp daylight'},
+  {key:'coast',label:'海岸',prompt:'a tropical coastline with clear turquoise water and bright sun'},
+  {key:'studio',label:'スタジオ(白)',prompt:'a clean seamless white studio backdrop with soft studio lighting'},
+  {key:'forest',label:'森',prompt:'a deep green forest with dappled sunlight through the leaves'},
+  {key:'custom',label:'カスタム…',prompt:''},
+];
+
+let pvState={origDataUrl:null,mainSubject:null,bgKey:null,bgPromptOverride:null,removedBgB64:null};
+
+function togglePhotoVideo(){
+  const body=document.getElementById('pv-body');
+  const btn=document.getElementById('pv-toggle');
+  const open=body.style.display==='none';
+  body.style.display=open?'block':'none';
+  btn.textContent=open?'閉じる':'展開';
+}
+
+async function pvHandleUpload(input){
+  const file=input.files&&input.files[0];
+  if(!file)return;
+  const dataUrl=await new Promise((resolve,reject)=>{
+    const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file);
+  });
+  pvState.origDataUrl=dataUrl;
+  document.getElementById('pv-orig-img').src=dataUrl;
+  document.getElementById('pv-step-analyze').style.display='block';
+  document.getElementById('pv-step-bg').style.display='none';
+  document.getElementById('pv-step-gen').style.display='none';
+  document.getElementById('pv-bg-loading').style.display='block';
+  document.getElementById('pv-bg-img').style.display='none';
+  document.getElementById('pv-vision-result').textContent='被写体を解析中…';
+
+  // Kick off vision-analyze + remove-bg in parallel
+  const base64=dataUrl.split(',')[1]||'';
+  const {data:{session}}=await sb.auth.getSession();
+  const token=session?.access_token||SUPABASE_ANON_KEY;
+  const headers={'Content-Type':'application/json',apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+token};
+
+  const visionP=fetch(SUPABASE_FN_BASE+'/vision-analyze',{
+    method:'POST',headers,body:JSON.stringify({image_base64:base64}),
+  }).then(r=>r.json()).catch(e=>({error:e.message||String(e)}));
+
+  const bgP=fetch(SUPABASE_FN_BASE+'/remove-bg',{
+    method:'POST',headers,body:JSON.stringify({image_base64:base64}),
+  }).then(r=>r.json()).catch(e=>({error:e.message||String(e)}));
+
+  const [vision,bg]=await Promise.all([visionP,bgP]);
+
+  // Vision result
+  if(vision&&!vision.error){
+    pvState.mainSubject=vision.main_subject||(Array.isArray(vision.labels)&&vision.labels[0]?.description)||'';
+    const labels=Array.isArray(vision.labels)?vision.labels.slice(0,5).map(l=>l.description||l).filter(Boolean):[];
+    const labelText=labels.length?' · '+labels.join(' / '):'';
+    document.getElementById('pv-vision-result').innerHTML=
+      '<strong style="color:var(--gold);">被写体:</strong> '+escapeHtml(pvState.mainSubject||'(不明)')+
+      (labelText?'<span style="color:var(--text-muted);font-size:12px;">'+escapeHtml(labelText)+'</span>':'');
+  }else{
+    document.getElementById('pv-vision-result').innerHTML='<span style="color:#bf7f7f;">被写体解析失敗: '+escapeHtml(vision?.error||'unknown')+'</span>';
+    pvState.mainSubject=null;
+  }
+
+  // Background removal
+  document.getElementById('pv-bg-loading').style.display='none';
+  if(bg&&bg.image_base64){
+    pvState.removedBgB64=bg.image_base64;
+    const img=document.getElementById('pv-bg-img');
+    img.src='data:image/png;base64,'+bg.image_base64;
+    img.style.display='block';
+  }else{
+    document.getElementById('pv-bg-loading').textContent='背景除去失敗';
+    document.getElementById('pv-bg-loading').style.display='block';
+    document.getElementById('pv-bg-loading').style.color='#bf7f7f';
+  }
+
+  pvRenderBgGrid();
+  document.getElementById('pv-step-bg').style.display='block';
+}
+
+function pvRenderBgGrid(){
+  const grid=document.getElementById('pv-bg-grid');
+  grid.innerHTML=PV_BG_PRESETS.map(p=>`
+    <button data-key="${p.key}" onclick="pvPickBg('${p.key}')" style="background:var(--black-border);border:1px solid ${pvState.bgKey===p.key?'var(--gold)':'var(--black-border)'};color:${pvState.bgKey===p.key?'var(--gold)':'#fff'};padding:14px 8px;border-radius:10px;cursor:pointer;font-size:12px;font-family:inherit;transition:all .15s;${pvState.bgKey===p.key?'background:rgba(201,168,76,0.1);':''}">${escapeHtml(p.label)}</button>
+  `).join('');
+}
+
+function pvPickBg(key){
+  pvState.bgKey=key;
+  document.getElementById('pv-custom-wrap').style.display=key==='custom'?'block':'none';
+  pvRenderBgGrid();
+  pvUpdateFinalPrompt();
+  document.getElementById('pv-step-gen').style.display='block';
+}
+
+function pvUpdateFinalPrompt(){
+  const preset=PV_BG_PRESETS.find(p=>p.key===pvState.bgKey);
+  if(!preset)return;
+  let bgDesc=preset.prompt;
+  if(preset.key==='custom'){
+    const txt=(document.getElementById('pv-custom-bg')?.value||'').trim();
+    bgDesc=txt||'(背景を入力してください)';
+    pvState.bgPromptOverride=txt;
+  }
+  const subject=pvState.mainSubject||'the subject in the photo';
+  const final='A cinematic video of '+subject+', composited into '+bgDesc+'. Smooth camera motion, professional lighting, photorealistic.';
+  document.getElementById('pv-final-prompt').textContent=final;
+}
+
+document.addEventListener('input',e=>{
+  if(e.target&&e.target.id==='pv-custom-bg')pvUpdateFinalPrompt();
+});
+
+function pvReset(){
+  pvState={origDataUrl:null,mainSubject:null,bgKey:null,bgPromptOverride:null,removedBgB64:null};
+  document.getElementById('pv-step-analyze').style.display='none';
+  document.getElementById('pv-step-bg').style.display='none';
+  document.getElementById('pv-step-gen').style.display='none';
+  document.getElementById('pv-photo-input').value='';
+}
+
+async function pvGenerate(){
+  const finalPromptText=document.getElementById('pv-final-prompt').textContent.trim();
+  if(!finalPromptText||finalPromptText.includes('(背景を入力'))return;
+  // Hand off to the existing generateVideo flow by priming the prompt & finalPrompt
+  finalPrompt=finalPromptText;
+  const promptInput=document.getElementById('prompt-input');
+  if(promptInput)promptInput.value=finalPromptText;
+  // Close the photo card and scroll to the generator
+  togglePhotoVideo();
+  if(window.generateVideo)window.generateVideo();
 }
 
 // ─ Upgrade modal ──────────────────────────────────────
