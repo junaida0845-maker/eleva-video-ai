@@ -1,5 +1,5 @@
 // Service Worker — auto-update, network-first
-// Build marker: 2026-04-21-custom-genre
+// Build marker: 2026-04-21-world-trends-direct-query
 const CACHE_VERSION = 'v' + Date.now();
 const CACHE_NAME = 'app-cache-' + CACHE_VERSION;
 

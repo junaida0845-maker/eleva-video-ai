@@ -112,7 +112,7 @@ footer{margin-top:60px;border-top:1px solid var(--border);padding:24px 20px;text
 
   <!-- Filter bar -->
   <div class="filter-bar">
-    <select class="select" id="country-select"><option value="JP">日本</option></select>
+    <select class="select" id="country-select"><option value="">🌍 全世界</option></select>
     <select class="select" id="platform-select">
       <option value="">全 SNS</option>
       <option value="tiktok">TikTok</option>
@@ -148,61 +148,95 @@ const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 
 const PLATFORM_ICON={tiktok:'i-tiktok',instagram:'i-instagram',youtube:'i-youtube'};
 const PLATFORM_LABEL={tiktok:'TikTok',instagram:'Instagram',youtube:'YouTube'};
-const COUNTRY_FLAG={JP:'🇯🇵',US:'🇺🇸',KR:'🇰🇷',TH:'🇹🇭',ID:'🇮🇩',BR:'🇧🇷',MX:'🇲🇽',FR:'🇫🇷',DE:'🇩🇪',IN:'🇮🇳',GB:'🇬🇧',AU:'🇦🇺'};
+const COUNTRY_FLAG={JP:'🇯🇵',US:'🇺🇸',KR:'🇰🇷',TH:'🇹🇭',ID:'🇮🇩',BR:'🇧🇷',MX:'🇲🇽',FR:'🇫🇷',DE:'🇩🇪',IN:'🇮🇳',GB:'🇬🇧',AU:'🇦🇺',CN:'🇨🇳',TW:'🇹🇼',VN:'🇻🇳',PH:'🇵🇭'};
+const COUNTRY_NAME_JA={JP:'日本',US:'アメリカ',KR:'韓国',TH:'タイ',ID:'インドネシア',BR:'ブラジル',MX:'メキシコ',FR:'フランス',DE:'ドイツ',IN:'インド',GB:'イギリス',AU:'オーストラリア',CN:'中国',TW:'台湾',VN:'ベトナム',PH:'フィリピン'};
+const GENRE_NAME_JA={food:'料理・グルメ',beauty:'美容・コスメ',fashion:'ファッション',travel:'旅行・観光',fitness:'フィットネス',music:'音楽',pet:'ペット',game:'ゲーム',sports:'スポーツ',education:'教育・学習',business_side:'ビジネス・副業',art:'アート・クリエイティブ',lifestyle:'ライフスタイル',news:'ニュース・時事',bike:'バイク・車',comedy:'コメディ',dance:'ダンス'};
 
-let state={country:'JP',genre:'',platform:'',countries:null,genres:null,hasData:null};
+// Default to 全世界 (no country filter) per product decision
+let state={country:'',genre:'',platform:'',countries:null,genres:null};
 
 function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function fmtNum(n){n=Number(n||0);if(n>=1e8)return (n/1e8).toFixed(1)+'億';if(n>=1e4)return (n/1e4).toFixed(1)+'万';if(n>=1e3)return (n/1e3).toFixed(1)+'k';return String(n);}
+
+// Best-effort thumbnail: YouTube IDs expose a public CDN endpoint. TikTok/Instagram don't.
+function deriveThumb(row){
+  if(row.platform==='youtube'&&row.video_id)return 'https://i.ytimg.com/vi/'+encodeURIComponent(row.video_id)+'/hqdefault.jpg';
+  const sb=row.storyboard_urls;
+  if(Array.isArray(sb)&&sb.length)return sb[0];
+  if(sb&&typeof sb==='object'){const v=sb.cover||sb.thumbnail||sb[0];if(v)return v;}
+  return '';
+}
+
+async function pgrest(path){
+  const res=await fetch(SUPABASE_URL+'/rest/v1/'+path,{
+    cache:'no-store',
+    headers:{apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY,Prefer:'count=exact'},
+  });
+  if(!res.ok)throw new Error('HTTP '+res.status+' '+(await res.text()).slice(0,120));
+  return res.json();
+}
+
+async function loadFiltersFromData(){
+  // Derive country + genre options from the distinct values currently in the table.
+  try{
+    const rows=await pgrest('global_buzz_data?archived=not.eq.true&select=country_code,genre&limit=500');
+    const cSet=new Set(),gSet=new Set();
+    rows.forEach(r=>{if(r.country_code)cSet.add(r.country_code);if(r.genre)gSet.add(r.genre);});
+    state.countries=[...cSet].sort();
+    state.genres=[...gSet].sort();
+    renderCountrySelect();
+    renderGenreTabs();
+  }catch(e){/* selects stay minimal on failure */}
+}
 
 async function loadTrends(){
   const grid=document.getElementById('grid');
   grid.innerHTML=Array.from({length:8}).map(()=>'<div class="skel" style="height:340px;"></div>').join('');
 
-  const p=new URLSearchParams({country:state.country,limit:'30'});
-  if(state.genre)p.set('genre',state.genre);
-  if(state.platform)p.set('platform',state.platform);
+  // Primary: query the table directly (RLS policy "public_read_global_buzz" allows anon SELECT).
+  // Include pending rows so titles / genre / platform are visible while analysis catches up.
+  const params=new URLSearchParams();
+  params.set('archived','not.eq.true');
+  params.set('order','views.desc.nullslast,buzz_score.desc.nullslast,buzz_detected_at.desc.nullslast');
+  params.set('limit','30');
+  params.set('select','id,platform,video_id,video_url,country_code,title,genre,views,likes,music_title,music_artist,buzz_score,analysis_status,storyboard_urls,buzz_detected_at');
+  if(state.country)params.append('country_code','eq.'+state.country);
+  if(state.platform)params.append('platform','eq.'+state.platform);
+  if(state.genre)params.append('genre','eq.'+state.genre);
 
-  let data;
+  let rows;
   try{
-    const res=await fetch(SUPABASE_URL+'/functions/v1/get-world-trends?'+p.toString(),{
-      cache:'no-store',
-      headers:{apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+SUPABASE_ANON_KEY},
-    });
-    if(!res.ok)throw new Error('HTTP '+res.status);
-    data=await res.json();
+    rows=await pgrest('global_buzz_data?'+params.toString());
   }catch(e){
     document.getElementById('content').innerHTML='<div class="error-banner">トレンド取得に失敗しました: '+escapeHtml(e.message||e)+'</div>';
     return;
   }
 
-  if(Array.isArray(data.countries)&&!state.countries){state.countries=data.countries;renderCountrySelect();}
-  if(Array.isArray(data.genres)&&!state.genres){state.genres=data.genres;renderGenreTabs();}
-  state.hasData=data.has_data;
+  if(!state.countries||!state.genres)loadFiltersFromData();
 
-  if(!data.has_data||!Array.isArray(data.trends)||data.trends.length===0){
+  if(!Array.isArray(rows)||rows.length===0){
     renderEmpty();
     return;
   }
-  renderCards(data.trends);
+  renderCards(rows);
 }
 
 function renderCountrySelect(){
   const sel=document.getElementById('country-select');
-  sel.innerHTML=(state.countries||[]).map(c=>{
-    const flag=COUNTRY_FLAG[c.code]||'';
-    const name=c.name_ja||c.name_en||c.code;
-    return '<option value="'+escapeHtml(c.code)+'">'+flag+' '+escapeHtml(name)+'</option>';
-  }).join('');
+  const opts=['<option value="">🌍 全世界</option>'].concat((state.countries||[]).map(code=>{
+    const flag=COUNTRY_FLAG[code]||'';
+    const name=COUNTRY_NAME_JA[code]||code;
+    return '<option value="'+escapeHtml(code)+'">'+flag+' '+escapeHtml(name)+'</option>';
+  }));
+  sel.innerHTML=opts.join('');
   sel.value=state.country;
 }
 
 function renderGenreTabs(){
   const wrap=document.getElementById('genre-tabs');
   const all='<button class="tab'+(state.genre===''?' active':'')+'" data-genre="">すべて</button>';
-  const tabs=(state.genres||[]).map(g=>{
-    const key=g.genre_key||g.key||g.genre;
-    const name=g.genre_name_ja||g.name_ja||g.name||key;
+  const tabs=(state.genres||[]).map(key=>{
+    const name=GENRE_NAME_JA[key]||key;
     return '<button class="tab'+(state.genre===key?' active':'')+'" data-genre="'+escapeHtml(key)+'">'+escapeHtml(name)+'</button>';
   }).join('');
   wrap.innerHTML=all+tabs;
@@ -217,31 +251,37 @@ function renderGenreTabs(){
 }
 
 function renderCards(trends){
-  const grid=document.getElementById('grid');
   document.getElementById('content').innerHTML='<div class="grid" id="grid"></div>';
   document.getElementById('grid').innerHTML=trends.map((t,i)=>{
     const platIcon=PLATFORM_ICON[t.platform]||'i-play';
     const platLabel=PLATFORM_LABEL[t.platform]||t.platform||'';
-    const contentUrl=t.content_url||'';
-    const thumb=t.thumbnail_url
-      ? '<img src="'+escapeHtml(t.thumbnail_url)+'" loading="lazy" alt="" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';"/><div class="no-img" style="display:none;">NO IMAGE</div>'
+    const contentUrl=t.video_url||'';
+    const thumbUrl=deriveThumb(t);
+    const thumb=thumbUrl
+      ? '<img src="'+escapeHtml(thumbUrl)+'" loading="lazy" alt="" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';"/><div class="no-img" style="display:none;">NO IMAGE</div>'
       : '<div class="no-img">NO IMAGE</div>';
     const music=t.music_title
-      ? '<div class="card-music"><svg><use href="#i-music"/></svg><span>'+escapeHtml(t.music_title)+(t.music_author?' — '+escapeHtml(t.music_author):'')+'</span></div>'
+      ? '<div class="card-music"><svg><use href="#i-music"/></svg><span>'+escapeHtml(t.music_title)+(t.music_artist?' — '+escapeHtml(t.music_artist):'')+'</span></div>'
       : '';
     const openThumb=contentUrl?'onclick="window.open(\''+escapeHtml(contentUrl).replace(/'/g,"\\'")+'\',\'_blank\',\'noopener\')"':'';
+    const genreLabel=t.genre?(GENRE_NAME_JA[t.genre]||t.genre):'';
+    const countryFlag=t.country_code&&COUNTRY_FLAG[t.country_code]?COUNTRY_FLAG[t.country_code]:'';
+    const pendingPill=t.analysis_status&&t.analysis_status!=='done'
+      ? '<span class="badge" style="top:auto;bottom:8px;left:8px;right:auto;background:rgba(10,10,10,0.82);border-color:rgba(168,168,168,0.3);color:#a8a8a8;">分析準備中</span>'
+      : '';
     return `
       <div class="card">
         <div class="thumb" ${openThumb}>
           ${thumb}
           <span class="badge"><svg><use href="#${platIcon}"/></svg>${escapeHtml(platLabel)}</span>
+          ${pendingPill}
         </div>
         <div class="body">
           <div class="card-title">${escapeHtml(t.title||'(無題)')}</div>
-          ${t.author?`<div class="card-author">@${escapeHtml(t.author)}</div>`:''}
+          <div class="card-author">${countryFlag?countryFlag+' ':''}${escapeHtml(genreLabel)}</div>
           <div class="card-stats">
-            <span class="stat"><svg><use href="#i-eye"/></svg>${fmtNum(t.view_count)}</span>
-            <span class="stat"><svg><use href="#i-heart"/></svg>${fmtNum(t.like_count)}</span>
+            <span class="stat"><svg><use href="#i-eye"/></svg>${fmtNum(t.views)}</span>
+            <span class="stat"><svg><use href="#i-heart"/></svg>${fmtNum(t.likes)}</span>
           </div>
           ${music}
           <button class="cta-btn" data-idx="${i}"><svg><use href="#i-arrow"/></svg>この構成で動画を作る</button>
@@ -274,7 +314,7 @@ function renderEmpty(){
 }
 
 // Filter handlers
-document.getElementById('country-select').addEventListener('change',e=>{state.country=e.target.value||'JP';loadTrends();});
+document.getElementById('country-select').addEventListener('change',e=>{state.country=e.target.value||'';loadTrends();});
 document.getElementById('platform-select').addEventListener('change',e=>{state.platform=e.target.value||'';loadTrends();});
 
 // Boot
