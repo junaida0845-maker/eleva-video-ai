@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 <link rel="manifest" href="/manifest.json"/>
 <link rel="apple-touch-icon" href="/icons/icon-180.png"/>
 <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png"/>
@@ -15,9 +15,11 @@
 <style>
 :root{--gold:#c9a84c;--gold-light:#f0d070;--gold-dark:#a07830;--black:#0a0a0a;--black-card:#111111;--black-border:#1a1a1a;--border-gold:rgba(201,168,76,0.22);--text-primary:#fff;--text-secondary:#aaa;--text-muted:#666;--text-gold:#c9a84c;--red:#e05a5a;}
 /* --- Horizontal overflow hard-lock --- */
+*{box-sizing:border-box;}
 *,*::before,*::after{box-sizing:border-box;}
-html{overflow-x:hidden;width:100%;}
-body{overflow-x:hidden;width:100%;max-width:100vw;font-family:'Inter','Noto Sans JP',sans-serif;background:var(--black);color:var(--text-primary);min-height:100vh;padding-top:56px;padding-bottom:130px;-webkit-font-smoothing:antialiased;margin:0;}
+html,body{overflow-x:hidden;width:100%;}
+body{max-width:100vw;font-family:'Inter','Noto Sans JP',sans-serif;background:var(--black);color:var(--text-primary);min-height:100vh;padding-top:56px;padding-bottom:130px;-webkit-font-smoothing:antialiased;margin:0;}
+.container,.card,.step-card{max-width:100%;width:100%;}
 img,video,canvas,iframe,table{max-width:100%;}
 a{color:inherit;text-decoration:none;}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
@@ -363,12 +365,43 @@ document.querySelectorAll('#duration-grid .opt-btn').forEach(b=>{
 });
 
 // ---- Material upload handlers ----
+// Read any file as a Data URL (used for video previews).
 function fileToDataUrl(file){
   return new Promise((resolve,reject)=>{
     const r = new FileReader();
     r.onload = ()=>resolve(r.result);
     r.onerror = ()=>reject(new Error('ファイルの読み込みに失敗しました'));
     r.readAsDataURL(file);
+  });
+}
+
+// Compress an image file via Canvas: long edge ≤ 800px, JPEG quality 0.7,
+// returning the pure base64 payload (no `data:image/jpeg;base64,` prefix)
+// so the scenario-generate body stays compact.
+async function compressImage(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const canvas = document.createElement('canvas');
+        const MAX = 800;
+        let w = img.width, h = img.height;
+        if(w > MAX || h > MAX){
+          if(w > h){ h = Math.round(h * MAX / w); w = MAX; }
+          else     { w = Math.round(w * MAX / h); h = MAX; }
+        }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const base64 = canvas.toDataURL('image/jpeg', 0.7)
+          .replace(/^data:image\/jpeg;base64,/, '');
+        resolve(base64);
+      };
+      img.onerror = ()=>reject(new Error('画像の読み込みに失敗しました'));
+      img.src = e.target.result;
+    };
+    reader.onerror = ()=>reject(new Error('ファイルの読み込みに失敗しました'));
+    reader.readAsDataURL(file);
   });
 }
 
@@ -380,15 +413,23 @@ async function handleFilePick(input){
       showAlert('素材は最大 ' + MAX_MATERIALS + ' 件までです');
       break;
     }
-    // 15 MB cap per file to avoid oversized base64 payloads
+    // 15 MB cap per file to avoid oversized base64 payloads before compression
     if(f.size > 15 * 1024 * 1024){
       showAlert(esc(f.name) + ' はサイズが大きすぎます（15MB以下にしてください）');
       continue;
     }
     try{
-      const dataUrl = await fileToDataUrl(f);
-      const kind = f.type.startsWith('video/') ? 'video' : 'image';
-      materials.push({kind, name: f.name, dataUrl});
+      if(f.type.startsWith('video/')){
+        // Videos: keep full data URL so the <video> preview can play it.
+        const dataUrl = await fileToDataUrl(f);
+        materials.push({kind:'video', name:f.name, dataUrl});
+      }else{
+        // Images: compress via Canvas → pure base64 (no prefix) for sending.
+        // previewUrl reconstructs the data URL purely for thumbnail display.
+        const base64 = await compressImage(f);
+        const previewUrl = 'data:image/jpeg;base64,' + base64;
+        materials.push({kind:'image', name:f.name, base64, previewUrl});
+      }
     }catch(e){
       showAlert(e.message || String(e));
     }
@@ -429,7 +470,7 @@ function renderThumbs(){
     const badge = m.kind === 'video' ? '動画' : m.kind === 'url' ? 'URL' : '画像';
     let body;
     if(m.kind === 'image'){
-      body = '<img src="' + esc(m.dataUrl) + '" alt=""/>';
+      body = '<img src="' + esc(m.previewUrl) + '" alt=""/>';
     }else if(m.kind === 'video'){
       body = '<video src="' + esc(m.dataUrl) + '" muted></video>';
     }else{
@@ -469,7 +510,9 @@ async function step1Submit(){
     const resolvedUserId = session?.user?.id || currentUser?.id;
 
     // Split uploaded materials into base64 image array + URL array (spec shape).
-    const images = materials.filter(m=>m.kind==='image').map(m=>m.dataUrl);
+    // images: pure base64 (no `data:image/jpeg;base64,` prefix) per spec —
+    // compressed in handleFilePick via compressImage().
+    const images = materials.filter(m=>m.kind==='image').map(m=>m.base64);
     const videos = materials.filter(m=>m.kind==='video').map(m=>m.dataUrl);
     const urls   = materials.filter(m=>m.kind==='url').map(m=>m.url);
 
@@ -585,7 +628,9 @@ async function step2SendChat(){
     // Re-run scenario-generate with the refined prompt, carrying materials forward
     const {data:{session}} = await sb.auth.getSession();
     const resolvedUserId = session?.user?.id || currentUser?.id;
-    const images = materials.filter(m=>m.kind==='image').map(m=>m.dataUrl);
+    // images: pure base64 (no `data:image/jpeg;base64,` prefix) per spec —
+    // compressed in handleFilePick via compressImage().
+    const images = materials.filter(m=>m.kind==='image').map(m=>m.base64);
     const videos = materials.filter(m=>m.kind==='video').map(m=>m.dataUrl);
     const urls   = materials.filter(m=>m.kind==='url').map(m=>m.url);
     const headers = await authHeaders();
