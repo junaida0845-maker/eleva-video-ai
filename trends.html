@@ -163,10 +163,15 @@ const PLATFORM_ICON={tiktok:'i-tiktok',instagram:'i-instagram',youtube:'i-youtub
 const PLATFORM_LABEL={tiktok:'TikTok',instagram:'Instagram',youtube:'YouTube'};
 const COUNTRY_FLAG={JP:'🇯🇵',US:'🇺🇸',KR:'🇰🇷',TH:'🇹🇭',ID:'🇮🇩',BR:'🇧🇷',MX:'🇲🇽',FR:'🇫🇷',DE:'🇩🇪',IN:'🇮🇳',GB:'🇬🇧',AU:'🇦🇺',CN:'🇨🇳',TW:'🇹🇼',VN:'🇻🇳',PH:'🇵🇭'};
 const COUNTRY_NAME_JA={JP:'日本',US:'アメリカ',KR:'韓国',TH:'タイ',ID:'インドネシア',BR:'ブラジル',MX:'メキシコ',FR:'フランス',DE:'ドイツ',IN:'インド',GB:'イギリス',AU:'オーストラリア',CN:'中国',TW:'台湾',VN:'ベトナム',PH:'フィリピン'};
-// Fixed whitelist — order here drives the tab order; values not in the list
-// (e.g. "general", "vehicle") are hidden from the UI even if they exist in DB.
-const GENRE_WHITELIST=['beauty','food','pet','music','travel','fashion','fitness','tech','lifestyle','dance','comedy','gaming'];
-const GENRE_NAME_JA={beauty:'美容・コスメ',food:'料理・グルメ',pet:'ペット',music:'音楽',travel:'旅行',fashion:'ファッション',fitness:'フィットネス',tech:'テック',lifestyle:'ライフスタイル',dance:'ダンス',comedy:'お笑い',gaming:'ゲーム'};
+// Preferred display order for the 12 originally-approved genres.
+// Other genre keys (including ones learned on the fly, e.g. "social_media", "design",
+// "craft", "nature") are appended after these in alphabetical order.
+const GENRE_ORDER=['beauty','food','pet','music','travel','fashion','fitness','tech','lifestyle','dance','comedy','gaming'];
+const GENRE_NAME_JA={beauty:'美容・コスメ',food:'料理・グルメ',pet:'ペット',music:'音楽',travel:'旅行',fashion:'ファッション',fitness:'フィットネス',tech:'テック',lifestyle:'ライフスタイル',dance:'ダンス',comedy:'お笑い',gaming:'ゲーム',social_media:'SNS',social:'ソーシャル',design:'デザイン',craft:'クラフト',nature:'自然',general:'その他'};
+function prettifyGenre(key){
+  if(GENRE_NAME_JA[key])return GENRE_NAME_JA[key];
+  return String(key||'').split('_').map(s=>s.charAt(0).toUpperCase()+s.slice(1)).join(' ');
+}
 
 // Default to 全世界 (no country filter) per product decision
 let state={country:'',genre:'',platform:'',countries:null,genres:null};
@@ -257,15 +262,19 @@ async function pgrest(path){
 }
 
 async function loadFiltersFromData(){
-  // Country list still comes from distinct values in the DB.
-  // Genres are a fixed whitelist so "general" / "vehicle" etc don't leak into the UI.
+  // Country + genre lists now come from the distinct values currently in the DB,
+  // so Claude-discovered genres (social_media / design / craft / nature / ...)
+  // surface in the tab row automatically. Known genres get their curated order,
+  // everything else appears afterwards alphabetically.
   try{
-    const rows=await pgrest('global_buzz_data?archived=eq.false&select=country_code&limit=500');
-    const cSet=new Set();
-    rows.forEach(r=>{if(r.country_code)cSet.add(r.country_code);});
+    const rows=await pgrest('global_buzz_data?archived=eq.false&select=country_code,genre&limit=1000');
+    const cSet=new Set(),gSet=new Set();
+    rows.forEach(r=>{if(r.country_code)cSet.add(r.country_code);if(r.genre&&r.genre!=='general')gSet.add(r.genre);});
     state.countries=[...cSet].sort();
-  }catch(e){/* country select stays minimal on failure */}
-  state.genres=GENRE_WHITELIST.slice();
+    const preferred=GENRE_ORDER.filter(g=>gSet.has(g));
+    const extras=[...gSet].filter(g=>!GENRE_ORDER.includes(g)).sort();
+    state.genres=[...preferred,...extras];
+  }catch(e){state.genres=GENRE_ORDER.slice();}
   renderCountrySelect();
   renderGenreTabs();
 }
@@ -319,7 +328,7 @@ function renderGenreTabs(){
   const wrap=document.getElementById('genre-tabs');
   const all='<button class="tab'+(state.genre===''?' active':'')+'" data-genre="">すべて</button>';
   const tabs=(state.genres||[]).map(key=>{
-    const name=GENRE_NAME_JA[key]||key;
+    const name=prettifyGenre(key);
     return '<button class="tab'+(state.genre===key?' active':'')+'" data-genre="'+escapeHtml(key)+'">'+escapeHtml(name)+'</button>';
   }).join('');
   wrap.innerHTML=all+tabs;
