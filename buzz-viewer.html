@@ -193,9 +193,32 @@ async function renderList(){
     <div class="list-card"><div class="list-thumb skel"></div><div class="list-body"><div class="skel" style="height:14px;width:80%;margin-bottom:8px;"></div><div class="skel" style="height:11px;width:50%;"></div></div></div>
   `).join('');
 
+  // If the signed-in user has a custom_genre saved in profiles, prefer matching rows.
+  let genreFilter='';
+  try{
+    const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    if(sb){
+      const {data:{user}}=await sb.auth.getUser();
+      if(user){
+        const {data:prof}=await sb.from('profiles').select('custom_genre,selected_genres').eq('id',user.id).single();
+        genreFilter=prof?.custom_genre||(Array.isArray(prof?.selected_genres)&&prof.selected_genres[0])||'';
+      }
+    }
+  }catch(_){/* soft-fail */}
+  if(genreFilter){
+    const hint=document.createElement('div');
+    hint.style.cssText='display:inline-flex;align-items:center;gap:8px;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);color:#c9a84c;padding:8px 14px;border-radius:999px;font-size:12.5px;margin-bottom:16px;';
+    hint.innerHTML='あなたのジャンル：<span style="color:#fff;font-weight:600;">'+escapeHtml(genreFilter)+'</span> のバズを優先表示';
+    page.querySelector('.section-sub')?.after(hint);
+  }
+
   let rows;
   try{
-    rows=await pgrest('global_buzz_data?analysis_status=eq.done&order=buzz_score.desc&limit=10&select=id,title,views,buzz_score,genre,platform,storyboard_urls,shooting_script');
+    const base='global_buzz_data?analysis_status=eq.done&order=buzz_score.desc&limit=10&select=id,title,views,buzz_score,genre,platform,storyboard_urls,shooting_script';
+    const url=genreFilter?base+'&genre=ilike.*'+encodeURIComponent(genreFilter)+'*':base;
+    rows=await pgrest(url);
+    // If the genre filter returned nothing, fall back to the general list so the page isn't empty.
+    if(genreFilter&&(!rows||!rows.length))rows=await pgrest(base);
   }catch(e){
     grid.innerHTML='';
     page.insertAdjacentHTML('afterbegin','<div class="error-banner">取得失敗: '+escapeHtml(e.message||e)+'</div>');

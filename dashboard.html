@@ -481,15 +481,26 @@ textarea::placeholder{color:var(--text-muted);}
     <div class="card-title"><span data-icon="star"></span> <span data-i18n="genre_label">ジャンル</span> <span style="color:var(--text-muted);font-size:11px;font-weight:400;">（1つ選択）</span></div>
     <div style="color:var(--text-secondary);font-size:12px;margin-bottom:8px;font-weight:600;" data-i18n="genre_personal_label">個人向け</div>
     <div class="genre-grid" id="genre-grid-personal">
-      <button class="genre-btn" onclick="pickGenre(this,'travel')" data-i18n="genre_travel">旅行</button>
-      <button class="genre-btn active" onclick="pickGenre(this,'food')" data-i18n="genre_food">グルメ</button>
+      <button class="genre-btn active" onclick="pickGenre(this,'food')" data-i18n="genre_food">料理・グルメ</button>
       <button class="genre-btn" onclick="pickGenre(this,'fashion')" data-i18n="genre_fashion">ファッション</button>
-      <button class="genre-btn" onclick="pickGenre(this,'beauty')" data-i18n="genre_beauty">美容</button>
-      <button class="genre-btn" onclick="pickGenre(this,'fitness')" data-i18n="genre_fitness">フィットネス</button>
-      <button class="genre-btn" onclick="pickGenre(this,'music')" data-i18n="genre_music">音楽</button>
-      <button class="genre-btn" onclick="pickGenre(this,'pet')" data-i18n="genre_pet">ペット</button>
-      <button class="genre-btn" onclick="pickGenre(this,'bike')" data-i18n="genre_bike">バイク・車</button>
+      <button class="genre-btn" onclick="pickGenre(this,'beauty')" data-i18n="genre_beauty">美容・コスメ</button>
+      <button class="genre-btn" onclick="pickGenre(this,'travel')" data-i18n="genre_travel">旅行・観光</button>
+      <button class="genre-btn" onclick="pickGenre(this,'sports')" data-i18n="genre_sports">スポーツ</button>
       <button class="genre-btn" onclick="pickGenre(this,'game')" data-i18n="genre_game">ゲーム</button>
+      <button class="genre-btn" onclick="pickGenre(this,'business_side')" data-i18n="genre_business_side">ビジネス・副業</button>
+      <button class="genre-btn" onclick="pickGenre(this,'education')" data-i18n="genre_education">教育・学習</button>
+      <button class="genre-btn" onclick="pickGenre(this,'pet')" data-i18n="genre_pet">ペット</button>
+      <button class="genre-btn" onclick="pickGenre(this,'music')" data-i18n="genre_music">音楽</button>
+      <button class="genre-btn" onclick="pickGenre(this,'art')" data-i18n="genre_art">アート・クリエイティブ</button>
+      <button class="genre-btn" onclick="pickGenre(this,'lifestyle')" data-i18n="genre_lifestyle">ライフスタイル</button>
+      <button class="genre-btn" onclick="pickGenre(this,'news')" data-i18n="genre_news">ニュース・時事</button>
+      <button class="genre-btn" onclick="pickGenre(this,'fitness')" data-i18n="genre_fitness">フィットネス</button>
+      <button class="genre-btn" onclick="pickGenre(this,'bike')" data-i18n="genre_bike">バイク・車</button>
+      <button class="genre-btn" onclick="pickGenre(this,'other')" data-i18n="genre_other">その他（カスタム）</button>
+    </div>
+    <div id="custom-genre-wrap" style="display:none;margin-top:12px;">
+      <input type="text" id="custom-genre-input" maxlength="40" oninput="onCustomGenreInput(this.value)" onblur="saveCustomGenre()" placeholder="ジャンル名を自由に入力（例：鉄道、DIY、釣り、投資…）" style="width:100%;background:var(--black-border);border:1px solid rgba(201,168,76,0.3);color:#fff;padding:10px 14px;border-radius:10px;font-size:14px;font-family:inherit;outline:none;"/>
+      <div style="color:var(--text-muted);font-size:11px;margin-top:6px;">入力内容はあなたのプロフィールに保存され、次回以降も自動入力されます</div>
     </div>
     <div style="color:var(--text-secondary);font-size:12px;margin:14px 0 8px;font-weight:600;" data-i18n="genre_business_label">業者向け</div>
     <div class="genre-grid" id="genre-grid-business">
@@ -1469,10 +1480,62 @@ function renderPhotoThumbs(){
 function removePhoto(idx){selectedPhotos.splice(idx,1);renderPhotoThumbs();if(!selectedPhotos.length)inputImageUrl=null;}
 
 // ─ Genre single-select ──────────────────────────────────
+let customGenreText='';
+let customGenreSaveTimer=null;
 function pickGenre(el,genre){
   document.querySelectorAll('#genre-grid-personal .genre-btn, #genre-grid-business .genre-btn').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
-  selectedGenres=[genre];
+  const wrap=document.getElementById('custom-genre-wrap');
+  if(genre==='other'){
+    if(wrap)wrap.style.display='block';
+    const inp=document.getElementById('custom-genre-input');
+    if(inp){
+      if(customGenreText)inp.value=customGenreText;
+      inp.focus();
+    }
+    selectedGenres=[customGenreText||'other'];
+  } else {
+    if(wrap)wrap.style.display='none';
+    selectedGenres=[genre];
+  }
+  persistSelectedGenres();
+}
+function onCustomGenreInput(value){
+  customGenreText=(value||'').trim().slice(0,40);
+  // keep selectedGenres in sync while the user types
+  selectedGenres=[customGenreText||'other'];
+  // debounce profile save
+  clearTimeout(customGenreSaveTimer);
+  customGenreSaveTimer=setTimeout(saveCustomGenre,600);
+}
+async function saveCustomGenre(){
+  if(!currentUser||!sb)return;
+  try{
+    await sb.from('profiles').update({custom_genre:customGenreText||null}).eq('id',currentUser.id);
+  }catch(e){console.warn('[saveCustomGenre]',e);}
+}
+async function persistSelectedGenres(){
+  if(!currentUser||!sb)return;
+  try{
+    await sb.from('profiles').update({selected_genres:selectedGenres}).eq('id',currentUser.id);
+  }catch(e){/* soft-fail */}
+}
+function hydrateGenreFromProfile(prof){
+  if(!prof)return;
+  if(prof.custom_genre){
+    customGenreText=String(prof.custom_genre).slice(0,40);
+    const otherBtn=document.querySelector('#genre-grid-personal .genre-btn[onclick*="\'other\'"]');
+    if(otherBtn)pickGenre(otherBtn,'other');
+    const inp=document.getElementById('custom-genre-input');
+    if(inp)inp.value=customGenreText;
+    selectedGenres=[customGenreText];
+    return;
+  }
+  const saved=Array.isArray(prof.selected_genres)&&prof.selected_genres[0];
+  if(saved){
+    const btn=document.querySelector(`#genre-grid-personal .genre-btn[onclick*="'${saved}'"], #genre-grid-business .genre-btn[onclick*="'${saved}'"]`);
+    if(btn)pickGenre(btn,saved);
+  }
 }
 // Legacy alias — any remaining call sites fall through to single-select
 function toggleGenre(el,genre){ pickGenre(el,genre); }
@@ -1720,11 +1783,12 @@ document.addEventListener('DOMContentLoaded',async()=>{
   hydrateDisclosureDefaults(currentUser);
   ELEVA.applyLanguage(localStorage.getItem('eleva_lang')||'ja');
   if(currentUser){
-    const {data:prof}=await sb.from('profiles').select('credits_remaining,is_admin').eq('id',currentUser.id).single();
+    const {data:prof}=await sb.from('profiles').select('credits_remaining,is_admin,custom_genre,selected_genres').eq('id',currentUser.id).single();
     if(prof){
       const html=(window.ELEVA_ICONS?.lightning||'⚡')+' '+prof.credits_remaining;
       document.getElementById('credits-badge').innerHTML=html;
     }
+    hydrateGenreFromProfile(prof);
     injectLeftDrawerExtras(prof);
     // SNS apply banner: show when the user has no connected accounts
     try{

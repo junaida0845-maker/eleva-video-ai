@@ -94,6 +94,10 @@ body{font-family:'Inter',sans-serif;background:var(--black);color:var(--text-pri
 <div class="page-wrap">
   <h1 class="page-title" data-i18n="sns_trend">SNSトレンド</h1>
   <p class="page-subtitle">各プラットフォームのリアルタイムトレンドをチェック</p>
+  <div id="user-genre-hint" style="display:none;align-items:center;gap:8px;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);color:#c9a84c;padding:8px 14px;border-radius:999px;font-size:12.5px;margin-bottom:16px;width:fit-content;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    あなたのジャンル：<span data-genre-val style="color:#fff;font-weight:600;">—</span><span style="color:var(--text-muted);">のトピックを優先表示</span>
+  </div>
 
   <!-- Platform Tabs -->
   <div class="tabs" id="platform-tabs">
@@ -191,9 +195,9 @@ async function loadTrends(){
     const hashtagPool=t.keywords||t.hashtags||platformList.flatMap(p=>p.hashtags||[]);
     const topicsPool=t.global_buzz||platformList.map(p=>({topic:p.title||p.name,description:p.description||p.snippet||''}));
     const musicPool=t.music||t.trending_music||[];
-    renderHashtags(hashtagPool.length?hashtagPool:generateFallbackHashtags());
+    renderHashtags(prioritizeByGenre(hashtagPool.length?hashtagPool:generateFallbackHashtags()));
     renderMusic(musicPool.length?musicPool:generateFallbackMusic());
-    renderTopics(topicsPool.length?topicsPool:generateFallbackTopics());
+    renderTopics(prioritizeByGenre(topicsPool.length?topicsPool:generateFallbackTopics()));
   }catch(e){
     console.warn('[trends] localized fetch failed, falling back',e);
     renderHashtags(generateFallbackHashtags());
@@ -333,9 +337,38 @@ document.addEventListener('keydown',e=>{
   }
 });
 
+// User's custom / selected genre keyword — used to prioritize matching topics
+window.userGenreKeyword='';
+function prioritizeByGenre(items){
+  const kw=(window.userGenreKeyword||'').toLowerCase().trim();
+  if(!kw||!Array.isArray(items))return items;
+  const hit=[],miss=[];
+  items.forEach(it=>{
+    const blob=JSON.stringify(it||'').toLowerCase();
+    (blob.includes(kw)?hit:miss).push(it);
+  });
+  return hit.concat(miss);
+}
+
+async function loadUserGenrePreference(){
+  try{
+    const sb=ELEVA.getSupabase();
+    const {data:{user}}=await sb.auth.getUser();
+    if(!user)return;
+    const {data:prof}=await sb.from('profiles').select('custom_genre,selected_genres').eq('id',user.id).single();
+    const kw=prof?.custom_genre||(Array.isArray(prof?.selected_genres)&&prof.selected_genres[0])||'';
+    window.userGenreKeyword=kw||'';
+    if(kw){
+      const hint=document.getElementById('user-genre-hint');
+      if(hint){hint.style.display='inline-flex';hint.querySelector('span[data-genre-val]').textContent=kw;}
+    }
+  }catch(e){/* soft-fail */}
+}
+
 document.addEventListener('DOMContentLoaded',async()=>{
   await ELEVA.initElevaPage({page:'trend'});
   ELEVA.applyLanguage(localStorage.getItem('eleva_lang')||'ja');
+  await loadUserGenrePreference();
   loadTrends();
 });
 </script>
