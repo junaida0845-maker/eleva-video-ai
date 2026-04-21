@@ -161,13 +161,38 @@ let state={country:'',genre:'',platform:'',countries:null,genres:null};
 function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function fmtNum(n){n=Number(n||0);if(n>=1e8)return (n/1e8).toFixed(1)+'億';if(n>=1e4)return (n/1e4).toFixed(1)+'万';if(n>=1e3)return (n/1e3).toFixed(1)+'k';return String(n);}
 
+// The collector stores video_id with a platform prefix (yt_, tk_, ig_). Strip it for URL building.
+function rawVideoId(id){return String(id||'').replace(/^(yt_|tk_|ig_)/,'');}
+
 // Best-effort thumbnail: YouTube IDs expose a public CDN endpoint. TikTok/Instagram don't.
 function deriveThumb(row){
-  if(row.platform==='youtube'&&row.video_id)return 'https://i.ytimg.com/vi/'+encodeURIComponent(row.video_id)+'/hqdefault.jpg';
+  if(row.platform==='youtube'&&row.video_id){
+    return 'https://i.ytimg.com/vi/'+encodeURIComponent(rawVideoId(row.video_id))+'/hqdefault.jpg';
+  }
   const sb=row.storyboard_urls;
   if(Array.isArray(sb)&&sb.length)return sb[0];
   if(sb&&typeof sb==='object'){const v=sb.cover||sb.thumbnail||sb[0];if(v)return v;}
   return '';
+}
+
+// Deep-link handler: try to open the native app first, fall back to web URL after 1s.
+// Uses window.location.href per product spec. If the app opens, the tab is replaced with the
+// deep-link URL (which the app intercepts); the scheduled fallback navigation is cancelled
+// when the page becomes hidden (app took focus).
+function openTrendLink(platform, videoId, fallbackUrl){
+  const raw=rawVideoId(videoId);
+  const fb=fallbackUrl||'';
+  let deep='';
+  if(platform==='tiktok'&&raw)deep='snssdk1233://aweme/detail/'+raw;
+  else if(platform==='instagram'&&raw)deep='instagram://reels/'+raw;
+  else if(platform==='youtube'&&raw)deep='youtube://watch?v='+raw;
+  if(!deep){if(fb)window.location.href=fb;return;}
+  // Schedule web fallback
+  const t=setTimeout(()=>{if(fb)window.location.href=fb;},1000);
+  // Cancel if the native app took focus
+  const onHide=()=>{if(document.hidden)clearTimeout(t);};
+  document.addEventListener('visibilitychange',onHide,{once:true});
+  window.location.href=deep;
 }
 
 async function pgrest(path){
@@ -261,7 +286,14 @@ function renderCards(trends){
   document.getElementById('grid').innerHTML=trends.map((t,i)=>{
     const platIcon=PLATFORM_ICON[t.platform]||'i-play';
     const platLabel=PLATFORM_LABEL[t.platform]||t.platform||'';
-    const contentUrl=t.video_url||'';
+    const raw=rawVideoId(t.video_id);
+    // Web fallback per product spec
+    let fallback=t.video_url||'';
+    if(raw){
+      if(t.platform==='youtube')fallback='https://www.youtube.com/shorts/'+raw;
+      else if(t.platform==='instagram')fallback='https://www.instagram.com/reel/'+raw;
+      else if(t.platform==='tiktok'&&!fallback)fallback='https://www.tiktok.com/video/'+raw;
+    }
     const thumbUrl=deriveThumb(t);
     const thumb=thumbUrl
       ? '<img src="'+escapeHtml(thumbUrl)+'" loading="lazy" alt="" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';"/><div class="no-img" style="display:none;">NO IMAGE</div>'
@@ -269,7 +301,9 @@ function renderCards(trends){
     const music=t.music_title
       ? '<div class="card-music"><svg><use href="#i-music"/></svg><span>'+escapeHtml(t.music_title)+(t.music_artist?' — '+escapeHtml(t.music_artist):'')+'</span></div>'
       : '';
-    const openThumb=contentUrl?'onclick="window.open(\''+escapeHtml(contentUrl).replace(/'/g,"\\'")+'\',\'_blank\',\'noopener\')"':'';
+    const thumbAttrs=fallback
+      ? ` data-plat="${escapeHtml(t.platform||'')}" data-vid="${escapeHtml(t.video_id||'')}" data-fb="${escapeHtml(fallback)}" style="cursor:pointer;"`
+      : '';
     const genreLabel=t.genre?(GENRE_NAME_JA[t.genre]||t.genre):'';
     const countryFlag=t.country_code&&COUNTRY_FLAG[t.country_code]?COUNTRY_FLAG[t.country_code]:'';
     const pendingPill=t.analysis_status&&t.analysis_status!=='done'
@@ -277,7 +311,7 @@ function renderCards(trends){
       : '';
     return `
       <div class="card">
-        <div class="thumb" ${openThumb}>
+        <div class="thumb"${thumbAttrs}>
           ${thumb}
           <span class="badge"><svg><use href="#${platIcon}"/></svg>${escapeHtml(platLabel)}</span>
           ${pendingPill}
@@ -294,6 +328,10 @@ function renderCards(trends){
         </div>
       </div>`;
   }).join('');
+  // Thumb click → deep link to native app (fallback to web)
+  document.getElementById('grid').querySelectorAll('.thumb[data-plat]').forEach(el=>{
+    el.addEventListener('click',()=>openTrendLink(el.dataset.plat,el.dataset.vid,el.dataset.fb));
+  });
   // Attach CTA handlers
   document.getElementById('grid').querySelectorAll('.cta-btn').forEach(btn=>{
     btn.addEventListener('click',e=>{
