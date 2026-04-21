@@ -150,7 +150,10 @@ const PLATFORM_ICON={tiktok:'i-tiktok',instagram:'i-instagram',youtube:'i-youtub
 const PLATFORM_LABEL={tiktok:'TikTok',instagram:'Instagram',youtube:'YouTube'};
 const COUNTRY_FLAG={JP:'🇯🇵',US:'🇺🇸',KR:'🇰🇷',TH:'🇹🇭',ID:'🇮🇩',BR:'🇧🇷',MX:'🇲🇽',FR:'🇫🇷',DE:'🇩🇪',IN:'🇮🇳',GB:'🇬🇧',AU:'🇦🇺',CN:'🇨🇳',TW:'🇹🇼',VN:'🇻🇳',PH:'🇵🇭'};
 const COUNTRY_NAME_JA={JP:'日本',US:'アメリカ',KR:'韓国',TH:'タイ',ID:'インドネシア',BR:'ブラジル',MX:'メキシコ',FR:'フランス',DE:'ドイツ',IN:'インド',GB:'イギリス',AU:'オーストラリア',CN:'中国',TW:'台湾',VN:'ベトナム',PH:'フィリピン'};
-const GENRE_NAME_JA={food:'料理・グルメ',beauty:'美容・コスメ',fashion:'ファッション',travel:'旅行・観光',fitness:'フィットネス',music:'音楽',pet:'ペット',game:'ゲーム',sports:'スポーツ',education:'教育・学習',business_side:'ビジネス・副業',art:'アート・クリエイティブ',lifestyle:'ライフスタイル',news:'ニュース・時事',bike:'バイク・車',comedy:'コメディ',dance:'ダンス'};
+// Fixed whitelist — order here drives the tab order; values not in the list
+// (e.g. "general", "vehicle") are hidden from the UI even if they exist in DB.
+const GENRE_WHITELIST=['beauty','food','pet','music','travel','fashion','fitness','tech','lifestyle','dance','comedy','gaming'];
+const GENRE_NAME_JA={beauty:'美容・コスメ',food:'料理・グルメ',pet:'ペット',music:'音楽',travel:'旅行',fashion:'ファッション',fitness:'フィットネス',tech:'テック',lifestyle:'ライフスタイル',dance:'ダンス',comedy:'お笑い',gaming:'ゲーム'};
 
 // Default to 全世界 (no country filter) per product decision
 let state={country:'',genre:'',platform:'',countries:null,genres:null};
@@ -177,16 +180,17 @@ async function pgrest(path){
 }
 
 async function loadFiltersFromData(){
-  // Derive country + genre options from the distinct values currently in the table.
+  // Country list still comes from distinct values in the DB.
+  // Genres are a fixed whitelist so "general" / "vehicle" etc don't leak into the UI.
   try{
-    const rows=await pgrest('global_buzz_data?archived=not.eq.true&select=country_code,genre&limit=500');
-    const cSet=new Set(),gSet=new Set();
-    rows.forEach(r=>{if(r.country_code)cSet.add(r.country_code);if(r.genre)gSet.add(r.genre);});
+    const rows=await pgrest('global_buzz_data?archived=eq.false&select=country_code&limit=500');
+    const cSet=new Set();
+    rows.forEach(r=>{if(r.country_code)cSet.add(r.country_code);});
     state.countries=[...cSet].sort();
-    state.genres=[...gSet].sort();
-    renderCountrySelect();
-    renderGenreTabs();
-  }catch(e){/* selects stay minimal on failure */}
+  }catch(e){/* country select stays minimal on failure */}
+  state.genres=GENRE_WHITELIST.slice();
+  renderCountrySelect();
+  renderGenreTabs();
 }
 
 async function loadTrends(){
