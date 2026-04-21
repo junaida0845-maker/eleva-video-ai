@@ -444,9 +444,11 @@ async function callAdmin(action,params={}){
 // ─ Trends DB ────────────────────────────────────────
 let _adminTrendsCache=null;
 async function loadAdminTrends(){
+  // Source of truth is global_buzz_data (archived=false). The legacy world_trends table
+  // stayed empty after we migrated collectors; admin page used to query the wrong source.
   const [summaryRes,rowsRes]=await Promise.all([
-    sb.from('world_trends').select('country_code,genre,collected_at'),
-    sb.from('world_trends').select('id,platform,country_code,genre,title,author,view_count,collected_at,content_url').order('collected_at',{ascending:false}).limit(50),
+    sb.from('global_buzz_data').select('country_code,genre,buzz_detected_at').eq('archived',false),
+    sb.from('global_buzz_data').select('id,platform,country_code,genre,title,views,buzz_detected_at,video_url,thumbnail_url').eq('archived',false).order('buzz_detected_at',{ascending:false}).limit(50),
   ]).catch(e=>{console.error('[admin-trends]',e);return [{error:e},{error:e}];});
 
   const summary=summaryRes?.data||[];
@@ -460,7 +462,7 @@ async function loadAdminTrends(){
   document.getElementById('trends-country-count').textContent=countries.size;
   document.getElementById('trends-genre-count').textContent=genres.size;
   const latest=(summary||[]).reduce((max,r)=>{
-    const t=r.collected_at?new Date(r.collected_at).getTime():0;
+    const t=r.buzz_detected_at?new Date(r.buzz_detected_at).getTime():0;
     return t>max?t:max;
   },0);
   document.getElementById('trends-latest').textContent=latest?new Date(latest).toLocaleString('ja-JP'):'—';
@@ -472,7 +474,7 @@ async function loadAdminTrends(){
     const k=key(r);
     if(!bucket[k])bucket[k]={country:r.country_code||'-',genre:r.genre||'-',count:0,latest:0};
     bucket[k].count++;
-    const t=r.collected_at?new Date(r.collected_at).getTime():0;
+    const t=r.buzz_detected_at?new Date(r.buzz_detected_at).getTime():0;
     if(t>bucket[k].latest)bucket[k].latest=t;
   });
   const summaryRows=Object.values(bucket).sort((a,b)=>b.count-a.count);
@@ -506,9 +508,9 @@ function renderAdminTrendsRows(){
     <td><span class="badge badge-plan" style="background:rgba(201,168,76,0.15);color:var(--gold);">${r.platform||'-'}</span></td>
     <td>${r.country_code||'-'}</td>
     <td class="secondary">${r.genre||'-'}</td>
-    <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.content_url?`<a href="${r.content_url}" target="_blank" style="color:inherit;">${r.title||'(無題)'}</a>`:(r.title||'(無題)')}</td>
-    <td>${Number(r.view_count||0).toLocaleString()}</td>
-    <td class="secondary" style="font-size:11px;">${r.collected_at?new Date(r.collected_at).toLocaleString('ja-JP'):'—'}</td>
+    <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.video_url?`<a href="${r.video_url}" target="_blank" style="color:inherit;">${r.title||'(無題)'}</a>`:(r.title||'(無題)')}</td>
+    <td>${Number(r.views||0).toLocaleString()}</td>
+    <td class="secondary" style="font-size:11px;">${r.buzz_detected_at?new Date(r.buzz_detected_at).toLocaleString('ja-JP'):'—'}</td>
   </tr>`).join('');
 }
 
@@ -519,9 +521,10 @@ async function runCollectWorldTrends(){
   try{
     const {data:{session}}=await sb.auth.getSession();
     const token=session?.access_token||ADMIN_TOKEN;
-    const res=await fetch(ELEVA.SUPABASE_URL+'/functions/v1/collect-world-trends',{
+    const res=await fetch(ELEVA.SUPABASE_URL+'/functions/v1/global-buzz-collector',{
       method:'POST',
       headers:{'Content-Type':'application/json','apikey':ELEVA.SUPABASE_ANON_KEY,'Authorization':'Bearer '+token},
+      body:JSON.stringify({platforms:['youtube','tiktok']}),
     });
     const text=await res.text();
     if(!res.ok)throw new Error('HTTP '+res.status+': '+text.slice(0,120));
