@@ -73,6 +73,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/generate-x-trends"
+  to = "/.netlify/functions/generate-x-trends"
+  status = 200
+
+[[redirects]]
   from = "/api/refine-concept"
   to = "/.netlify/functions/refine-concept"
   status = 200

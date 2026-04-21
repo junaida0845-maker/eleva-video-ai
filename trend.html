@@ -136,11 +136,24 @@ body{font-family:'Inter',sans-serif;background:var(--black);color:var(--text-pri
     </div>
 
     <!-- Topics -->
-    <div class="trend-section">
+    <div class="trend-section" id="topic-section">
       <div class="trend-section-title">💬 <span data-i18n="topics">トピック</span></div>
       <div class="trend-grid" id="topic-grid">
         <div class="loading-card"><div style="flex:1;"><div class="skeleton" style="width:80%;margin-bottom:8px;"></div><div class="skeleton" style="width:50%;height:10px;"></div></div></div>
       </div>
+    </div>
+
+    <!-- X / Twitter real-time trends (Claude-generated) -->
+    <div class="trend-section" id="x-section" style="display:none;">
+      <div class="trend-section-title" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <span>𝕏 今のトレンド（AI 推定）</span>
+        <button id="x-refresh-btn" onclick="loadXTrends(true)" style="background:transparent;border:1px solid rgba(201,168,76,0.4);color:#c9a84c;padding:6px 14px;border-radius:16px;font-size:12px;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          <span>更新</span>
+        </button>
+      </div>
+      <div id="x-meta" style="color:var(--text-muted);font-size:11px;margin-bottom:10px;">—</div>
+      <div class="trend-grid" id="x-grid"></div>
     </div>
   </div>
 </div>
@@ -156,7 +169,14 @@ function selectPlatform(el){
   document.querySelectorAll('#platform-tabs .tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
   currentPlatform=el.dataset.platform;
-  document.getElementById('music-section').style.display=currentPlatform==='x'?'none':'block';
+  const isX=currentPlatform==='x';
+  // X has its own layout: Claude-generated topic cards only.
+  document.getElementById('music-section').style.display=isX?'none':'block';
+  document.querySelectorAll('#trend-content .trend-section').forEach(s=>{
+    if(s.id==='x-section')s.style.display=isX?'block':'none';
+    else if(isX)s.style.display='none';
+    else if(s.id!=='music-section')s.style.display='block';
+  });
   loadTrends();
 }
 
@@ -174,7 +194,67 @@ function numberFormat(n){
   return n.toString();
 }
 
+const X_CATEGORY_COLOR={
+  '時事':'#6ea8fe','政治':'#6ea8fe','スポーツ':'#4ade80','エンタメ':'#f472b6',
+  'ビジネス':'#c9a84c','経済':'#c9a84c','テック':'#a78bfa','カルチャー':'#fbbf24','ミーム':'#fb923c',
+};
+const X_HEAT_LABEL={high:'🔥 急上昇',medium:'📈 上昇中',low:'🌱 注目'};
+
+async function loadXTrends(forceRefresh){
+  const grid=document.getElementById('x-grid');
+  const meta=document.getElementById('x-meta');
+  const btn=document.getElementById('x-refresh-btn');
+  if(!grid)return;
+  grid.innerHTML='<div style="color:var(--text-muted);text-align:center;padding:24px;font-size:13px;grid-column:1/-1;">Claude が推定中…（5〜10秒）</div>';
+  if(btn){btn.disabled=true;btn.style.opacity='0.6';}
+  meta.textContent='AI 推定トレンド（更新中…）';
+  try{
+    const lang=(localStorage.getItem('eleva_lang')||'ja').toLowerCase();
+    const res=await fetch('/api/generate-x-trends',{
+      method:'POST',
+      cache:forceRefresh?'no-store':'default',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({lang,genre:(window.userGenreKeyword||'')}),
+    });
+    const data=await res.json();
+    if(!res.ok||!Array.isArray(data.topics)){
+      meta.textContent='生成に失敗しました';
+      grid.innerHTML='<div style="color:#bf7f7f;text-align:center;padding:20px;font-size:13px;grid-column:1/-1;">X のトレンドを生成できませんでした: '+(data.error||'unknown')+'</div>';
+      return;
+    }
+    const when=data.generated_at?new Date(data.generated_at).toLocaleString('ja-JP',{hour:'2-digit',minute:'2-digit'}):'';
+    meta.textContent='Claude 推定・'+data.topics.length+'件'+(when?'・'+when+' 更新':'')+'（実データではなく AI による推定です）';
+    grid.innerHTML=data.topics.map((t,i)=>{
+      const cat=String(t.category||'トレンド').slice(0,8);
+      const col=X_CATEGORY_COLOR[cat]||'#c9a84c';
+      const heat=X_HEAT_LABEL[t.heat]||'';
+      const tag=t.hashtag?String(t.hashtag).replace(/^#?/,'#'):'';
+      return `<div class="trend-card">
+        <span class="trend-rank">${i+1}</span>
+        <div class="trend-body">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
+            <span style="background:${col}22;color:${col};border:1px solid ${col}55;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">${cat}</span>
+            ${heat?`<span style="color:var(--text-muted);font-size:10px;">${heat}</span>`:''}
+          </div>
+          <div class="trend-name">${escapeHtml(String(t.title||'').slice(0,60))}</div>
+          <div class="trend-meta" style="margin-top:3px;">${escapeHtml(String(t.description||'').slice(0,90))}</div>
+          ${tag?`<div style="color:#c9a84c;font-size:11px;margin-top:6px;">${escapeHtml(tag)}</div>`:''}
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    meta.textContent='通信エラー';
+    grid.innerHTML='<div style="color:#bf7f7f;text-align:center;padding:20px;font-size:13px;grid-column:1/-1;">'+escapeHtml(String(e.message||e))+'</div>';
+  }finally{
+    if(btn){btn.disabled=false;btn.style.opacity='1';}
+  }
+}
+
 async function loadTrends(){
+  if(currentPlatform==='x'){
+    loadXTrends(false);
+    return;
+  }
   // Reset
   ['hashtag-grid','music-grid','topic-grid'].forEach(id=>{
     const el=document.getElementById(id);
