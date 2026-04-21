@@ -29,7 +29,15 @@ body{font-family:'Inter',sans-serif;background:var(--black);color:var(--text-pri
   .top-bar-center{font-size:14px;}
 }
 
-.page-wrap{max-width:800px;margin:0 auto;padding:24px 16px 100px;}
+.page-wrap{max-width:800px;margin:0 auto;padding:24px 16px 120px;}
+
+/* Fixed bottom generate bar (always visible) */
+.generate-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:linear-gradient(to top,rgba(10,10,10,0.98) 0%,rgba(10,10,10,0.92) 70%,rgba(10,10,10,0) 100%);padding:18px 16px 20px;backdrop-filter:blur(8px);}
+.generate-bar-inner{max-width:800px;margin:0 auto;}
+.generate-bar-btn{width:100%;background:var(--gold);color:#000;border:none;padding:16px;border-radius:14px;font-weight:800;font-size:16px;letter-spacing:0.05em;cursor:pointer;box-shadow:0 6px 20px rgba(201,168,76,0.28);transition:transform 0.15s,box-shadow 0.15s,background 0.15s;}
+.generate-bar-btn:hover{background:var(--gold-light);transform:translateY(-1px);box-shadow:0 8px 28px rgba(201,168,76,0.42);}
+.generate-bar-btn:disabled{background:#2a2a2a;color:#666;cursor:not-allowed;box-shadow:none;transform:none;}
+.generate-bar-hint{text-align:center;color:var(--text-muted);font-size:11px;margin-top:6px;}
 .page-title{color:var(--gold-light);font-size:24px;font-weight:800;margin-bottom:24px;}
 
 /* Cards */
@@ -130,7 +138,7 @@ textarea::placeholder{color:var(--text-muted);}
 
 <!-- Top Bar -->
 <div class="top-bar">
-  <div class="top-bar-center">ELEVA Studio</div>
+  <div class="top-bar-center">ELEVA スタジオ</div>
   <!-- Elements kept in DOM (hidden) for existing JS that updates their innerHTML -->
   <div class="top-badge" id="credits-badge" style="display:none;"><span data-icon="lightning"></span> --</div>
   <a id="admin-link" href="/admin.html" style="display:none;" data-i18n="admin">管理画面</a>
@@ -203,10 +211,10 @@ textarea::placeholder{color:var(--text-muted);}
 
   <!-- Prompt + Upload -->
   <div class="card" id="generate-section">
-    <div class="card-title"><span data-icon="sparkle"></span> どんな動画を作りたい？</div>
+    <div class="card-title"><span data-icon="sparkle"></span> どんな動画を作りたいか</div>
 
     <!-- Theme / Purpose -->
-    <label style="color:var(--text-secondary);font-size:12px;display:block;margin-bottom:6px;">動画のテーマ・目的</label>
+    <label style="color:var(--text-secondary);font-size:12px;display:block;margin-bottom:6px;">テーマ・目的</label>
     <textarea id="prompt-input" data-i18n-ph="input_prompt_ph" placeholder="例：自宅で簡単に作れる時短パスタのレシピを紹介したい" rows="3" style="width:100%;background:var(--black-border);border:1px solid rgba(201,168,76,0.3);color:#fff;padding:12px;border-radius:10px;font-family:inherit;font-size:14px;resize:vertical;outline:none;margin-bottom:14px;"></textarea>
 
     <!-- Target audience -->
@@ -1755,6 +1763,21 @@ document.addEventListener('DOMContentLoaded',async()=>{
   currentUser=await ELEVA.initElevaPage({page:'generate',onUser:u=>{currentUser=u;}});
   hydrateDisclosureDefaults(currentUser);
   ELEVA.applyLanguage(localStorage.getItem('eleva_lang')||'ja');
+  // 動画生成ページは全テキストを日本語に統一（localStorageは書き換えない）
+  (function forceJaOnGeneratePage(){
+    const ja=window.ELEVA_T&&window.ELEVA_T['ja'];
+    if(!ja)return;
+    document.querySelectorAll('[data-i18n]').forEach(el=>{
+      const v=ja[el.dataset.i18n];
+      if(!v)return;
+      if(el.tagName==='INPUT'||el.tagName==='TEXTAREA')el.placeholder=v;
+      else el.textContent=v;
+    });
+    document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
+      const v=ja[el.dataset.i18nPh];
+      if(v)el.placeholder=v;
+    });
+  })();
   if(currentUser){
     const {data:prof}=await sb.from('profiles').select('credits_remaining,is_admin,custom_genre,selected_genres').eq('id',currentUser.id).single();
     if(prof){
@@ -1785,5 +1808,13 @@ document.addEventListener('DOMContentLoaded',async()=>{
   </div>
   <div>© 2025 株式会社LETIZIA All rights reserved.</div>
 </footer>
+
+<!-- Fixed bottom generate button — always visible at the bottom -->
+<div class="generate-bar">
+  <div class="generate-bar-inner">
+    <button class="generate-bar-btn" id="bottom-generate-btn" onclick="generateVideo()">動画を生成する</button>
+    <div class="generate-bar-hint">プロンプト・各設定を入力したらこのボタンで生成</div>
+  </div>
+</div>
 </body>
 </html>
