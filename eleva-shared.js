@@ -350,8 +350,25 @@ function getLangRegion(){
 }
 
 async function signInWithGoogle(){
-  const sb=getSupabase();if(!sb)return;
-  await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:win.location.origin+'/dashboard.html'}});
+  const sb=getSupabase();
+  if(!sb){alert('Supabase クライアントが初期化されていません。ページを再読み込みしてください。');return;}
+  try{
+    const {data,error}=await sb.auth.signInWithOAuth({
+      provider:'google',
+      options:{redirectTo:win.location.origin+'/dashboard.html'},
+    });
+    if(error){
+      console.error('[signInWithGoogle]',error);
+      alert('Google ログインを開始できませんでした。\n'+(error.message||error));
+    }else if(data&&data.url&&!location.href.startsWith(data.url)){
+      // Fallback: Supabase should redirect automatically, but some browsers
+      // (popup blockers, nested iframes) miss it — force navigation.
+      location.href=data.url;
+    }
+  }catch(err){
+    console.error('[signInWithGoogle] threw',err);
+    alert('Google ログイン中にエラーが発生しました。\n'+(err.message||err));
+  }
 }
 
 async function loginWithBiometrics(){

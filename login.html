@@ -235,6 +235,23 @@ document.addEventListener('DOMContentLoaded',async()=>{
   ELEVA.initElevaPage({page:'login',requireAuth:false,redirectIfAuth:true});
   ELEVA.applyLanguage(localStorage.getItem('eleva_lang')||'ja');
   if(window.location.hash==='#signup')switchTab('signup');
+
+  // Surface OAuth errors coming back in the URL (?error= or #error=)
+  try{
+    const hashParams=new URLSearchParams((location.hash||'').replace(/^#/,''));
+    const queryParams=new URLSearchParams(location.search||'');
+    const errCode=hashParams.get('error')||queryParams.get('error');
+    const errDesc=hashParams.get('error_description')||queryParams.get('error_description');
+    if(errCode){
+      const el=document.getElementById('login-error');
+      if(el){
+        el.textContent='Google ログインに失敗しました: '+(errDesc||errCode);
+        el.style.display='block';
+      }
+      // Clean URL so the error doesn't persist on reload
+      history.replaceState(null,'',location.pathname);
+    }
+  }catch(e){/* ignore */}
   document.getElementById('login-password').addEventListener('keypress',e=>{if(e.key==='Enter')doLogin();});
   document.getElementById('signup-password').addEventListener('keypress',e=>{if(e.key==='Enter')doSignup();});
   document.getElementById('reset-modal').addEventListener('click',e=>{if(e.target===document.getElementById('reset-modal'))closeResetModal();});
