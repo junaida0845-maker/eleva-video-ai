@@ -53,6 +53,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .thumb{position:relative;aspect-ratio:9/16;background:linear-gradient(135deg,#161616,#0f0f0f);overflow:hidden;cursor:pointer;}
 .thumb img{width:100%;height:100%;object-fit:cover;display:block;}
 .thumb .no-img{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-3);font-size:11px;letter-spacing:1px;}
+.thumb .placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#131313 0%,#0b0b0b 100%);}
+.thumb img{position:relative;z-index:1;}
 .badge{position:absolute;top:8px;left:8px;padding:4px 10px 4px 8px;background:rgba(10,10,10,0.82);border:1px solid var(--border-gold);color:var(--gold);font-size:10px;font-weight:700;letter-spacing:.5px;border-radius:999px;display:inline-flex;align-items:center;gap:5px;text-transform:uppercase;}
 .badge svg{width:11px;height:11px;}
 
@@ -96,6 +98,17 @@ footer{margin-top:60px;border-top:1px solid var(--border);padding:24px 20px;text
     <symbol id="i-tiktok" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.34 6.34 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.76a4.85 4.85 0 01-1.01-.07z" fill="currentColor"/></symbol>
     <symbol id="i-instagram" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="1.6" fill="none"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.6" fill="none"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/></symbol>
     <symbol id="i-youtube" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" fill="currentColor"/></symbol>
+    <symbol id="g-beauty" viewBox="0 0 24 24"><path d="M12 2l2.4 5.4L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.6-1.6z" stroke="currentColor" stroke-width="1.5" fill="none"/></symbol>
+    <symbol id="g-food" viewBox="0 0 24 24"><path d="M3 2v7c0 1.1.9 2 2 2h1v11M11 2v20M11 2v7c0 1.1-.9 2-2 2M17 2c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h2v6" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></symbol>
+    <symbol id="g-pet" viewBox="0 0 24 24"><circle cx="11" cy="4.5" r="2" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="17" cy="7" r="1.8" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="5.5" cy="7" r="1.8" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="18.5" cy="14" r="1.8" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="3.5" cy="14" r="1.8" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M15 18a4 4 0 0 1-8 0c0-2 2-4 4-4s4 2 4 4z" stroke="currentColor" stroke-width="1.5" fill="none"/></symbol>
+    <symbol id="g-travel" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="1.5" fill="none"/></symbol>
+    <symbol id="g-fashion" viewBox="0 0 24 24"><path d="M4 6l4-4h8l4 4-3 3v11H7V9L4 6z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/></symbol>
+    <symbol id="g-fitness" viewBox="0 0 24 24"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M7 9h10M7 15h10" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></symbol>
+    <symbol id="g-tech" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="9" y="9" width="6" height="6" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+    <symbol id="g-lifestyle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+    <symbol id="g-dance" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="g-comedy" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M8 14s1.5 2 4 2 4-2 4-2" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><line x1="9" y1="9" x2="9.01" y2="9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="15" y1="9" x2="15.01" y2="9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="g-gaming" viewBox="0 0 24 24"><path d="M6 12h4m-2-2v4M15 13h.01M18 11h.01M17.32 5H6.68a4 4 0 00-3.978 3.59L2 15a3 3 0 003 3c1 0 1.5-.5 2-1l1.5-1.5h7l1.5 1.5c.5.5 1 1 2 1a3 3 0 003-3l-.702-6.41A4 4 0 0017.32 5z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   </defs>
 </svg>
 
@@ -164,8 +177,11 @@ function fmtNum(n){n=Number(n||0);if(n>=1e8)return (n/1e8).toFixed(1)+'億';if(n
 // The collector stores video_id with a platform prefix (yt_, tk_, ig_). Strip it for URL building.
 function rawVideoId(id){return String(id||'').replace(/^(yt_|tk_|ig_)/,'');}
 
-// Best-effort thumbnail: YouTube IDs expose a public CDN endpoint. TikTok/Instagram don't.
-function deriveThumb(row){
+// Thumbnail resolution: DB-stored url first (TikTok CDN / Instagram), then derived
+// YouTube CDN url, then storyboard fallback. Empty string falls through to the
+// gold-SVG placeholder built by genrePlaceholder().
+function resolveThumb(row){
+  if(row.thumbnail_url)return row.thumbnail_url;
   if(row.platform==='youtube'&&row.video_id){
     return 'https://i.ytimg.com/vi/'+encodeURIComponent(rawVideoId(row.video_id))+'/hqdefault.jpg';
   }
@@ -173,6 +189,24 @@ function deriveThumb(row){
   if(Array.isArray(sb)&&sb.length)return sb[0];
   if(sb&&typeof sb==='object'){const v=sb.cover||sb.thumbnail||sb[0];if(v)return v;}
   return '';
+}
+
+// Kept for backward compat
+function deriveThumb(row){return resolveThumb(row);}
+
+// Map each known genre to a lucide-style SVG symbol defined in the <defs> block above.
+const GENRE_ICON={
+  beauty:'g-beauty', food:'g-food', pet:'g-pet', music:'i-music',
+  travel:'g-travel', fashion:'g-fashion', fitness:'g-fitness',
+  tech:'g-tech', lifestyle:'g-lifestyle', dance:'g-dance',
+  comedy:'g-comedy', gaming:'g-gaming',
+};
+
+function genrePlaceholder(platform, genre){
+  const icon=GENRE_ICON[genre]||'i-play';
+  return `<div class="placeholder">
+    <svg width="64" height="64" style="color:#c9a84c;opacity:0.85;"><use href="#${icon}"/></svg>
+  </div>`;
 }
 
 // Deep-link handler: try to open the native app first, fall back to web URL after 1s.
@@ -294,10 +328,13 @@ function renderCards(trends){
       else if(t.platform==='instagram')fallback='https://www.instagram.com/reel/'+raw;
       else if(t.platform==='tiktok'&&!fallback)fallback='https://www.tiktok.com/video/'+raw;
     }
-    const thumbUrl=deriveThumb(t);
-    const thumb=thumbUrl
-      ? '<img src="'+escapeHtml(thumbUrl)+'" loading="lazy" alt="" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';"/><div class="no-img" style="display:none;">NO IMAGE</div>'
-      : '<div class="no-img">NO IMAGE</div>';
+    const thumbUrl=resolveThumb(t);
+    const placeholder=genrePlaceholder(t.platform,t.genre);
+    // Placeholder renders underneath the img; if the img errors or is absent,
+    // we hide it (via onerror) so the gold-icon placeholder shows through.
+    const thumb=placeholder+(thumbUrl
+      ? '<img src="'+escapeHtml(thumbUrl)+'" loading="lazy" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\';"/>'
+      : '');
     const music=t.music_title
       ? '<div class="card-music"><svg><use href="#i-music"/></svg><span>'+escapeHtml(t.music_title)+(t.music_artist?' — '+escapeHtml(t.music_artist):'')+'</span></div>'
       : '';
