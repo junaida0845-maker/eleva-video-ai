@@ -11,9 +11,28 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Inter',sans-serif;background:var(--black);color:var(--text-primary);min-height:100vh;padding-top:56px;}
 ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-thumb{background:rgba(201,168,76,0.3);}
-.top-bar{position:fixed;top:0;left:0;right:0;height:56px;background:rgba(10,10,10,0.95);border-bottom:1px solid var(--border-gold);display:flex;align-items:center;justify-content:flex-end;padding:0 20px;gap:12px;z-index:100;backdrop-filter:blur(8px);}
-.top-bar-center{position:absolute;left:50%;transform:translateX(-50%);font-size:16px;font-weight:800;color:var(--gold-light);}
+.top-bar{position:fixed;top:0;left:0;right:0;height:56px;background:rgba(10,10,10,0.95);border-bottom:1px solid var(--border-gold);display:flex;align-items:center;justify-content:space-between;padding:0 20px;gap:12px;z-index:100;backdrop-filter:blur(8px);}
+.top-bar-center{font-size:16px;font-weight:800;color:var(--gold-light);letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .btn-top{background:none;border:1px solid var(--border-gold);color:var(--gold);padding:6px 12px;border-radius:16px;cursor:pointer;font-size:12px;}
+/* Desktop nav (>= md 768px) */
+.nav-desktop{display:none;align-items:center;gap:8px;}
+.nav-desktop a{color:var(--text-secondary);font-size:12px;padding:6px 10px;border-radius:8px;text-decoration:none;letter-spacing:.05em;transition:color .15s,background .15s;}
+.nav-desktop a:hover{color:var(--gold);background:rgba(201,168,76,0.08);}
+.nav-desktop .btn-top{padding:6px 12px;}
+@media (min-width:768px){
+  .nav-desktop{display:flex;}
+  .hamburger{display:none;}
+}
+/* Mobile hamburger (< md 768px) */
+.hamburger{background:none;border:1px solid var(--border-gold);color:var(--gold);width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;}
+.hamburger svg{width:18px;height:18px;}
+.mobile-sheet{position:fixed;top:56px;left:0;right:0;background:var(--black-card);border-bottom:1px solid var(--border-gold);z-index:99;transform:translateY(-120%);transition:transform .25s ease;}
+.mobile-sheet.open{transform:translateY(0);}
+.mobile-sheet a,.mobile-sheet button{display:flex;align-items:center;gap:10px;width:100%;padding:14px 22px;color:var(--text-primary);font-size:14px;text-decoration:none;border:none;background:transparent;border-bottom:1px solid rgba(255,255,255,0.04);text-align:left;cursor:pointer;font-family:inherit;}
+.mobile-sheet a:last-child,.mobile-sheet button:last-child{border-bottom:none;}
+.mobile-sheet a:hover,.mobile-sheet button:hover{color:var(--gold);background:rgba(201,168,76,0.04);}
+.mobile-sheet-scrim{position:fixed;inset:56px 0 0 0;background:rgba(0,0,0,.4);z-index:98;opacity:0;pointer-events:none;transition:opacity .2s;}
+.mobile-sheet-scrim.open{opacity:1;pointer-events:auto;}
 .page-wrap{max-width:800px;margin:0 auto;padding:24px 16px 80px;}
 .page-title{color:var(--gold-light);font-size:24px;font-weight:800;margin-bottom:8px;}
 .page-subtitle{color:var(--text-secondary);font-size:14px;margin-bottom:24px;}
@@ -48,7 +67,24 @@ body{font-family:'Inter',sans-serif;background:var(--black);color:var(--text-pri
 <body>
 <div class="top-bar">
   <div class="top-bar-center" data-i18n="sns_trend">SNSトレンド</div>
-  <button class="btn-top" onclick="ELEVA.showLanguageModal()">🌐</button>
+  <div class="nav-desktop">
+    <a href="/dashboard.html">ダッシュボード</a>
+    <a href="/trends.html">世界トレンド</a>
+    <a href="/history.html">履歴</a>
+    <button class="btn-top" onclick="ELEVA.showLanguageModal()" aria-label="言語">🌐</button>
+  </div>
+  <button class="hamburger" id="hamburger-btn" onclick="toggleMobileNav()" aria-label="メニュー">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+  </button>
+</div>
+<div class="mobile-sheet-scrim" id="m-scrim" onclick="toggleMobileNav()"></div>
+<div class="mobile-sheet" id="m-sheet">
+  <a href="/dashboard.html">ダッシュボード</a>
+  <a href="/trends.html">世界トレンド</a>
+  <a href="/history.html">履歴</a>
+  <a href="/mypage.html">マイページ</a>
+  <a href="/settings.html">設定</a>
+  <button onclick="ELEVA.showLanguageModal();toggleMobileNav();">🌐 言語を変更</button>
 </div>
 
 <div class="page-wrap">
@@ -196,19 +232,30 @@ const TOPIC_PAGE_MAP={
   'ショート動画の収益化':'/short-video-monetization.html',
   'バズる投稿の条件':'/buzz-conditions.html',
 };
+function extractTopicText(t){
+  // API may return strings, objects with various key names, or nested objects.
+  if(t==null)return {title:'',desc:''};
+  if(typeof t==='string')return {title:t,desc:''};
+  const title=t.title||t.topic||t.name||t.headline||t.label||'';
+  const desc=t.description||t.desc||t.summary||t.snippet||t.subtitle||'';
+  // Guard against non-scalar values that would otherwise print as [object Object]
+  const str=v=>(v&&typeof v==='object')?(v.text||v.value||JSON.stringify(v)):String(v||'');
+  return {title:str(title),desc:str(desc)};
+}
 function renderTopics(items){
   const el=document.getElementById('topic-grid');
   if(!el)return;
   el.innerHTML=items.slice(0,6).map(t=>{
-    const title=t.topic||t.name||t;
+    const {title,desc}=extractTopicText(t);
     const page=TOPIC_PAGE_MAP[title];
-    const safeTitle=(title+'').replace(/"/g,'&quot;');
+    const safeTitle=title.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const safeDesc=desc.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     const cta=page?`style="cursor:pointer;" onclick="location.href='${page}'"`:'';
     return `
     <div class="trend-card" ${cta}>
       <div class="trend-body">
-        <div class="trend-name">${safeTitle}${page?' <span style="color:var(--gold);font-size:11px;">›</span>':''}</div>
-        <div class="trend-meta">${t.description||''}</div>
+        <div class="trend-name">${safeTitle||'(タイトルなし)'}${page?' <span style="color:var(--gold);font-size:11px;">›</span>':''}</div>
+        <div class="trend-meta">${safeDesc}</div>
       </div>
     </div>`;
   }).join('');
@@ -233,9 +280,54 @@ function generateFallbackHashtags(){
 function generateFallbackMusic(){
   return [{title:'Calm Morning',artist:'Lo-Fi Beats',count:85000},{title:'Summer Vibes',artist:'Digital Wave',count:62000},{title:'Epic Rise',artist:'Cinematic Studio',count:45000},{title:'Happy Day',artist:'J-Pop Select',count:38000}];
 }
+const PLATFORM_TOPICS={
+  tiktok:[
+    {title:'バズる投稿の条件',description:'視聴維持率・フック・テロップで再生数を最大化'},
+    {title:'ダンスチャレンジ最新',description:'TikTokで週間バズ中のダンス・振付トレンド'},
+    {title:'音楽・楽曲トレンド',description:'使用数が急伸している BGM と短尺で使えるフレーズ'},
+    {title:'ショート動画の収益化',description:'Creator Rewards の最新条件と単価の目安'},
+    {title:'AI動画生成トレンド',description:'AI で量産する短尺クリップが急増中'},
+  ],
+  instagram:[
+    {title:'ビジュアル・写真映え',description:'フィードとリールで保存される構図と色使い'},
+    {title:'ライフスタイル系リール',description:'朝活・ルーティン・おうち時間系が継続的に伸びる'},
+    {title:'リール完視聴テク',description:'冒頭 1 秒フック・ループ・テキストオーバーレイの最適化'},
+    {title:'ショート動画の収益化',description:'Reels Play ボーナスと案件単価の目安'},
+    {title:'バズる投稿の条件',description:'保存・シェアされるリールの共通構造'},
+  ],
+  youtube:[
+    {title:'教育・How-to 長尺',description:'10〜20 分の解説動画が収益化で最強'},
+    {title:'長尺ショートの移行',description:'Shorts から本編視聴へ誘導する設計'},
+    {title:'収益化の最新ルール',description:'Shorts Fund・広告単価・Super Thanks の現状'},
+    {title:'AI動画生成トレンド',description:'AI ナレーション解説系が急成長'},
+    {title:'サムネイル心理学',description:'CTR を倍にするサムネの 3 要素'},
+  ],
+  x:[
+    {title:'時事・速報ニュース',description:'いま話題のトピック・速報タグ'},
+    {title:'議論が盛り上がる投稿',description:'引用ポストで拡散する意見型ツイートの型'},
+    {title:'トレンドワード',description:'24 時間以内に急伸したキーワード'},
+    {title:'画像・動画付きポスト',description:'インプレッション 10 倍のメディア付き投稿'},
+    {title:'バズる投稿の条件',description:'140 字でエンゲージを最大化する構造'},
+  ],
+};
 function generateFallbackTopics(){
-  return [{topic:'AI動画生成トレンド',description:'生成AIを使ったクリエイティブコンテンツが急増'},{topic:'ショート動画の収益化',description:'各プラットフォームの収益プログラム最新情報'},{topic:'バズる投稿の条件',description:'エンゲージメント率を高める投稿テクニック'}];
+  return PLATFORM_TOPICS[currentPlatform]||PLATFORM_TOPICS.tiktok;
 }
+
+// ── Mobile hamburger ──
+function toggleMobileNav(){
+  const sheet=document.getElementById('m-sheet');
+  const scrim=document.getElementById('m-scrim');
+  if(!sheet||!scrim)return;
+  const open=sheet.classList.toggle('open');
+  scrim.classList.toggle('open',open);
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    const sheet=document.getElementById('m-sheet');
+    if(sheet&&sheet.classList.contains('open'))toggleMobileNav();
+  }
+});
 
 document.addEventListener('DOMContentLoaded',async()=>{
   await ELEVA.initElevaPage({page:'trend'});
