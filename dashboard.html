@@ -20,6 +20,20 @@ body{font-family:'Inter',sans-serif;background:var(--black);color:var(--text-pri
 .top-bar-center{position:absolute;left:50%;transform:translateX(-50%);font-size:16px;font-weight:800;color:var(--gold-light);letter-spacing:0.1em;}
 .top-badge{background:rgba(201,168,76,0.15);border:1px solid var(--border-gold);color:var(--gold);padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;}
 .lang-btn-top{background:none;border:1px solid var(--border-gold);color:var(--gold);padding:6px 12px;border-radius:16px;cursor:pointer;font-size:12px;}
+.top-nav-desktop{display:flex;align-items:center;gap:12px;}
+.hamburger{display:none;background:none;border:1px solid var(--border-gold);border-radius:8px;color:var(--gold);cursor:pointer;padding:8px 10px;flex-direction:column;gap:4px;align-items:center;justify-content:center;width:40px;height:36px;}
+.hamburger span{display:block;width:20px;height:2px;background:var(--gold);border-radius:2px;}
+.mobile-nav-scrim{display:none;position:fixed;inset:56px 0 0 0;background:rgba(0,0,0,0.6);z-index:199;}
+.mobile-nav-sheet{display:none;position:fixed;top:56px;right:0;bottom:0;width:82vw;max-width:300px;background:#0a0a0a;border-left:1px solid var(--border-gold);z-index:200;padding:20px 18px;flex-direction:column;gap:12px;overflow-y:auto;}
+.mobile-nav-sheet.open,.mobile-nav-scrim.open{display:flex;}
+.mobile-nav-sheet a,.mobile-nav-sheet button{width:100%;text-align:left;background:transparent;border:1px solid var(--border-gold);color:var(--gold);padding:12px 14px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;font-family:inherit;display:flex;align-items:center;gap:8px;}
+.mobile-nav-sheet a:hover,.mobile-nav-sheet button:hover{border-color:var(--gold);background:rgba(201,168,76,0.08);}
+@media (max-width:767px){
+  .top-nav-desktop{display:none;}
+  .hamburger{display:flex;}
+  .top-bar-center{font-size:14px;}
+  .top-bar{padding:0 14px;}
+}
 
 .page-wrap{max-width:800px;margin:0 auto;padding:24px 16px 100px;}
 .page-title{color:var(--gold-light);font-size:24px;font-weight:800;margin-bottom:24px;}
@@ -123,15 +137,37 @@ textarea::placeholder{color:var(--text-muted);}
 <!-- Top Bar -->
 <div class="top-bar">
   <div class="top-bar-center">ELEVA Studio</div>
-  <div class="top-badge" id="credits-badge"><span data-icon="lightning"></span> --</div>
-  <a href="/trends.html" style="background:transparent;border:1px solid #333;border-radius:6px;color:#aaa;padding:6px 12px;font-size:12px;text-decoration:none;letter-spacing:.05em;display:inline-flex;align-items:center;gap:5px;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='#333';this.style.color='#aaa'">
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="color:var(--gold);"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18" stroke="currentColor" stroke-width="1.6"/></svg>
-    世界のトレンド
-  </a>
-  <a id="admin-link" href="/admin.html" style="display:none;background:transparent;border:1px solid var(--gold);border-radius:6px;color:var(--gold);padding:6px 14px;font-size:12px;text-decoration:none;letter-spacing:.08em;" data-i18n="admin">管理画面</a>
-  <button class="lang-btn-top" onclick="ELEVA.showLanguageModal()"><span data-icon="globe"></span></button>
-  <button onclick="ELEVA.logout()" style="background:transparent;border:1px solid #333;border-radius:6px;color:#888;padding:6px 14px;font-size:12px;cursor:pointer;font-family:inherit;letter-spacing:.08em;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='#333';this.style.color='#888'" data-i18n="logout">LOGOUT</button>
+  <div class="top-nav-desktop">
+    <div class="top-badge" id="credits-badge"><span data-icon="lightning"></span> --</div>
+    <a href="/trends.html" style="background:transparent;border:1px solid #333;border-radius:6px;color:#aaa;padding:6px 12px;font-size:12px;text-decoration:none;letter-spacing:.05em;display:inline-flex;align-items:center;gap:5px;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='#333';this.style.color='#aaa'">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="color:var(--gold);"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18" stroke="currentColor" stroke-width="1.6"/></svg>
+      世界のトレンド
+    </a>
+    <a id="admin-link" href="/admin.html" style="display:none;background:transparent;border:1px solid var(--gold);border-radius:6px;color:var(--gold);padding:6px 14px;font-size:12px;text-decoration:none;letter-spacing:.08em;" data-i18n="admin">管理画面</a>
+    <button class="lang-btn-top" onclick="ELEVA.showLanguageModal()"><span data-icon="globe"></span></button>
+    <button onclick="ELEVA.logout()" style="background:transparent;border:1px solid #333;border-radius:6px;color:#888;padding:6px 14px;font-size:12px;cursor:pointer;font-family:inherit;letter-spacing:.08em;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='#333';this.style.color='#888'" data-i18n="logout">LOGOUT</button>
+  </div>
+  <button class="hamburger" onclick="toggleMobileNav()" aria-label="メニュー"><span></span><span></span><span></span></button>
 </div>
+<div class="mobile-nav-scrim" id="mobile-nav-scrim" onclick="toggleMobileNav()"></div>
+<nav class="mobile-nav-sheet" id="mobile-nav-sheet" aria-hidden="true">
+  <div class="top-badge" id="credits-badge-mobile" style="align-self:flex-start;"><span data-icon="lightning"></span> --</div>
+  <a href="/trends.html">🌐 世界のトレンド</a>
+  <a id="admin-link-mobile" href="/admin.html" style="display:none;" data-i18n="admin">管理画面</a>
+  <button onclick="ELEVA.showLanguageModal();toggleMobileNav();"><span data-icon="globe"></span> 言語</button>
+  <button onclick="ELEVA.logout()" data-i18n="logout">LOGOUT</button>
+</nav>
+<script>
+function toggleMobileNav(){
+  const s=document.getElementById('mobile-nav-sheet');
+  const c=document.getElementById('mobile-nav-scrim');
+  const open=s.classList.toggle('open');
+  c.classList.toggle('open',open);
+  s.setAttribute('aria-hidden',open?'false':'true');
+  document.body.style.overflow=open?'hidden':'';
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){const s=document.getElementById('mobile-nav-sheet');if(s&&s.classList.contains('open'))toggleMobileNav();}});
+</script>
 
 <!-- Upgrade Modal -->
 <div id="upgrade-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);backdrop-filter:blur(6px);z-index:9999;align-items:center;justify-content:center;padding:20px;">
@@ -1693,10 +1729,16 @@ document.addEventListener('DOMContentLoaded',async()=>{
   ELEVA.applyLanguage(localStorage.getItem('eleva_lang')||'ja');
   if(currentUser){
     const {data:prof}=await sb.from('profiles').select('credits_remaining,is_admin').eq('id',currentUser.id).single();
-    if(prof)document.getElementById('credits-badge').innerHTML=(window.ELEVA_ICONS?.lightning||'⚡')+' '+prof.credits_remaining;
+    if(prof){
+      const html=(window.ELEVA_ICONS?.lightning||'⚡')+' '+prof.credits_remaining;
+      document.getElementById('credits-badge').innerHTML=html;
+      const cbm=document.getElementById('credits-badge-mobile');if(cbm)cbm.innerHTML=html;
+    }
     if(prof?.is_admin){
       const adminLink=document.getElementById('admin-link');
       if(adminLink)adminLink.style.display='inline-block';
+      const adminLinkM=document.getElementById('admin-link-mobile');
+      if(adminLinkM)adminLinkM.style.display='flex';
     }
     // SNS apply banner: show when the user has no connected accounts
     try{
