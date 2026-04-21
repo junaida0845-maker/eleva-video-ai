@@ -7,130 +7,114 @@
 <link rel="apple-touch-icon" href="/icons/icon-180.png"/>
 <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png"/>
 <meta name="theme-color" content="#0a0a0a"/>
-<title>ELEVA — Studio</title>
+<title>ELEVA — 動画を生成する</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/eleva-icons.js"></script>
 <style>
-:root{--gold:#c9a84c;--gold-light:#f0d070;--gold-dark:#a07830;--black:#0a0a0a;--black-card:#111111;--black-border:#1a1a1a;--border-gold:rgba(201,168,76,0.2);--text-primary:#fff;--text-secondary:#aaa;--text-muted:#666;--text-gold:#c9a84c;}
+:root{--gold:#c9a84c;--gold-light:#f0d070;--gold-dark:#a07830;--black:#0a0a0a;--black-card:#111111;--black-border:#1a1a1a;--border-gold:rgba(201,168,76,0.22);--text-primary:#fff;--text-secondary:#aaa;--text-muted:#666;--text-gold:#c9a84c;--red:#e05a5a;}
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{overflow-x:hidden;max-width:100vw;}
-img,video,iframe,table{max-width:100%;}
-body{font-family:'Inter',sans-serif;background:var(--black);color:var(--text-primary);min-height:100vh;padding-top:56px;}
+body{font-family:'Inter','Noto Sans JP',sans-serif;background:var(--black);color:var(--text-primary);min-height:100vh;padding-top:56px;padding-bottom:130px;-webkit-font-smoothing:antialiased;}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
 ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-thumb{background:rgba(201,168,76,0.3);}
 
-.top-bar{position:fixed;top:0;left:0;right:0;height:56px;background:rgba(10,10,10,0.95);border-bottom:1px solid var(--border-gold);display:flex;align-items:center;justify-content:flex-end;padding:0 20px;gap:12px;z-index:100;backdrop-filter:blur(8px);}
+.top-bar{position:fixed;top:0;left:0;right:0;height:56px;background:rgba(10,10,10,0.95);border-bottom:1px solid var(--border-gold);display:flex;align-items:center;justify-content:flex-end;padding:0 20px 0 64px;gap:12px;z-index:100;backdrop-filter:blur(8px);}
 .top-bar-center{position:absolute;left:50%;transform:translateX(-50%);font-size:16px;font-weight:800;color:var(--gold-light);letter-spacing:0.1em;}
 .top-badge{background:rgba(201,168,76,0.15);border:1px solid var(--border-gold);color:var(--gold);padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;}
-.lang-btn-top{background:none;border:1px solid var(--border-gold);color:var(--gold);padding:6px 12px;border-radius:16px;cursor:pointer;font-size:12px;}
-.top-bar{padding-left:64px;}
-@media (max-width:767px){
-  .top-bar-center{font-size:14px;}
-}
+@media (max-width:767px){.top-bar-center{font-size:14px;}}
 
-.page-wrap{max-width:800px;margin:0 auto;padding:24px 16px 120px;}
+.page-wrap{max-width:760px;margin:0 auto;padding:28px 18px 40px;}
+.page-title{color:var(--gold-light);font-size:24px;font-weight:800;margin-bottom:8px;letter-spacing:.02em;}
+.page-sub{color:var(--text-secondary);font-size:13px;line-height:1.7;margin-bottom:24px;}
 
-/* Fixed bottom generate bar (always visible) */
-.generate-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:linear-gradient(to top,rgba(10,10,10,0.98) 0%,rgba(10,10,10,0.92) 70%,rgba(10,10,10,0) 100%);padding:18px 16px 20px;backdrop-filter:blur(8px);}
-.generate-bar-inner{max-width:800px;margin:0 auto;}
-.generate-bar-btn{width:100%;background:var(--gold);color:#000;border:none;padding:16px;border-radius:14px;font-weight:800;font-size:16px;letter-spacing:0.05em;cursor:pointer;box-shadow:0 6px 20px rgba(201,168,76,0.28);transition:transform 0.15s,box-shadow 0.15s,background 0.15s;}
+/* Step indicator */
+.steps-bar{display:flex;align-items:center;gap:0;margin-bottom:24px;padding:10px 14px;background:var(--black-card);border:1px solid var(--border-gold);border-radius:14px;}
+.step-dot{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;color:var(--text-muted);font-weight:600;letter-spacing:.05em;padding:6px 4px;position:relative;}
+.step-dot .n{width:22px;height:22px;border-radius:50%;background:var(--black-border);border:1px solid var(--border-gold);color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
+.step-dot.active{color:var(--gold);}
+.step-dot.active .n{background:var(--gold);color:#000;border-color:var(--gold);}
+.step-dot.done .n{background:rgba(201,168,76,0.2);border-color:var(--gold);color:var(--gold);}
+.step-dot.done{color:var(--gold);}
+.step-sep{width:20px;height:2px;background:var(--black-border);flex-shrink:0;}
+.step-dot .label{display:inline-block;}
+@media (max-width:640px){.step-dot .label{display:none;}.step-sep{width:12px;}}
+
+/* Cards */
+.card{background:var(--black-card);border:1px solid var(--border-gold);border-radius:16px;padding:24px;margin-bottom:18px;animation:fadeIn .35s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+.card-title{color:var(--gold);font-size:13px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.card-title .step-badge{background:var(--gold);color:#000;font-size:10px;font-weight:800;padding:3px 10px;border-radius:999px;letter-spacing:.08em;}
+
+/* Form */
+label{color:var(--text-secondary);font-size:12px;display:block;margin-bottom:6px;letter-spacing:.02em;font-weight:500;}
+textarea,input[type=text]{width:100%;background:var(--black-border);border:1px solid rgba(201,168,76,0.28);color:#fff;padding:14px;border-radius:12px;font-family:inherit;font-size:14.5px;outline:none;transition:border-color .15s;line-height:1.6;}
+textarea{resize:vertical;min-height:110px;}
+textarea:focus,input[type=text]:focus{border-color:var(--gold);}
+textarea::placeholder,input[type=text]::placeholder{color:var(--text-muted);}
+
+.opt-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;}
+.opt-btn{background:var(--black-border);border:1px solid var(--border-gold);color:#cfcfcf;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;transition:all .15s;flex:1;min-width:92px;}
+.opt-btn:hover{border-color:var(--gold);color:#fff;}
+.opt-btn.active{background:var(--gold);color:#000;border-color:var(--gold);font-weight:700;}
+
+.btn-gold{background:var(--gold);color:#000;border:none;padding:14px 22px;border-radius:12px;font-weight:800;font-size:15px;letter-spacing:.04em;transition:all .15s;width:100%;margin-top:16px;}
+.btn-gold:hover{background:var(--gold-light);transform:translateY(-1px);box-shadow:0 6px 20px rgba(201,168,76,0.22);}
+.btn-gold:disabled{background:#2a2a2a;color:#666;cursor:not-allowed;transform:none;box-shadow:none;}
+.btn-outline{background:transparent;border:1px solid var(--gold);color:var(--gold);padding:11px 18px;border-radius:10px;font-size:13px;transition:all .15s;}
+.btn-outline:hover{background:rgba(201,168,76,0.1);}
+
+/* Scene cards */
+.scene-card{background:var(--black-border);border:1px solid rgba(201,168,76,0.2);border-radius:14px;padding:16px 18px;margin-bottom:12px;}
+.scene-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.scene-num{background:var(--gold);color:#000;font-size:11px;font-weight:800;padding:3px 10px;border-radius:999px;letter-spacing:.08em;}
+.scene-hook{color:var(--gold);font-size:11.5px;font-weight:600;letter-spacing:.02em;}
+.scene-dur{color:var(--text-muted);font-size:11.5px;margin-left:auto;}
+.scene-row{display:flex;gap:12px;font-size:13px;line-height:1.55;margin-top:6px;}
+.scene-row .rlabel{color:var(--text-muted);min-width:70px;flex-shrink:0;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;padding-top:2px;}
+.scene-row .rval{color:#fff;flex:1;}
+.scene-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.05);}
+.scene-meta div{font-size:12px;color:var(--text-secondary);line-height:1.5;}
+.scene-meta strong{color:var(--gold);display:block;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;}
+
+/* Chat */
+.chat-wrap{margin-top:18px;padding:16px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:12px;}
+.chat-msgs{max-height:240px;overflow-y:auto;margin-bottom:10px;display:flex;flex-direction:column;gap:10px;padding:4px;}
+.chat-msg{max-width:85%;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.55;white-space:pre-wrap;}
+.chat-msg.user{align-self:flex-end;background:#2a2a2a;color:#fff;}
+.chat-msg.bot{align-self:flex-start;background:rgba(201,168,76,0.08);color:#fff;border:1px solid var(--border-gold);}
+.chat-msg.bot::before{content:'ELEVA';display:block;color:var(--gold);font-size:10px;font-weight:700;letter-spacing:.08em;margin-bottom:4px;}
+.chat-input-row{display:flex;gap:8px;}
+.chat-input-row input{flex:1;}
+
+/* Loading / generating */
+.loader-wrap{display:flex;flex-direction:column;align-items:center;gap:18px;padding:32px 20px;}
+.loader{width:58px;height:58px;border:3px solid rgba(201,168,76,0.18);border-top-color:var(--gold);border-radius:50%;animation:spin 0.9s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loader-text{font-size:14px;color:var(--text-primary);font-weight:600;}
+.loader-sub{font-size:12px;color:var(--text-muted);text-align:center;line-height:1.6;}
+
+/* Result */
+.result-video{width:100%;border-radius:14px;border:1px solid var(--gold);background:#000;display:block;}
+.result-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;}
+
+/* Alert / error */
+.alert{padding:12px 16px;border-radius:10px;font-size:13px;line-height:1.55;margin-bottom:14px;}
+.alert.error{background:rgba(224,90,90,0.1);border:1px solid rgba(224,90,90,0.35);color:#ff9a9a;}
+.alert.info{background:rgba(201,168,76,0.08);border:1px solid var(--border-gold);color:#e6cb7f;}
+
+/* Fixed bottom bar */
+.generate-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;background:linear-gradient(to top,rgba(10,10,10,0.98) 0%,rgba(10,10,10,0.92) 70%,rgba(10,10,10,0) 100%);padding:18px 16px 20px;backdrop-filter:blur(8px);display:none;}
+.generate-bar.show{display:block;}
+.generate-bar-inner{max-width:760px;margin:0 auto;}
+.generate-bar-btn{width:100%;background:var(--gold);color:#000;border:none;padding:16px;border-radius:14px;font-weight:800;font-size:16px;letter-spacing:0.05em;box-shadow:0 6px 20px rgba(201,168,76,0.28);transition:all 0.15s;}
 .generate-bar-btn:hover{background:var(--gold-light);transform:translateY(-1px);box-shadow:0 8px 28px rgba(201,168,76,0.42);}
 .generate-bar-btn:disabled{background:#2a2a2a;color:#666;cursor:not-allowed;box-shadow:none;transform:none;}
 .generate-bar-hint{text-align:center;color:var(--text-muted);font-size:11px;margin-top:6px;}
-.page-title{color:var(--gold-light);font-size:24px;font-weight:800;margin-bottom:24px;}
 
-/* Cards */
-.card{background:var(--black-card);border:1px solid var(--border-gold);border-radius:16px;padding:24px;margin-bottom:20px;}
-.card-title{color:var(--gold);font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
-
-/* SNS Selector */
-.sns-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;}
-.sns-item{background:var(--black-border);border:2px solid var(--border-gold);border-radius:10px;padding:12px;cursor:pointer;text-align:center;transition:all 0.2s;user-select:none;}
-.sns-item:hover{border-color:var(--gold);}
-.sns-item.selected{border-color:var(--gold);background:rgba(201,168,76,0.1);}
-.sns-item .plat-icon{font-size:22px;display:block;margin-bottom:6px;}
-.sns-item .plat-name{color:#fff;font-size:12px;font-weight:600;}
-.sns-item .genre-badge{display:inline-block;background:var(--gold);color:#000;font-size:10px;padding:2px 6px;border-radius:10px;margin-top:4px;}
-
-/* Media Upload */
-.upload-area{border:2px dashed rgba(201,168,76,0.3);border-radius:12px;padding:20px;}
-.upload-btns{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
-.upload-btn{background:var(--black-border);border:1px solid var(--border-gold);color:var(--gold);padding:10px 18px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;transition:all 0.2s;display:flex;align-items:center;gap:6px;}
-.upload-btn:hover{background:rgba(201,168,76,0.1);border-color:var(--gold);}
-.media-preview{display:none;background:var(--black-border);border-radius:8px;overflow:hidden;max-height:200px;margin-bottom:12px;position:relative;}
-.media-preview img,.media-preview video{width:100%;max-height:200px;object-fit:cover;}
-.preview-remove{position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.6);border:none;color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px;}
-.url-input-wrap{display:none;margin-bottom:12px;}
-.url-input-wrap input{width:100%;background:var(--black-border);border:1px solid rgba(201,168,76,0.3);color:#fff;padding:10px 14px;border-radius:8px;font-size:14px;outline:none;}
-.url-input-wrap input:focus{border-color:var(--gold);}
-.divider{display:flex;align-items:center;gap:12px;margin:12px 0;color:var(--text-muted);font-size:12px;}
-.divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.08);}
-textarea{width:100%;background:var(--black-border);border:1px solid rgba(201,168,76,0.3);color:#fff;padding:14px;border-radius:10px;font-size:14px;font-family:'Inter',sans-serif;resize:vertical;min-height:100px;outline:none;transition:border-color 0.2s;line-height:1.6;}
-textarea:focus{border-color:var(--gold);}
-textarea::placeholder{color:var(--text-muted);}
-
-/* Duration */
-.duration-grid{display:flex;flex-wrap:wrap;gap:8px;}
-.dur-btn{background:var(--black-border);border:1px solid var(--border-gold);color:#aaa;padding:10px 18px;border-radius:8px;cursor:pointer;font-size:13px;transition:all 0.2s;}
-.dur-btn:hover{border-color:var(--gold);color:#fff;}
-.dur-btn.active{background:var(--gold);color:#000;border-color:var(--gold);font-weight:600;}
-
-/* Genre Buttons */
-.genre-grid{display:flex;flex-wrap:wrap;gap:8px;}
-.genre-btn{background:var(--black-border);border:1px solid var(--border-gold);color:#fff;padding:8px 14px;border-radius:20px;cursor:pointer;font-size:13px;transition:all 0.2s;}
-.genre-btn:hover{border-color:var(--gold);}
-.genre-btn.active{background:var(--gold);color:#000;border-color:var(--gold);font-weight:600;}
-
-/* Action buttons */
-.btn-gold{background:var(--gold);color:#000;border:none;padding:12px 24px;border-radius:10px;font-weight:700;cursor:pointer;transition:all 0.2s;font-size:14px;}
-.btn-gold:hover{background:var(--gold-light);}
-.btn-gold:disabled{background:#333;color:#666;cursor:not-allowed;}
-.btn-outline{background:transparent;border:1px solid var(--gold);color:var(--gold);padding:10px 20px;border-radius:10px;cursor:pointer;font-size:14px;transition:all 0.2s;}
-.btn-outline:hover{background:rgba(201,168,76,0.1);}
-
-/* Smart Suggestion */
-.suggestion-panel{position:fixed;bottom:0;left:0;right:0;background:#111111;border-top:2px solid var(--gold);border-radius:20px 20px 0 0;padding:24px 20px;z-index:200;transform:translateY(100%);transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);max-height:80vh;overflow-y:auto;}
-.suggestion-panel.open{transform:translateY(0);}
-.sugg-title{color:var(--gold-light);font-size:18px;font-weight:700;margin-bottom:16px;}
-.sugg-card{background:#1a1a1a;border:1px solid var(--border-gold);border-radius:12px;padding:16px;margin-bottom:12px;cursor:pointer;transition:border-color 0.2s;}
-.sugg-card:hover{border-color:var(--gold);}
-.sugg-card-title{color:var(--gold-light);font-size:14px;font-weight:600;margin-bottom:6px;}
-.sugg-reason{color:var(--text-secondary);font-size:12px;margin-bottom:10px;line-height:1.5;}
-.badge-high{background:var(--gold);color:#000;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;}
-.badge-med{background:#666;color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;}
-.badge-low{background:#333;color:#aaa;font-size:10px;padding:2px 8px;border-radius:10px;}
-.dur-badge{background:var(--black);border:1px solid var(--gold);color:var(--gold);font-size:10px;padding:2px 8px;border-radius:10px;}
-
-/* Optimize panel */
-.optimize-panel{background:#111111;border:1px solid var(--gold);border-radius:16px;padding:24px;margin-top:16px;display:none;}
-.opt-summary{color:var(--gold-light);font-size:20px;font-weight:700;margin-bottom:16px;}
-.opt-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
-.opt-label{color:var(--text-secondary);font-size:13px;}
-.opt-value{color:#fff;font-size:13px;font-weight:500;text-align:right;max-width:60%;}
-
-/* Generate result */
-.result-area{display:none;margin-top:20px;text-align:center;}
-.result-video{width:100%;border-radius:12px;border:1px solid var(--gold);background:#000;}
-.result-actions{display:flex;gap:12px;justify-content:center;margin-top:16px;flex-wrap:wrap;}
-
-/* Split Suggestion */
-.split-card{background:rgba(201,168,76,0.05);border:2px solid var(--gold);border-radius:12px;padding:20px;margin-top:16px;display:none;}
-.split-title{color:var(--gold-light);font-size:15px;font-weight:700;margin-bottom:8px;}
-.split-body{color:#fff;font-size:13px;margin-bottom:14px;line-height:1.6;}
-.split-actions{display:flex;gap:10px;flex-wrap:wrap;}
-
-/* Posting schedule */
-.schedule-table{width:100%;border-collapse:collapse;margin-top:12px;}
-.schedule-table th{color:var(--gold);font-size:12px;text-align:left;padding:8px 12px;background:#0d0d0d;border-bottom:1px solid rgba(201,168,76,0.2);}
-.schedule-table td{color:#fff;font-size:13px;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.04);}
-.schedule-table tr:nth-child(even) td{background:rgba(255,255,255,0.02);}
-.schedule-table td:nth-child(2){color:var(--text-secondary);}
-
-/* Camera modal */
-.camera-modal{position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:10000;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
-.camera-modal.open{display:flex;}
-#camera-preview{width:100%;max-width:400px;border-radius:12px;border:2px solid var(--gold);}
+.hidden{display:none !important;}
 </style>
 <!-- eleva-sw-register --><script>if('serviceWorker' in navigator){window.addEventListener('load',async()=>{try{const reg=await navigator.serviceWorker.register('/sw.js');reg.addEventListener('updatefound',()=>{const nw=reg.installing;nw.addEventListener('statechange',()=>{if(nw.state==='installed'&&navigator.serviceWorker.controller){nw.postMessage('skipWaiting');navigator.serviceWorker.addEventListener('controllerchange',()=>window.location.reload());}});});setInterval(()=>reg.update(),30*60*1000);}catch(e){console.log('SW registration failed:',e);}});}</script>
 </head>
@@ -139,1682 +123,493 @@ textarea::placeholder{color:var(--text-muted);}
 <!-- Top Bar -->
 <div class="top-bar">
   <div class="top-bar-center">ELEVA スタジオ</div>
-  <!-- Elements kept in DOM (hidden) for existing JS that updates their innerHTML -->
-  <div class="top-badge" id="credits-badge" style="display:none;"><span data-icon="lightning"></span> --</div>
-  <a id="admin-link" href="/admin.html" style="display:none;" data-i18n="admin">管理画面</a>
+  <div class="top-badge" id="credits-badge" style="display:none;">⚡ --</div>
+  <a id="admin-link" href="/admin.html" style="display:none;color:var(--gold);font-size:12px;">管理画面</a>
 </div>
 
 <!-- Upgrade Modal -->
 <div id="upgrade-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);backdrop-filter:blur(6px);z-index:9999;align-items:center;justify-content:center;padding:20px;">
-  <div style="background:#0f0f0f;border:1px solid #1f1f1f;border-radius:18px;width:100%;max-width:420px;padding:32px 26px;box-shadow:0 8px 32px rgba(212,175,55,0.18);font-family:'Inter','Noto Sans JP',sans-serif;">
-    <div style="text-align:center;margin-bottom:18px;">
-      <div style="width:60px;height:60px;border-radius:50%;background:rgba(212,175,55,0.12);display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;">
-        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" style="color:#d4af37;"><path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2 2-6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-      </div>
-      <h3 style="font-size:18px;font-weight:800;letter-spacing:.5px;margin-bottom:6px;color:#fff;">今月の上限に達しました</h3>
-      <p style="color:#a8a8a8;font-size:13px;line-height:1.6;">現在のプラン: <span id="upgrade-current-plan" style="color:#d4af37;font-weight:600;">—</span></p>
+  <div style="background:#0f0f0f;border:1px solid #1f1f1f;border-radius:18px;width:100%;max-width:420px;padding:32px 26px;">
+    <h3 style="font-size:18px;font-weight:800;margin-bottom:10px;color:#fff;">今月の上限に達しました</h3>
+    <p style="color:#a8a8a8;font-size:13px;line-height:1.6;margin-bottom:18px;">現在のプラン: <span id="upgrade-current-plan" style="color:var(--gold);font-weight:600;">—</span></p>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <a href="/pricing.html" style="display:block;text-align:center;background:var(--gold);color:#000;padding:14px;border-radius:12px;font-weight:700;font-size:13px;">プランをアップグレード</a>
+      <button onclick="document.getElementById('upgrade-modal').style.display='none'" style="background:none;color:#6b6b6b;font-size:12px;padding:10px;">キャンセル</button>
     </div>
-    <div style="display:flex;flex-direction:column;gap:10px;margin-top:22px;">
-      <button id="addon-buy-btn" onclick="purchaseAddon('addon_15s_10')" style="display:block;text-align:center;background:linear-gradient(135deg,#d4af37,#b8941f);color:#0a0a0a;padding:14px 18px;border-radius:12px;font-weight:700;font-size:13px;letter-spacing:.5px;border:none;cursor:pointer;font-family:inherit;">追加購入する（15秒×10本）</button>
-      <a href="/pricing.html" style="display:block;text-align:center;background:transparent;color:#d4af37;border:1px solid #d4af37;padding:13px 18px;border-radius:12px;font-weight:700;font-size:13px;letter-spacing:.5px;text-decoration:none;">プランをアップグレード</a>
-      <button onclick="closeUpgradeModal()" style="background:none;border:none;color:#6b6b6b;font-size:12px;padding:10px;cursor:pointer;font-family:inherit;">キャンセル</button>
-    </div>
-  </div>
-</div>
-
-<!-- Camera Modal -->
-<div class="camera-modal" id="camera-modal">
-  <video id="camera-preview" autoplay muted playsinline></video>
-  <div style="display:flex;gap:12px;">
-    <button onclick="capturePhoto()" style="background:var(--gold);color:#000;border:none;padding:14px 28px;border-radius:50px;font-weight:700;cursor:pointer;font-size:16px;display:flex;align-items:center;gap:8px;"><span data-icon="camera"></span> 撮影</button>
-    <button onclick="closeCamera()" style="background:#333;color:#666;border:none;padding:14px 28px;border-radius:50px;cursor:pointer;">閉じる</button>
   </div>
 </div>
 
 <div class="page-wrap">
-  <!-- SNS apply banner (shown only when user has zero connected SNS accounts) -->
-  <a id="sns-apply-banner" href="/sns-apply.html" style="display:none;align-items:center;justify-content:space-between;gap:14px;background:linear-gradient(135deg,rgba(201,168,76,0.10),rgba(201,168,76,0.04));border:1px solid rgba(201,168,76,0.35);padding:16px 20px;border-radius:14px;margin-bottom:20px;text-decoration:none;transition:border-color .15s,transform .15s;">
-    <div style="flex:1;min-width:0;">
-      <div style="color:var(--gold);font-weight:700;font-size:13px;letter-spacing:.3px;margin-bottom:4px;display:flex;align-items:center;gap:8px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-        SNS 成長診断を無料で受けませんか？
-      </div>
-      <div style="color:var(--text-secondary);font-size:12px;line-height:1.6;">SNS アカウントを連携すると AI がフォロワー増加の障壁を分析します。申請中も動画生成は使えます。</div>
-    </div>
-    <span style="background:var(--gold);color:#050505;padding:9px 20px;border-radius:8px;font-size:12.5px;font-weight:700;letter-spacing:.5px;white-space:nowrap;">診断する（無料）</span>
-  </a>
+  <h1 class="page-title">動画を生成する</h1>
+  <p class="page-sub">AI があなたの意図を理解し、バイラル動画のシナリオと動画本体までを自動で生成します。</p>
 
-  <h1 class="page-title">動画を生成</h1>
-
-  <!-- SNS Selector -->
-  <div class="card" id="sns-section">
-    <div class="card-title"><span data-icon="platform"></span> <span data-i18n="select_sns">投稿先SNS</span></div>
-    <div class="sns-grid" id="sns-grid">
-      <div class="sns-item" onclick="toggleSNS(this,'tiktok')">
-        <span class="plat-icon" data-icon="tiktok"></span>
-        <span class="plat-name">TikTok</span>
-      </div>
-      <div class="sns-item selected" onclick="toggleSNS(this,'instagram')">
-        <span class="plat-icon" data-icon="instagram"></span>
-        <span class="plat-name">Instagram</span>
-      </div>
-      <div class="sns-item" onclick="toggleSNS(this,'youtube')">
-        <span class="plat-icon" data-icon="youtube"></span>
-        <span class="plat-name">YouTube</span>
-      </div>
-      <div class="sns-item" onclick="toggleSNS(this,'x')">
-        <span class="plat-icon" data-icon="x_twitter"></span>
-        <span class="plat-name">X</span>
-      </div>
-    </div>
+  <!-- Step indicator -->
+  <div class="steps-bar" id="steps-bar">
+    <div class="step-dot active" data-step="1"><span class="n">1</span><span class="label">意図入力</span></div>
+    <div class="step-sep"></div>
+    <div class="step-dot" data-step="2"><span class="n">2</span><span class="label">シナリオ確認</span></div>
+    <div class="step-sep"></div>
+    <div class="step-dot" data-step="3"><span class="n">3</span><span class="label">生成中</span></div>
+    <div class="step-sep"></div>
+    <div class="step-dot" data-step="4"><span class="n">4</span><span class="label">完了</span></div>
   </div>
 
-  <!-- Prompt + Upload -->
-  <div class="card" id="generate-section">
-    <div class="card-title"><span data-icon="sparkle"></span> どんな動画を作りたいか</div>
+  <div id="global-alert"></div>
 
-    <!-- Theme / Purpose -->
-    <label style="color:var(--text-secondary);font-size:12px;display:block;margin-bottom:6px;">テーマ・目的</label>
-    <textarea id="prompt-input" data-i18n-ph="input_prompt_ph" placeholder="例：自宅で簡単に作れる時短パスタのレシピを紹介したい" rows="3" style="width:100%;background:var(--black-border);border:1px solid rgba(201,168,76,0.3);color:#fff;padding:12px;border-radius:10px;font-family:inherit;font-size:14px;resize:vertical;outline:none;margin-bottom:14px;"></textarea>
+  <!-- STEP 1 — Intent input -->
+  <section class="card" id="step1-card">
+    <div class="card-title"><span class="step-badge">STEP 1</span> ユーザーの意図を入力</div>
 
-    <!-- Target audience -->
-    <label style="color:var(--text-secondary);font-size:12px;display:block;margin-bottom:6px;">ターゲット（任意）</label>
-    <input type="text" id="target-input" placeholder="例：20代女性、料理初心者" style="width:100%;background:var(--black-border);border:1px solid rgba(201,168,76,0.3);color:#fff;padding:10px 12px;border-radius:10px;font-family:inherit;font-size:13px;outline:none;margin-bottom:14px;"/>
+    <label for="intent-input">どんな動画を作りたいですか？</label>
+    <textarea id="intent-input" placeholder="例：自宅で簡単に作れる時短パスタのレシピを紹介したい。見た目がおしゃれで、忙しい20代女性にハマる内容にしたい。"></textarea>
 
-    <!-- Style / mood -->
-    <label style="color:var(--text-secondary);font-size:12px;display:block;margin-bottom:6px;">スタイル・雰囲気（任意）</label>
-    <select id="style-input" style="width:100%;background:var(--black-border);border:1px solid rgba(201,168,76,0.3);color:#fff;padding:10px 12px;border-radius:10px;font-family:inherit;font-size:13px;outline:none;margin-bottom:18px;">
-      <option value="">選択してください</option>
-      <option value="明るく元気">明るく元気</option>
-      <option value="落ち着いた・おしゃれ">落ち着いた・おしゃれ</option>
-      <option value="エモーショナル">エモーショナル</option>
-      <option value="ASMR・静か">ASMR・静か</option>
-      <option value="コミカル・面白い">コミカル・面白い</option>
-      <option value="高級感・ラグジュアリー">高級感・ラグジュアリー</option>
-      <option value="ドキュメンタリー風">ドキュメンタリー風</option>
-      <option value="チュートリアル・解説">チュートリアル・解説</option>
-    </select>
-
-    <!-- Upload Buttons -->
-    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">参考素材（任意）</div>
-    <div class="upload-area">
-      <div class="upload-btns">
-        <button class="upload-btn" onclick="openCamera()"><span data-icon="camera"></span> <span data-i18n="camera">カメラ</span></button>
-        <button class="upload-btn" onclick="document.getElementById('photo-input').click()"><span data-icon="photo"></span> <span data-i18n="photo">写真</span></button>
-        <button class="upload-btn" onclick="document.getElementById('video-input').click()"><span data-icon="video"></span> <span data-i18n="video">動画</span></button>
-        <button class="upload-btn" onclick="toggleUrlInput()"><span data-icon="link"></span> <span data-i18n="url">URL</span></button>
-      </div>
-      <input type="file" id="photo-input" accept="image/*" multiple style="display:none" onchange="handleMultiPhoto(this)"/>
-      <input type="file" id="video-input" accept="video/*" style="display:none" onchange="handleVideoUpload(this)"/>
-
-      <!-- URL Input -->
-      <div class="url-input-wrap" id="url-input-wrap">
-        <input type="url" id="source-url" data-i18n-ph="url_placeholder" placeholder="動画・画像のURLを貼り付け" onchange="handleUrlInput(this.value)"/>
-      </div>
-
-      <!-- Multi Photo Preview -->
-      <div id="multi-photo-preview" style="display:none;margin:12px 0;display:flex;flex-wrap:wrap;gap:8px;"></div>
-
-      <!-- Media Preview -->
-      <div class="media-preview" id="media-preview">
-        <img id="preview-img" style="display:none"/>
-        <video id="preview-video" controls style="display:none"></video>
-        <button class="preview-remove" onclick="clearMedia()">×</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- New AI Proposal Flow -->
-  <div class="card" id="proposal-card">
-    <div class="card-title"><span data-icon="sparkle"></span> <span data-i18n="ai_proposal_title">ELEVAに動画を提案してもらう</span></div>
-    <p style="color:var(--text-secondary);font-size:13px;margin-bottom:14px;" data-i18n="ai_proposal_desc">ジャンルとトレンドデータからAIが3案を提案します。チャットで修正できます。</p>
-    <button class="btn-gold" id="get-proposals-btn" onclick="getVideoProposals()" style="width:100%;padding:14px;font-size:15px;border-radius:30px;display:flex;align-items:center;justify-content:center;gap:8px;">
-      ✨ <span data-i18n="get_proposals">ELEVAに提案してもらう</span>
-    </button>
-
-    <!-- Proposals -->
-    <div id="proposals-area" style="display:none;margin-top:20px;">
-      <div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:12px;">📱 <span data-i18n="proposals_from_eleva">ELEVAからの提案</span></div>
-      <div id="proposals-list"></div>
-    </div>
-
-    <!-- Chat -->
-    <div id="chat-area" style="display:none;margin-top:20px;">
-      <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;" data-i18n="chat_hint">修正したい点をチャットで伝えてください</div>
-      <div id="chat-messages" style="max-height:280px;overflow-y:auto;padding:8px;background:rgba(255,255,255,0.02);border-radius:10px;margin-bottom:10px;"></div>
-      <div style="display:flex;gap:8px;">
-        <input type="text" id="chat-input" data-i18n-ph="chat_input_ph" placeholder="例: もっとスピード感を出して" style="flex:1;padding:10px 14px;background:var(--black-border);border:1px solid rgba(201,168,76,0.3);border-radius:8px;color:#fff;font-size:14px;outline:none;font-family:inherit;" onkeypress="if(event.key==='Enter')sendChatMessage()">
-        <button class="btn-outline" onclick="sendChatMessage()" id="chat-send-btn" style="padding:10px 18px;" data-i18n="send">送信</button>
+    <div style="margin-top:18px;">
+      <label>プラットフォーム</label>
+      <div class="opt-grid" id="platform-grid">
+        <button class="opt-btn active" data-platform="tiktok" type="button">TikTok</button>
+        <button class="opt-btn" data-platform="instagram" type="button">Instagram</button>
+        <button class="opt-btn" data-platform="youtube" type="button">YouTube</button>
       </div>
     </div>
 
-    <!-- Final Generate -->
-    <div id="generate-area" style="display:none;margin-top:20px;">
-      <div style="background:rgba(201,168,76,0.06);border:1px solid var(--gold);border-radius:10px;padding:14px;margin-bottom:14px;">
-        <div style="font-size:11px;color:var(--gold);font-weight:600;margin-bottom:6px;letter-spacing:0.05em;" data-i18n="confirmed_concept">確定したコンセプト</div>
-        <div id="confirmed-concept-text" style="color:#fff;font-size:14px;line-height:1.6;"></div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <button class="btn-gold" id="scenario-gen-btn" onclick="generateScenario()" style="padding:16px 12px;font-size:14px;border-radius:14px;font-weight:700;letter-spacing:.5px;line-height:1.3;">
-          <span style="display:block;font-size:11px;opacity:.7;margin-bottom:2px;letter-spacing:1.5px;" data-i18n="recommended">推奨</span>
-          <span data-i18n="scenario_generate">シナリオ生成</span>
-        </button>
-        <button class="btn-outline" id="final-generate-btn" onclick="generateVideo()" style="padding:16px 12px;font-size:14px;border-radius:14px;font-weight:700;letter-spacing:.5px;line-height:1.3;border:1px solid var(--gold);background:transparent;color:var(--gold);">
-          <span style="display:block;font-size:11px;opacity:.7;margin-bottom:2px;letter-spacing:1.5px;">&nbsp;</span>
-          <span data-i18n="single_generate">単発動画生成</span>
-        </button>
-      </div>
-      <div style="margin-top:10px;color:var(--text-muted);font-size:11px;line-height:1.5;text-align:center;" data-i18n="scenario_hint">シナリオ生成は1テーマを3シーンに自動分解、約30秒のバズ動画に仕上げます（情報量6倍）</div>
-
-      <!-- Scenario progress -->
-      <div id="scenario-progress" style="display:none;margin-top:18px;padding:16px;background:rgba(212,175,55,0.05);border:1px solid var(--gold);border-radius:12px;">
-        <div style="font-size:12px;color:var(--gold);font-weight:600;margin-bottom:10px;letter-spacing:1px;text-transform:uppercase;">シナリオ生成中</div>
-        <div id="scene-rows" style="display:flex;flex-direction:column;gap:8px;"></div>
-        <div id="scenario-merge" style="display:none;margin-top:12px;color:var(--text);font-size:13px;text-align:center;">結合処理中…</div>
+    <div style="margin-top:18px;">
+      <label>動画尺</label>
+      <div class="opt-grid" id="duration-grid">
+        <button class="opt-btn" data-dur="15" type="button">15秒</button>
+        <button class="opt-btn active" data-dur="30" type="button">30秒</button>
+        <button class="opt-btn" data-dur="60" type="button">60秒</button>
       </div>
     </div>
-  </div>
 
-  <!-- Scenario explanation popup (first run) -->
-  <div id="scenario-intro" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);backdrop-filter:blur(6px);z-index:9999;align-items:center;justify-content:center;padding:20px;">
-    <div style="background:#0f0f0f;border:1px solid #1f1f1f;border-radius:18px;width:100%;max-width:420px;padding:30px 26px;font-family:'Inter','Noto Sans JP',sans-serif;box-shadow:0 8px 32px rgba(212,175,55,0.18);">
-      <h3 style="font-size:17px;font-weight:800;letter-spacing:.5px;color:var(--gold);margin-bottom:14px;">シナリオ生成とは？</h3>
-      <p style="color:var(--text-2,#a8a8a8);font-size:13px;line-height:1.75;margin-bottom:22px;">AI が 1 つのテーマから 3 つのシーンに自動分解し、それぞれを並列生成して 30 秒のバズ動画に仕上げます（通常の 6 倍の情報量で再生数 UP）。</p>
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <button onclick="confirmScenarioIntro()" style="background:linear-gradient(135deg,#d4af37,#b8941f);color:#0a0a0a;padding:13px;border:none;border-radius:12px;font-weight:700;font-size:13px;letter-spacing:.5px;cursor:pointer;font-family:inherit;">理解しました、生成する</button>
-        <button onclick="document.getElementById('scenario-intro').style.display='none'" style="background:none;border:none;color:#6b6b6b;font-size:12px;padding:8px;cursor:pointer;font-family:inherit;">キャンセル</button>
+    <button class="btn-gold" id="step1-submit-btn" onclick="step1Submit()">プロンプトを作成する</button>
+  </section>
+
+  <!-- STEP 2 — Scenario confirmation -->
+  <section class="card hidden" id="step2-card">
+    <div class="card-title"><span class="step-badge">STEP 2</span> プロンプト確認</div>
+
+    <div id="overall-info" style="padding:14px 16px;background:rgba(201,168,76,0.06);border:1px solid var(--border-gold);border-radius:12px;margin-bottom:16px;">
+      <div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:.08em;margin-bottom:4px;">動画タイトル</div>
+      <div id="overall-title" style="font-size:15px;color:#fff;font-weight:600;line-height:1.4;"></div>
+      <div id="overall-meta" style="font-size:12px;color:var(--text-secondary);margin-top:6px;line-height:1.5;"></div>
+    </div>
+
+    <div id="scenes-list"></div>
+
+    <div class="chat-wrap">
+      <div style="font-size:13px;color:var(--gold);font-weight:700;margin-bottom:10px;letter-spacing:.04em;">修正を依頼する</div>
+      <div style="font-size:11.5px;color:var(--text-muted);margin-bottom:10px;line-height:1.55;">例：「もっと元気な雰囲気に」「シーン3の尺を伸ばして」「テロップを短く」</div>
+      <div class="chat-msgs" id="chat-msgs"></div>
+      <div class="chat-input-row">
+        <input type="text" id="chat-input" placeholder="修正内容を入力..." onkeypress="if(event.key==='Enter')step2SendChat()"/>
+        <button class="btn-outline" id="chat-send-btn" onclick="step2SendChat()" style="padding:11px 18px;white-space:nowrap;">送信</button>
       </div>
     </div>
-  </div>
 
-  <!-- Scenario Modal -->
-  <div id="scenario-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:1000;overflow-y:auto;padding:24px 12px;">
-    <div style="max-width:720px;margin:0 auto;background:var(--black-card);border:1px solid var(--border-gold);border-radius:16px;padding:24px;color:#fff;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <div style="font-size:18px;font-weight:700;color:var(--gold);">シナリオ作成</div>
-        <button onclick="closeScenarioModal()" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer;">×</button>
-      </div>
-      <div id="scenario-step-1">
-        <div style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;">カテゴリを選択してください。バズ分析データを元にClaudeが3パターンのシナリオを生成します。</div>
-        <div id="scenario-cat-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
-          <button class="genre-btn" onclick="pickScenarioCategory('料理')">料理</button>
-          <button class="genre-btn" onclick="pickScenarioCategory('美容')">美容</button>
-          <button class="genre-btn" onclick="pickScenarioCategory('フィットネス')">フィットネス</button>
-          <button class="genre-btn" onclick="pickScenarioCategory('旅行')">旅行</button>
-          <button class="genre-btn" onclick="pickScenarioCategory('ビジネス')">ビジネス</button>
-          <button class="genre-btn" onclick="pickScenarioCategory('エンタメ')">エンタメ</button>
-        </div>
-      </div>
-      <div id="scenario-step-2" style="display:none;">
-        <div id="scenario-loading" style="text-align:center;color:var(--text-secondary);padding:40px 0;">
-          <div style="font-size:14px;">シナリオを生成中...</div>
-        </div>
-        <div id="scenario-error" style="display:none;color:#ff6b6b;font-size:13px;padding:16px;border-radius:8px;background:rgba(255,107,107,0.08);margin-bottom:12px;"></div>
-        <div id="scenario-patterns" style="display:none;"></div>
-        <div style="text-align:center;margin-top:16px;">
-          <button class="btn-outline" onclick="resetScenarioModal()" style="font-size:13px;">カテゴリ選択に戻る</button>
-        </div>
-      </div>
-    </div>
-  </div>
+    <button class="btn-outline" onclick="goToStep(1)" style="width:100%;margin-top:14px;">← 最初からやり直す</button>
+  </section>
 
-  <!-- Post Preparation Modal -->
-  <!-- Buzz Style Modal -->
-  <div id="buzz-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;padding:20px;overflow-y:auto;">
-    <div style="max-width:500px;margin:40px auto;background:var(--black-card);border:1px solid var(--gold);border-radius:16px;padding:24px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-        <h3 id="buzz-modal-title" style="color:var(--gold);font-size:16px;letter-spacing:.05em;"></h3>
-        <button onclick="document.getElementById('buzz-modal').style.display='none'" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer;">×</button>
-      </div>
-      <div id="buzz-modal-content"></div>
+  <!-- STEP 3 — Generating -->
+  <section class="card hidden" id="step3-card">
+    <div class="card-title"><span class="step-badge">STEP 3</span> 生成中</div>
+    <div class="loader-wrap">
+      <div class="loader"></div>
+      <div class="loader-text" id="loader-text">動画を生成中です...</div>
+      <div class="loader-sub" id="loader-sub">通常1〜3分ほどかかります。このページを閉じても生成は続きます。</div>
     </div>
-  </div>
+  </section>
 
-  <div id="post-prep-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:1000;overflow-y:auto;padding:24px 12px;">
-    <div style="max-width:640px;margin:0 auto;background:var(--black-card);border:1px solid var(--border-gold);border-radius:16px;padding:24px;color:#fff;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <div style="font-size:18px;font-weight:700;color:var(--gold);">投稿準備</div>
-        <button onclick="closePostPrepModal()" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer;">×</button>
-      </div>
-      <div id="post-prep-upsell" style="display:none;background:rgba(201,168,76,0.06);border:1px solid var(--border-gold);border-radius:12px;padding:20px;text-align:center;margin-bottom:16px;">
-        <div style="font-size:14px;color:var(--gold);font-weight:600;margin-bottom:8px;" data-i18n="post_prep_upsell">🔒 キャプション・ハッシュタグ自動生成はStarter以上で利用できます</div>
-        <div style="display:flex;gap:10px;justify-content:center;margin-top:12px;">
-          <a href="/pricing.html" class="btn-gold" style="text-decoration:none;padding:10px 20px;border-radius:8px;font-size:13px;" data-i18n="upgrade_plan">プランをアップグレード</a>
-          <button class="btn-outline" onclick="document.getElementById('post-prep-upsell').style.display='none';document.getElementById('post-prep-content').style.display='block';" style="font-size:13px;" data-i18n="enter_manually">自分で入力する</button>
-        </div>
-      </div>
-      <div id="post-prep-content">
-        <div style="color:var(--text-secondary);font-size:12px;margin-bottom:12px;" data-i18n="post_which_sns">どのSNSに投稿しますか？</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;" id="post-sns-btns">
-          <button class="btn-outline post-sns-btn active" data-platform="tiktok" onclick="selectPostSNS('tiktok',this)" style="font-size:12px;padding:8px 16px;">TikTok</button>
-          <button class="btn-outline post-sns-btn" data-platform="instagram" onclick="selectPostSNS('instagram',this)" style="font-size:12px;padding:8px 16px;">Instagram</button>
-          <button class="btn-outline post-sns-btn" data-platform="x" onclick="selectPostSNS('x',this)" style="font-size:12px;padding:8px 16px;">X</button>
-          <button class="btn-outline post-sns-btn" data-platform="youtube" onclick="selectPostSNS('youtube',this)" style="font-size:12px;padding:8px 16px;">YouTube</button>
-        </div>
-        <!-- Posting Materials -->
-        <div id="posting-materials" style="display:none;margin-bottom:16px;">
-          <div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:12px;">📱 投稿素材（トレンドデータより）</div>
-          <div id="pm-bgm" style="margin-bottom:12px;">
-            <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">🎵 おすすめBGM</div>
-            <div id="pm-bgm-list" style="font-size:13px;color:var(--text-secondary);"></div>
-          </div>
-          <div id="pm-effects" style="margin-bottom:12px;">
-            <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">✨ おすすめエフェクト</div>
-            <div id="pm-effects-list" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
-          </div>
-          <div style="margin-bottom:12px;">
-            <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">📝 テロップ提案</div>
-            <textarea id="pm-telop" rows="2" style="width:100%;background:var(--black-border);border:1px solid rgba(201,168,76,0.15);color:#fff;padding:10px;border-radius:8px;font-family:inherit;font-size:13px;resize:vertical;outline:none;"></textarea>
-          </div>
-        </div>
-        <div style="margin-bottom:14px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <label style="color:var(--text-secondary);font-size:12px;" data-i18n="ai_caption">AIキャプション</label>
-            <button class="btn-outline" onclick="generateAllPostMaterials()" id="gen-cap-btn" style="font-size:11px;padding:4px 12px;">✨ AI生成</button>
-          </div>
-          <textarea id="post-caption" rows="4" data-i18n-ph="caption_ph" placeholder="キャプションを入力..." style="width:100%;background:var(--black-border);border:1px solid rgba(201,168,76,0.3);color:#fff;padding:12px;border-radius:8px;font-family:'Inter',sans-serif;font-size:14px;resize:vertical;outline:none;"></textarea>
-        </div>
-        <div style="margin-bottom:14px;">
-          <label style="color:var(--text-secondary);font-size:12px;display:block;margin-bottom:6px;" data-i18n="hashtags">ハッシュタグ</label>
-          <textarea id="post-hashtags" rows="3" placeholder="#ハッシュタグ" style="width:100%;background:var(--black-border);border:1px solid rgba(201,168,76,0.3);color:#fff;padding:12px;border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;resize:vertical;outline:none;"></textarea>
-        </div>
-        <button class="btn-gold" onclick="copyPostContent()" style="width:100%;font-size:14px;padding:14px;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:8px;">📋 <span data-i18n="copy_to_post">コピーしてSNSアプリで投稿する</span></button>
-        <div id="post-guide" style="display:none;margin-top:16px;background:rgba(255,255,255,0.03);border-radius:10px;padding:16px;">
-          <div style="font-size:13px;font-weight:600;color:var(--gold);margin-bottom:10px;" id="guide-title"></div>
-          <div style="font-size:12px;color:var(--text-secondary);line-height:1.8;" id="guide-steps"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Prompt Optimization Result -->
-  <div class="optimize-panel" id="optimize-panel">
-    <div class="opt-summary" id="opt-summary">最適化されたプロンプト</div>
-    <div id="opt-rows"></div>
-    <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;">
-      <button class="btn-gold" onclick="useOptimized()" data-i18n="generate_btn">この内容で動画生成</button>
-      <button class="btn-outline" onclick="document.getElementById('optimize-panel').style.display='none'">再編集する</button>
-    </div>
-  </div>
-
-  <!-- Duration -->
-  <div class="card">
-    <div class="card-title"><span data-icon="history"></span> <span data-i18n="video_duration">動画尺</span></div>
-    <div class="duration-grid" id="dur-grid">
-      <button class="dur-btn active" onclick="selectDur(this,5)" data-i18n="duration_5s">5秒</button>
-      <button class="dur-btn" onclick="selectDur(this,15)" data-i18n="duration_15s">15秒</button>
-      <button class="dur-btn" onclick="selectDur(this,30)" data-i18n="duration_30s">30秒</button>
-      <button class="dur-btn" onclick="selectDur(this,60)" data-i18n="duration_60s">60秒</button>
-      <button class="dur-btn" onclick="selectDur(this,180)" data-i18n="duration_3m">3分</button>
-      <button class="dur-btn" onclick="selectDur(this,0)" data-i18n="duration_ai">AIにお任せ</button>
-    </div>
-  </div>
-
-  <!-- Genre -->
-  <div class="card">
-    <div class="card-title"><span data-icon="star"></span> <span data-i18n="genre_label">ジャンル</span> <span style="color:var(--text-muted);font-size:11px;font-weight:400;">（1つ選択）</span></div>
-    <div style="color:var(--text-secondary);font-size:12px;margin-bottom:8px;font-weight:600;" data-i18n="genre_personal_label">個人向け</div>
-    <div class="genre-grid" id="genre-grid-personal">
-      <button class="genre-btn active" onclick="pickGenre(this,'food')" data-i18n="genre_food">料理・グルメ</button>
-      <button class="genre-btn" onclick="pickGenre(this,'fashion')" data-i18n="genre_fashion">ファッション</button>
-      <button class="genre-btn" onclick="pickGenre(this,'beauty')" data-i18n="genre_beauty">美容・コスメ</button>
-      <button class="genre-btn" onclick="pickGenre(this,'travel')" data-i18n="genre_travel">旅行・観光</button>
-      <button class="genre-btn" onclick="pickGenre(this,'sports')" data-i18n="genre_sports">スポーツ</button>
-      <button class="genre-btn" onclick="pickGenre(this,'game')" data-i18n="genre_game">ゲーム</button>
-      <button class="genre-btn" onclick="pickGenre(this,'business_side')" data-i18n="genre_business_side">ビジネス・副業</button>
-      <button class="genre-btn" onclick="pickGenre(this,'education')" data-i18n="genre_education">教育・学習</button>
-      <button class="genre-btn" onclick="pickGenre(this,'pet')" data-i18n="genre_pet">ペット</button>
-      <button class="genre-btn" onclick="pickGenre(this,'music')" data-i18n="genre_music">音楽</button>
-      <button class="genre-btn" onclick="pickGenre(this,'art')" data-i18n="genre_art">アート・クリエイティブ</button>
-      <button class="genre-btn" onclick="pickGenre(this,'lifestyle')" data-i18n="genre_lifestyle">ライフスタイル</button>
-      <button class="genre-btn" onclick="pickGenre(this,'news')" data-i18n="genre_news">ニュース・時事</button>
-      <button class="genre-btn" onclick="pickGenre(this,'fitness')" data-i18n="genre_fitness">フィットネス</button>
-      <button class="genre-btn" onclick="pickGenre(this,'bike')" data-i18n="genre_bike">バイク・車</button>
-      <button class="genre-btn" onclick="pickGenre(this,'other')" data-i18n="genre_other">その他（カスタム）</button>
-    </div>
-    <div id="custom-genre-wrap" style="display:none;margin-top:12px;">
-      <input type="text" id="custom-genre-input" maxlength="40" oninput="onCustomGenreInput(this.value)" onblur="saveCustomGenre()" placeholder="ジャンル名を自由に入力（例：鉄道、DIY、釣り、投資…）" style="width:100%;background:var(--black-border);border:1px solid rgba(201,168,76,0.3);color:#fff;padding:10px 14px;border-radius:10px;font-size:14px;font-family:inherit;outline:none;"/>
-      <div style="color:var(--text-muted);font-size:11px;margin-top:6px;">入力内容はあなたのプロフィールに保存され、次回以降も自動入力されます</div>
-    </div>
-    <div style="color:var(--text-secondary);font-size:12px;margin:14px 0 8px;font-weight:600;" data-i18n="genre_business_label">業者向け</div>
-    <div class="genre-grid" id="genre-grid-business">
-      <button class="genre-btn" onclick="pickGenre(this,'shop_pr')" data-i18n="genre_shop_pr">お店PR</button>
-      <button class="genre-btn" onclick="pickGenre(this,'product_sale')" data-i18n="genre_product_sale">商品販売</button>
-      <button class="genre-btn" onclick="pickGenre(this,'restaurant')" data-i18n="genre_restaurant">飲食店PR</button>
-      <button class="genre-btn" onclick="pickGenre(this,'salon')" data-i18n="genre_salon">サロン・美容室</button>
-      <button class="genre-btn" onclick="pickGenre(this,'real_estate')" data-i18n="genre_real_estate">不動産</button>
-      <button class="genre-btn" onclick="pickGenre(this,'event')" data-i18n="genre_event">イベント告知</button>
-    </div>
-  </div>
-
-  <!-- AI & Commercial Disclosure -->
-  <div class="card">
-    <div class="card-title"><span data-icon="sparkle"></span> <span data-i18n="disclosure_title">AI開示・商業コンテンツ</span></div>
-    <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--border-gold);border-radius:10px;background:rgba(201,168,76,0.06);margin-bottom:12px;cursor:not-allowed;">
-      <input type="checkbox" id="ai-disclose" checked disabled style="width:18px;height:18px;accent-color:var(--gold);">
-      <div style="flex:1;">
-        <div style="color:#fff;font-size:14px;font-weight:600;" data-i18n="ai_disclosure_label">AI生成コンテンツとして開示</div>
-        <div style="color:var(--text-secondary);font-size:12px;margin-top:2px;" data-i18n="ai_disclosure_required">TikTok / Instagramの規約に基づき、ELEVAで生成した動画は常に開示されます（変更不可）</div>
-      </div>
-    </label>
-    <div style="color:var(--text-secondary);font-size:12px;margin-bottom:8px;" data-i18n="commercial_disclosure">商業コンテンツ開示（TikTok）</div>
-    <div style="display:flex;flex-direction:column;gap:8px;">
-      <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--black-border);border-radius:8px;cursor:pointer;">
-        <input type="radio" name="commercial" value="none" checked style="accent-color:var(--gold);">
-        <span style="color:#fff;font-size:13px;" data-i18n="commercial_none">どちらでもない（個人投稿）</span>
-      </label>
-      <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--black-border);border-radius:8px;cursor:pointer;">
-        <input type="radio" name="commercial" value="brand_organic" style="accent-color:var(--gold);">
-        <span style="color:#fff;font-size:13px;" data-i18n="commercial_organic">自分のブランド・ビジネスのPR</span>
-      </label>
-      <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--black-border);border-radius:8px;cursor:pointer;">
-        <input type="radio" name="commercial" value="brand_content" style="accent-color:var(--gold);">
-        <span style="color:#fff;font-size:13px;" data-i18n="commercial_sponsored">第三者ブランドのPR（案件・タイアップ）</span>
-      </label>
-    </div>
-    <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;margin-top:12px;border:1px solid var(--black-border);border-radius:8px;cursor:pointer;">
-      <input type="checkbox" id="ig-ai-tag" checked style="width:16px;height:16px;accent-color:var(--gold);">
-      <span style="color:#fff;font-size:13px;" data-i18n="ig_ai_autotag">Instagram キャプションに #AI生成 を自動追加</span>
-    </label>
-  </div>
-
-  <!-- Legacy Generate Button (hidden — new flow uses #final-generate-btn) -->
-  <div style="text-align:center;margin:24px 0;display:none;">
-    <button class="btn-gold" id="gen-btn" onclick="generateVideo()" style="font-size:18px;padding:16px 48px;border-radius:50px;" data-i18n="generate_btn">動画を生成</button>
-  </div>
-  <div style="text-align:center;margin:8px 0;">
-    <div id="gen-status" style="color:var(--text-secondary);font-size:13px;margin-top:10px;display:none;"></div>
-  </div>
-
-  <!-- Result -->
-  <div class="result-area" id="result-area">
-    <video class="result-video" id="result-video" controls></video>
-    <p style="color:var(--text-muted);font-size:12px;margin-top:8px;display:flex;align-items:center;gap:6px;"><span data-icon="photo"></span> <span data-i18n="screenshot_tip">各シーンをスクリーンショットしてInstagramカルーセルにも使えます</span></p>
+  <!-- STEP 4 — Completed -->
+  <section class="card hidden" id="step4-card">
+    <div class="card-title"><span class="step-badge">STEP 4</span> 完了</div>
+    <video class="result-video" id="result-video" controls playsinline></video>
     <div class="result-actions">
-      <button class="btn-gold" onclick="downloadVideo()" data-i18n="download" style="display:flex;align-items:center;gap:6px;"><span data-icon="download"></span> ダウンロード</button>
-      <button class="btn-gold" id="btn-post-prep" onclick="openPostPrepModal()" style="display:flex;align-items:center;gap:6px;background:#1A1500;color:var(--gold);border:1px solid var(--gold);"><span data-icon="share"></span> 投稿準備</button>
+      <button class="btn-gold" id="download-btn" onclick="downloadVideo()" style="margin-top:0;">ダウンロード</button>
+      <button class="btn-outline" onclick="restartFlow()" style="padding:14px;">もう一度作る</button>
     </div>
-    <!-- Split Suggestion -->
-    <div class="split-card" id="split-card">
-      <div class="split-title"><span data-icon="scissors"></span> <span data-i18n="split_title">分割投稿の提案</span></div>
-      <div class="split-body" id="split-body"></div>
-      <div class="split-actions">
-        <button class="btn-gold" onclick="addToSchedule()" style="font-size:13px;padding:10px 18px;" data-i18n="split_schedule">分割して投稿スケジュールに追加</button>
-        <button class="btn-outline" style="font-size:13px;padding:10px 18px;" onclick="document.getElementById('split-card').style.display='none'" data-i18n="keep_single">このまま1本で投稿</button>
-      </div>
-    </div>
-  </div>
+  </section>
+</div>
 
-  <!-- Buzz Style -->
-  <div class="card" style="margin-top:20px;">
-    <div class="card-title"><span data-icon="fire"></span> <span data-i18n="buzz_style_title">国別バズり方</span></div>
-    <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px;" data-i18n="buzz_style_desc">あなたの言語設定に合わせた動画スタイル・テロップ・BGM・ペースのガイド</p>
-    <button id="buzz-style-btn" onclick="showBuzzStyle()" style="background:transparent;border:1px solid var(--gold);color:var(--gold);padding:8px 18px;border-radius:20px;font-size:13px;cursor:pointer;letter-spacing:.05em;display:inline-flex;align-items:center;gap:6px;">
-      ⚡ <span data-i18n="buzz_style_btn">この国のバズり方を見る</span>
-    </button>
+<footer style="text-align:center;padding:24px 16px 32px;color:#555;font-size:11px;letter-spacing:.05em;">
+  <div style="margin-bottom:8px;">
+    <a href="/commerce.html" target="_blank" style="color:#666;margin:0 10px;">特定商取引法に基づく表記</a>
+    <a href="/privacy.html" target="_blank" style="color:#666;margin:0 10px;">プライバシーポリシー</a>
+    <a href="/terms.html" target="_blank" style="color:#666;margin:0 10px;">利用規約</a>
   </div>
+  <div>© 2026 株式会社LETIZIA All rights reserved.</div>
+</footer>
 
-  <!-- Posting Schedule -->
-  <div class="card" style="margin-top:20px;">
-    <div class="card-title"><span data-icon="calendar"></span> <span data-i18n="best_post_times">最適投稿時間</span></div>
-    <div id="schedule-wrap">
-      <table class="schedule-table" id="schedule-table">
-        <thead>
-          <tr>
-            <th data-i18n="platform">プラットフォーム</th>
-            <th data-i18n="genre">ジャンル</th>
-            <th data-i18n="best_days">最適曜日</th>
-            <th data-i18n="best_time">最適時間</th>
-          </tr>
-        </thead>
-        <tbody id="schedule-body">
-          <tr><td colspan="4" style="color:var(--text-muted);text-align:center;padding:20px;" data-i18n="loading">読み込み中...</td></tr>
-        </tbody>
-      </table>
-    </div>
+<!-- Fixed bottom generate button (shown only on step 2) -->
+<div class="generate-bar" id="generate-bar">
+  <div class="generate-bar-inner">
+    <button class="generate-bar-btn" id="bottom-generate-btn" onclick="generateVideo()">このプロンプトで生成する</button>
+    <div class="generate-bar-hint">シナリオを確認したらここから動画生成を開始</div>
   </div>
 </div>
 
-<!-- Smart Suggestion Panel -->
-<div class="suggestion-panel" id="sugg-panel">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-    <div class="sugg-title" style="display:flex;align-items:center;gap:8px;"><span data-icon="fire"></span> 次の投稿提案</div>
-    <button onclick="closeSuggestions()" style="background:none;border:none;color:#666;font-size:20px;cursor:pointer;">×</button>
-  </div>
-  <div id="sugg-list"></div>
-</div>
-
-<script src="/eleva-i18n.js?v=20260418"></script>
-<script src="/eleva-shared.js?v=20260418"></script>
-<script>document.addEventListener('DOMContentLoaded',()=>{if(window.ELEVA_applyIcons)window.ELEVA_applyIcons();});</script>
+<script src="/eleva-i18n.js?v=20260422"></script>
+<script src="/eleva-shared.js?v=20260422"></script>
 <script>
-const SUPABASE_URL=ELEVA.SUPABASE_URL;
-const SUPABASE_ANON_KEY=ELEVA.SUPABASE_ANON_KEY;
-const sb=ELEVA.getSupabase();
-let currentUser=null;
-let selectedDuration=5;
-let selectedGenres=['food'];
-let selectedSNS=['instagram'];
-let inputImageUrl=null;
-let inputVideoUrl=null;
-let sourceUrl=null;
-let optimizedData=null;
-let currentTaskId=null;
-let currentGenId=null;
-let cameraStream=null;
+const SUPABASE_URL = ELEVA.SUPABASE_URL;
+const SUPABASE_ANON_KEY = ELEVA.SUPABASE_ANON_KEY;
+const SUPABASE_FN_BASE = SUPABASE_URL + '/functions/v1';
+const sb = ELEVA.getSupabase();
 
-// ─ SNS ───────────────────────────────────────────────────
-function toggleSNS(el,platform){
-  el.classList.toggle('selected');
-  updateSelectedSNS();
+// ---- State ----
+let currentUser = null;
+let currentStep = 1;
+let selectedPlatform = 'tiktok';
+let selectedDuration = 30;
+let currentScenario = null;        // scenario returned by scenario-generate
+let currentScenarioJobId = null;   // multi_scene_jobs.id
+let currentIntent = '';            // the original user intent text
+let currentTaskId = null;
+let currentGenId = null;
+let pollingInterval = null;
+
+// ---- Utils ----
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function showAlert(msg, type){
+  type = type || 'error';
+  document.getElementById('global-alert').innerHTML = '<div class="alert '+type+'">'+esc(msg)+'</div>';
 }
-function updateSelectedSNS(){
-  selectedSNS=Array.from(document.querySelectorAll('.sns-item.selected')).map(el=>el.dataset?.plat||el.querySelector('.plat-name')?.textContent?.toLowerCase()||'');
-}
+function clearAlert(){document.getElementById('global-alert').innerHTML = '';}
 
-// ─ Duration ──────────────────────────────────────────────
-function selectDur(btn,sec){
-  document.querySelectorAll('.dur-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  selectedDuration=sec;
-}
-
-// ─ Scenario generation (multi-scene parallel) ────────
-const SUPABASE_FN_BASE='https://syxctolgqhdtcoaothwi.supabase.co/functions/v1';
-let _scenarioJob=null;
-
-function confirmScenarioIntro(){
-  localStorage.setItem('eleva_scenario_intro_seen','1');
-  document.getElementById('scenario-intro').style.display='none';
-  startScenarioGeneration();
+async function authHeaders(){
+  // Attach Supabase JWT so Edge Functions can identify the caller via auth.getUser().
+  // Falls back to the anon key when the user is unauthenticated (scenario-generate will refuse in that case).
+  const {data:{session}} = await sb.auth.getSession();
+  return {
+    'Content-Type':'application/json',
+    'apikey': SUPABASE_ANON_KEY,
+    'Authorization': 'Bearer ' + (session?.access_token || SUPABASE_ANON_KEY),
+  };
 }
 
-async function generateScenario(){
-  const seen=localStorage.getItem('eleva_scenario_intro_seen');
-  if(!seen){
-    document.getElementById('scenario-intro').style.display='flex';
-    return;
-  }
-  startScenarioGeneration();
-}
-
-async function startScenarioGeneration(){
-  const prompt=(finalPrompt||document.getElementById('prompt-input').value||'').trim();
-  if(!prompt){alert('先にコンセプトを確定してください。');return;}
-  if(currentUser){
-    try{
-      const {data:p}=await sb.from('profiles').select('credits_remaining,plan_type').eq('id',currentUser.id).single();
-      if(p&&p.credits_remaining!=null&&p.credits_remaining<=0){showUpgradeModal(p.plan_type||'free',0);return;}
-    }catch(e){}
-  }
-  const btn=document.getElementById('scenario-gen-btn');
-  btn.disabled=true;btn.style.opacity='.6';
-  document.getElementById('scenario-progress').style.display='block';
-  document.getElementById('scenario-merge').style.display='none';
-
-  const {data:{session}}=await sb.auth.getSession();
-  const headers={'Content-Type':'application/json',apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+(session?.access_token||SUPABASE_ANON_KEY)};
-  try{
-    const res=await fetch(SUPABASE_FN_BASE+'/scenario-generate',{method:'POST',headers,body:JSON.stringify({prompt})});
-    if(!res.ok){const t=await res.text();throw new Error('scenario-generate '+res.status+': '+t);}
-    _scenarioJob=await res.json();
-    const job=_scenarioJob.job||_scenarioJob;
-    renderSceneRows(job.scenario?.scenes||[]);
-    pollScenarioStatus(job.id||_scenarioJob.id||_scenarioJob.job_id);
-  }catch(err){
-    console.error('[scenario]',err);
-    alert('シナリオ生成に失敗しました。\n'+(err.message||err));
-    btn.disabled=false;btn.style.opacity='';
-    document.getElementById('scenario-progress').style.display='none';
-  }
-}
-
-function renderSceneRows(scenes){
-  if(!Array.isArray(scenes)||!scenes.length)scenes=[{title:'シーン1'},{title:'シーン2'},{title:'シーン3'}];
-  document.getElementById('scene-rows').innerHTML=scenes.slice(0,3).map((s,i)=>`
-    <div class="scene-row" data-idx="${i}" style="display:flex;align-items:center;gap:10px;padding:10px;background:#0d0d0d;border:1px solid #1f1f1f;border-radius:8px;">
-      <div style="width:24px;height:24px;border-radius:50%;background:rgba(212,175,55,0.15);color:var(--gold);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;">${i+1}</div>
-      <div style="flex:1;font-size:13px;color:#fff;">${(s.title||s.prompt||'シーン '+(i+1)).slice(0,50)}</div>
-      <div class="scene-status" style="font-size:11px;color:var(--gold);">生成中…</div>
-    </div>
-  `).join('');
-}
-
-async function pollScenarioStatus(jobId){
-  if(!jobId){console.warn('[scenario] no jobId');return;}
-  let attempts=0;
-  const maxAttempts=120; // 10 min @ 5s
-  const interval=setInterval(async()=>{
-    attempts++;
-    if(attempts>maxAttempts){clearInterval(interval);alert('シナリオ生成がタイムアウトしました。履歴から確認してください。');resetScenarioBtn();return;}
-    try{
-      // Poll multi_scene_jobs row directly via PostgREST + child generations for per-scene status
-      const {data:jobRows}=await sb.from('multi_scene_jobs').select('id,status,total_scenes,completed_scenes,final_video_url,scenario,child_generation_ids').eq('id',jobId).limit(1);
-      const job=jobRows?.[0];
-      if(!job)return;
-      const childIds=job.child_generation_ids||[];
-      let children=[];
-      if(childIds.length){
-        const {data:gens}=await sb.from('generations').select('id,status,video_url').in('id',childIds);
-        children=gens||[];
-      }
-      // Merge scene definitions with child status, in array order
-      (job.scenario?.scenes||[]).forEach((_,i)=>{
-        const child=children[i];
-        const row=document.querySelector('.scene-row[data-idx="'+i+'"] .scene-status');
-        if(!row)return;
-        if(!child){row.textContent='待機中';row.style.color='var(--gold)';return;}
-        if(child.status==='completed'||child.video_url){row.textContent='完了';row.style.color='#7fbf7f';}
-        else if(child.status==='failed'){row.textContent='失敗';row.style.color='#bf7f7f';}
-        else row.textContent=child.status||'生成中…';
-      });
-      const merging=(job.completed_scenes>=job.total_scenes)&&job.status!=='completed';
-      if(merging)document.getElementById('scenario-merge').style.display='block';
-      if(job.status==='completed'&&job.final_video_url){
-        clearInterval(interval);
-        showResult(job.final_video_url,job.id);
-        resetScenarioBtn();
-      }
-    }catch(e){console.warn('[scenario] poll error',e);}
-  },5000);
-}
-
-function resetScenarioBtn(){
-  const btn=document.getElementById('scenario-gen-btn');
-  if(btn){btn.disabled=false;btn.style.opacity='';}
-}
-
-// ─ Photo → Video (background removal) ────────────────
-const PV_BG_PRESETS=[
-  {key:'circuit',label:'サーキット',prompt:'a professional race track with blurred stands and dramatic lighting'},
-  {key:'desert',label:'砂漠',prompt:'a vast desert at golden hour with sand dunes and warm light'},
-  {key:'city_night',label:'夜の都市',prompt:'a neon-lit city skyline at night with reflections on wet streets'},
-  {key:'mountain',label:'山岳',prompt:'a dramatic mountain range with clouds and crisp daylight'},
-  {key:'coast',label:'海岸',prompt:'a tropical coastline with clear turquoise water and bright sun'},
-  {key:'studio',label:'スタジオ(白)',prompt:'a clean seamless white studio backdrop with soft studio lighting'},
-  {key:'forest',label:'森',prompt:'a deep green forest with dappled sunlight through the leaves'},
-  {key:'custom',label:'カスタム…',prompt:''},
-];
-
-let pvState={origDataUrl:null,mainSubject:null,bgKey:null,bgPromptOverride:null,removedBgB64:null};
-
-function togglePhotoVideo(){
-  const body=document.getElementById('pv-body');
-  const btn=document.getElementById('pv-toggle');
-  const open=body.style.display==='none';
-  body.style.display=open?'block':'none';
-  btn.textContent=open?'閉じる':'展開';
-}
-
-async function pvHandleUpload(input){
-  const file=input.files&&input.files[0];
-  if(!file)return;
-  const dataUrl=await new Promise((resolve,reject)=>{
-    const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file);
+// ---- Step machine ----
+function goToStep(n){
+  currentStep = n;
+  ['step1-card','step2-card','step3-card','step4-card'].forEach((id,i)=>{
+    document.getElementById(id).classList.toggle('hidden', i+1 !== n);
   });
-  pvState.origDataUrl=dataUrl;
-  document.getElementById('pv-orig-img').src=dataUrl;
-  document.getElementById('pv-step-analyze').style.display='block';
-  document.getElementById('pv-step-bg').style.display='none';
-  document.getElementById('pv-step-gen').style.display='none';
-  document.getElementById('pv-bg-loading').style.display='block';
-  document.getElementById('pv-bg-img').style.display='none';
-  document.getElementById('pv-vision-result').textContent='被写体を解析中…';
-
-  // Kick off vision-analyze + remove-bg in parallel
-  const base64=dataUrl.split(',')[1]||'';
-  const {data:{session}}=await sb.auth.getSession();
-  const token=session?.access_token||SUPABASE_ANON_KEY;
-  const headers={'Content-Type':'application/json',apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+token};
-
-  const visionP=fetch(SUPABASE_FN_BASE+'/vision-analyze',{
-    method:'POST',headers,body:JSON.stringify({image_base64:base64}),
-  }).then(r=>r.json()).catch(e=>({error:e.message||String(e)}));
-
-  const bgP=fetch(SUPABASE_FN_BASE+'/remove-bg',{
-    method:'POST',headers,body:JSON.stringify({image_base64:base64}),
-  }).then(r=>r.json()).catch(e=>({error:e.message||String(e)}));
-
-  const [vision,bg]=await Promise.all([visionP,bgP]);
-
-  // Vision result
-  if(vision&&!vision.error){
-    pvState.mainSubject=vision.main_subject||(Array.isArray(vision.labels)&&vision.labels[0]?.description)||'';
-    const labels=Array.isArray(vision.labels)?vision.labels.slice(0,5).map(l=>l.description||l).filter(Boolean):[];
-    const labelText=labels.length?' · '+labels.join(' / '):'';
-    document.getElementById('pv-vision-result').innerHTML=
-      '<strong style="color:var(--gold);">被写体:</strong> '+escapeHtml(pvState.mainSubject||'(不明)')+
-      (labelText?'<span style="color:var(--text-muted);font-size:12px;">'+escapeHtml(labelText)+'</span>':'');
-  }else{
-    document.getElementById('pv-vision-result').innerHTML='<span style="color:#bf7f7f;">被写体解析失敗: '+escapeHtml(vision?.error||'unknown')+'</span>';
-    pvState.mainSubject=null;
-  }
-
-  // Background removal
-  document.getElementById('pv-bg-loading').style.display='none';
-  if(bg&&bg.image_base64){
-    pvState.removedBgB64=bg.image_base64;
-    const img=document.getElementById('pv-bg-img');
-    img.src='data:image/png;base64,'+bg.image_base64;
-    img.style.display='block';
-  }else{
-    document.getElementById('pv-bg-loading').textContent='背景除去失敗';
-    document.getElementById('pv-bg-loading').style.display='block';
-    document.getElementById('pv-bg-loading').style.color='#bf7f7f';
-  }
-
-  pvRenderBgGrid();
-  document.getElementById('pv-step-bg').style.display='block';
+  document.querySelectorAll('.step-dot').forEach(el=>{
+    const s = Number(el.dataset.step);
+    el.classList.toggle('active', s === n);
+    el.classList.toggle('done', s < n);
+  });
+  // Fixed bottom button visible only on STEP 2
+  document.getElementById('generate-bar').classList.toggle('show', n === 2);
+  window.scrollTo({top:0, behavior:'smooth'});
 }
 
-function pvRenderBgGrid(){
-  const grid=document.getElementById('pv-bg-grid');
-  grid.innerHTML=PV_BG_PRESETS.map(p=>`
-    <button data-key="${p.key}" onclick="pvPickBg('${p.key}')" style="background:var(--black-border);border:1px solid ${pvState.bgKey===p.key?'var(--gold)':'var(--black-border)'};color:${pvState.bgKey===p.key?'var(--gold)':'#fff'};padding:14px 8px;border-radius:10px;cursor:pointer;font-size:12px;font-family:inherit;transition:all .15s;${pvState.bgKey===p.key?'background:rgba(201,168,76,0.1);':''}">${escapeHtml(p.label)}</button>
-  `).join('');
-}
-
-function pvPickBg(key){
-  pvState.bgKey=key;
-  document.getElementById('pv-custom-wrap').style.display=key==='custom'?'block':'none';
-  pvRenderBgGrid();
-  pvUpdateFinalPrompt();
-  document.getElementById('pv-step-gen').style.display='block';
-}
-
-function pvUpdateFinalPrompt(){
-  const preset=PV_BG_PRESETS.find(p=>p.key===pvState.bgKey);
-  if(!preset)return;
-  let bgDesc=preset.prompt;
-  if(preset.key==='custom'){
-    const txt=(document.getElementById('pv-custom-bg')?.value||'').trim();
-    bgDesc=txt||'(背景を入力してください)';
-    pvState.bgPromptOverride=txt;
-  }
-  const subject=pvState.mainSubject||'the subject in the photo';
-  const final='A cinematic video of '+subject+', composited into '+bgDesc+'. Smooth camera motion, professional lighting, photorealistic.';
-  document.getElementById('pv-final-prompt').textContent=final;
-}
-
-document.addEventListener('input',e=>{
-  if(e.target&&e.target.id==='pv-custom-bg')pvUpdateFinalPrompt();
+// ---- Option buttons (platform / duration) ----
+document.querySelectorAll('#platform-grid .opt-btn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('#platform-grid .opt-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    selectedPlatform = b.dataset.platform;
+  });
+});
+document.querySelectorAll('#duration-grid .opt-btn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('#duration-grid .opt-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    selectedDuration = Number(b.dataset.dur);
+  });
 });
 
-function pvReset(){
-  pvState={origDataUrl:null,mainSubject:null,bgKey:null,bgPromptOverride:null,removedBgB64:null};
-  document.getElementById('pv-step-analyze').style.display='none';
-  document.getElementById('pv-step-bg').style.display='none';
-  document.getElementById('pv-step-gen').style.display='none';
-  document.getElementById('pv-photo-input').value='';
-}
+// ---- STEP 1: create scenario via scenario-generate ----
+async function step1Submit(){
+  clearAlert();
+  const intent = (document.getElementById('intent-input').value || '').trim();
+  if(!intent){
+    showAlert('動画の内容を入力してください');
+    return;
+  }
+  if(!currentUser){
+    showAlert('ログインが必要です。ログインページに移動します。');
+    setTimeout(()=>{location.href='/login.html';}, 1500);
+    return;
+  }
+  currentIntent = intent;
 
-async function pvGenerate(){
-  const finalPromptText=document.getElementById('pv-final-prompt').textContent.trim();
-  if(!finalPromptText||finalPromptText.includes('(背景を入力'))return;
-  // Hand off to the existing generateVideo flow by priming the prompt & finalPrompt
-  finalPrompt=finalPromptText;
-  const promptInput=document.getElementById('prompt-input');
-  if(promptInput)promptInput.value=finalPromptText;
-  // Close the photo card and scroll to the generator
-  togglePhotoVideo();
-  if(window.generateVideo)window.generateVideo();
-}
+  const btn = document.getElementById('step1-submit-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ プロンプトを作成中...';
 
-// ─ Upgrade modal ──────────────────────────────────────
-function showUpgradeModal(planType,_remaining){
-  const m=document.getElementById('upgrade-modal');
-  if(!m)return;
-  document.getElementById('upgrade-current-plan').textContent=String(planType||'free').toUpperCase();
-  m.style.display='flex';
-}
-function closeUpgradeModal(){
-  const m=document.getElementById('upgrade-modal');
-  if(m)m.style.display='none';
-}
-async function purchaseAddon(addonType){
-  const btn=document.getElementById('addon-buy-btn');
-  const orig=btn.textContent;btn.disabled=true;btn.textContent='決済画面を開いています…';
   try{
-    const {data:{session}}=await sb.auth.getSession();
-    if(!session){location.href='/login.html?next=/dashboard.html';return;}
-    const res=await fetch(SUPABASE_FN_BASE+'/purchase-addon',{
+    const headers = await authHeaders();
+    const res = await fetch(SUPABASE_FN_BASE + '/scenario-generate', {
       method:'POST',
-      headers:{'Content-Type':'application/json',apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+session.access_token},
-      body:JSON.stringify({addon_type:addonType,success_url:location.origin+'/success.html?type=addon',cancel_url:location.origin+'/dashboard.html'}),
+      headers,
+      body: JSON.stringify({
+        prompt: intent,
+        platform: selectedPlatform,
+        target_duration_sec: selectedDuration,
+        aspect_ratio: '9:16',
+        genre: 'general',
+        userId: currentUser.id,
+      })
     });
-    if(!res.ok){const t=await res.text();throw new Error('purchase-addon '+res.status+': '+t);}
-    const data=await res.json();
-    if(data.url)location.href=data.url;
-    else throw new Error('No checkout URL');
-  }catch(e){
-    console.error('[purchaseAddon]',e);
-    alert('追加購入の決済画面を開けませんでした。\n'+(e.message||e));
-    btn.disabled=false;btn.textContent=orig;
-  }
-}
-
-// ─ Genre (see single-select definition further below) ───
-
-// ─ Media Upload ───────────────────────────────────────────
-async function handlePhotoUpload(input){
-  if(!input.files[0])return;
-  const file=input.files[0];
-  showMediaPreview('img',URL.createObjectURL(file));
-  try{
-    const url=await ELEVA.uploadToStorage(file,currentUser?.id||'anon');
-    inputImageUrl=url;
-  }catch(e){console.error('Upload error:',e);}
-}
-
-async function handleVideoUpload(input){
-  if(!input.files[0])return;
-  const file=input.files[0];
-  if(file.size>100*1024*1024){alert('動画は100MB以下にしてください');return;}
-  showMediaPreview('video',URL.createObjectURL(file));
-  try{
-    const url=await ELEVA.uploadToStorage(file,currentUser?.id||'anon');
-    inputVideoUrl=url;
-  }catch(e){console.error('Upload error:',e);}
-}
-
-function handleUrlInput(url){
-  sourceUrl=url;
-  if(url.match(/\.(jpg|jpeg|png|gif|webp)$/i))inputImageUrl=url;
-  else inputVideoUrl=url;
-}
-
-function toggleUrlInput(){
-  const wrap=document.getElementById('url-input-wrap');
-  wrap.style.display=wrap.style.display==='none'||!wrap.style.display?'block':'none';
-}
-
-function showMediaPreview(type,src){
-  const preview=document.getElementById('media-preview');
-  const img=document.getElementById('preview-img');
-  const video=document.getElementById('preview-video');
-  preview.style.display='block';
-  if(type==='img'){img.src=src;img.style.display='block';video.style.display='none';}
-  else{video.src=src;video.style.display='block';img.style.display='none';}
-}
-
-function clearMedia(){
-  document.getElementById('media-preview').style.display='none';
-  document.getElementById('preview-img').src='';
-  document.getElementById('preview-video').src='';
-  document.getElementById('photo-input').value='';
-  document.getElementById('video-input').value='';
-  document.getElementById('source-url').value='';
-  inputImageUrl=null;inputVideoUrl=null;sourceUrl=null;
-}
-
-// ─ Camera ────────────────────────────────────────────────
-async function openCamera(){
-  try{
-    cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
-    document.getElementById('camera-preview').srcObject=cameraStream;
-    document.getElementById('camera-modal').classList.add('open');
-  }catch(e){alert('カメラへのアクセスが拒否されました');}
-}
-
-function closeCamera(){
-  if(cameraStream)cameraStream.getTracks().forEach(t=>t.stop());
-  document.getElementById('camera-modal').classList.remove('open');
-}
-
-function capturePhoto(){
-  const video=document.getElementById('camera-preview');
-  const canvas=document.createElement('canvas');
-  canvas.width=video.videoWidth;canvas.height=video.videoHeight;
-  canvas.getContext('2d').drawImage(video,0,0);
-  canvas.toBlob(async blob=>{
-    const file=new File([blob],'camera_capture.jpg',{type:'image/jpeg'});
-    showMediaPreview('img',URL.createObjectURL(blob));
-    closeCamera();
-    try{inputImageUrl=await ELEVA.uploadToStorage(file,currentUser?.id||'anon');}catch(e){}
-  },'image/jpeg',0.9);
-}
-
-// ─ Smart Suggestions ─────────────────────────────────────
-async function loadSuggestions(){
-  document.getElementById('sugg-panel').classList.add('open');
-  document.getElementById('sugg-list').innerHTML='<div style="color:var(--text-muted);text-align:center;padding:20px;">読み込み中...</div>';
-  try{
-    const res=await fetch(SUPABASE_URL+'/functions/v1/suggest-next-video',{
-      method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY},
-      body:JSON.stringify({userId:currentUser?.id,platform:selectedSNS[0]||'instagram',genre:selectedGenres[0]||'general',lang:localStorage.getItem('eleva_lang')||'ja'})
-    });
-    const data=await res.json();
-    const suggestions=data.suggestions||data||[];
-    if(!suggestions.length){document.getElementById('sugg-list').innerHTML='<div style="color:var(--text-muted);text-align:center;padding:20px;">提案がありません</div>';return;}
-    document.getElementById('sugg-list').innerHTML=suggestions.map((s,i)=>`
-      <div class="sugg-card" onclick="useSuggestion('${(s.prompt||'').replace(/'/g,"\\'")}')">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
-          <div class="sugg-card-title">${s.title||s.prompt?.slice(0,40)||'提案 '+(i+1)}</div>
-          <div style="display:flex;gap:4px;flex-shrink:0;">
-            ${s.score==='HIGH'||s.priority==='high'?'<span class="badge-high">HIGH</span>':s.score==='LOW'?'<span class="badge-low">LOW</span>':'<span class="badge-med">MED</span>'}
-            ${s.duration?`<span class="dur-badge">${s.duration}秒</span>`:''}
-          </div>
-        </div>
-        <div class="sugg-reason">${s.reason||s.description||''}</div>
-        ${s.trends?.map(t=>`<span class="badge-high" style="margin-right:4px;font-size:9px;">#${t}</span>`).join('')||''}
-        <div style="margin-top:10px;"><button class="btn-gold" style="font-size:12px;padding:7px 14px;" onclick="event.stopPropagation();useSuggestion('${(s.prompt||'').replace(/'/g,"\\'")}')">このプロンプトを使う</button></div>
-      </div>`).join('');
-  }catch(e){document.getElementById('sugg-list').innerHTML='<div style="color:#ff4444;text-align:center;padding:20px;">読み込みエラー</div>';}
-}
-
-function useSuggestion(prompt){
-  document.getElementById('prompt-input').value=prompt;
-  closeSuggestions();
-}
-function closeSuggestions(){document.getElementById('sugg-panel').classList.remove('open');}
-
-// ─ Prompt Optimization ────────────────────────────────────
-async function optimizePrompt(){
-  const prompt=document.getElementById('prompt-input').value;
-  if(!prompt.trim()){alert('プロンプトを入力してください');return;}
-  const panel=document.getElementById('optimize-panel');
-  panel.style.display='block';
-  document.getElementById('opt-summary').textContent='最適化中...';
-  document.getElementById('opt-rows').innerHTML='<div style="color:var(--text-muted);padding:20px;text-align:center;">⚡ 分析中...</div>';
-  try{
-    const res=await fetch(SUPABASE_URL+'/functions/v1/optimize-prompt',{
-      method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY},
-      body:JSON.stringify({prompt,platform:selectedSNS[0]||'instagram',genre:selectedGenres[0]||'general',duration:selectedDuration,userId:currentUser?.id,lang:localStorage.getItem('eleva_lang')||'ja'})
-    });
-    const data=await res.json();
-    optimizedData=data;
-    document.getElementById('opt-summary').textContent=data.summary||data.optimized_prompt||prompt;
-    const rows=[
-      {label:'BGM',value:data.bgm||data.music||'-'},
-      {label:'テロップ',value:data.caption||data.text||'-'},
-      {label:'エフェクト',value:data.effect||'-'},
-      {label:'投稿文',value:data.post_text||'-'},
-      {label:'ハッシュタグ',value:data.hashtags?.join(' ')||'-'}
-    ];
-    document.getElementById('opt-rows').innerHTML=rows.map(r=>`<div class="opt-row"><span class="opt-label">${r.label}</span><span class="opt-value">${r.value}</span></div>`).join('');
-  }catch(e){document.getElementById('opt-rows').innerHTML='<div style="color:#ff4444;">最適化エラー</div>';}
-}
-
-function useOptimized(){
-  if(optimizedData?.optimized_prompt)document.getElementById('prompt-input').value=optimizedData.optimized_prompt;
-  document.getElementById('optimize-panel').style.display='none';
-  generateVideo();
-}
-
-// ─ Generate Video ─────────────────────────────────────────
-async function generateVideo(){
-  if(finalPrompt){document.getElementById('prompt-input').value=finalPrompt;}
-  const prompt=document.getElementById('prompt-input').value.trim();
-  if(!prompt&&!inputImageUrl&&!inputVideoUrl){
-    alert(window.elevaT?elevaT('need_concept_first'):'先にELEVAに動画を提案してもらってください');
-    return;
-  }
-  // Quota check — show upgrade modal when monthly credits are exhausted
-  if(currentUser){
-    try{
-      const {data:p}=await sb.from('profiles').select('credits_remaining,plan_type').eq('id',currentUser.id).single();
-      if(p&&p.credits_remaining!=null&&p.credits_remaining<=0){
-        showUpgradeModal(p.plan_type||'free',0);
-        return;
-      }
-    }catch(e){console.warn('[generateVideo] credit check skipped:',e);}
-  }
-  const btn=document.getElementById('final-generate-btn')||document.getElementById('gen-btn');
-  const status=document.getElementById('gen-status');
-  btn.disabled=true;btn.innerHTML='⏳ '+elevaT('generating');status.style.display='block';
-
-  const pollStatus=async(taskId,genId)=>{
-    status.textContent='🔄 生成中... しばらくお待ちください（通常1〜3分）';
-    // Store in localStorage for background tracking
-    const genData={taskId,generationId:genId,startedAt:Date.now(),platform:selectedSNS[0]||'instagram',genre:selectedGenres[0]||'general'};
-    localStorage.setItem('eleva_generating',JSON.stringify(genData));
-    ELEVA.showGenBanner(taskId,genId,selectedSNS[0]);
-
-    let attempts=0;
-    const interval=setInterval(async()=>{
-      attempts++;
-      if(attempts>60){clearInterval(interval);status.textContent='タイムアウトしました。履歴から確認してください。';btn.disabled=false;if(btn.id==='final-generate-btn'){btn.innerHTML='🎬 <span data-i18n="generate_with_concept">'+elevaT('generate_with_concept')+'</span>';}else{btn.textContent=elevaT('generate_btn');}return;}
-      try{
-        const res=await fetch('/api/video-status?taskId='+taskId+(genId?'&generationId='+genId:''));
-        const data=await res.json();
-        console.log('poll #'+attempts+':',data.status,data.videoUrl?'has video':'no video');
-        if(data.status==='completed'||data.videoUrl||data.video_url){
-          clearInterval(interval);
-          localStorage.removeItem('eleva_generating');
-          document.getElementById('gen-banner')?.remove();
-          const vUrl=data.videoUrl||data.video_url||'';
-          if(vUrl){
-            showResult(vUrl,genId);
-            btn.disabled=false;if(btn.id==='final-generate-btn'){btn.innerHTML='🎬 <span data-i18n="generate_with_concept">'+elevaT('generate_with_concept')+'</span>';}else{btn.textContent=elevaT('generate_btn');}status.style.display='none';
-            checkSplitSuggestion(genId);
-          }else{
-            status.textContent='動画URLが取得できませんでした。履歴から確認してください。';
-            btn.disabled=false;if(btn.id==='final-generate-btn'){btn.innerHTML='🎬 <span data-i18n="generate_with_concept">'+elevaT('generate_with_concept')+'</span>';}else{btn.textContent=elevaT('generate_btn');}
-          }
-        }else if(data.status==='failed'){
-          clearInterval(interval);
-          const errDetail=data.error||data.message||'';
-          status.textContent='生成に失敗しました。'+(errDetail?' ('+errDetail+')':'')+'再度お試しください。';
-          console.error('Video generation failed:',JSON.stringify(data));
-          btn.disabled=false;if(btn.id==='final-generate-btn'){btn.innerHTML='🎬 <span data-i18n="generate_with_concept">'+elevaT('generate_with_concept')+'</span>';}else{btn.textContent=elevaT('generate_btn');}
-          localStorage.removeItem('eleva_generating');
-        }else{
-          status.textContent='🔄 生成中... ('+Math.floor(attempts*8/60)+'分'+((attempts*8)%60)+'秒経過)';
-        }
-      }catch(e){console.error('Poll error:',e);}
-    },8000);
-  };
-
-  try{
-    const disclosure=getDisclosureState();
-    const body={
-      prompt,userId:currentUser?.id,platform:selectedSNS[0]||'instagram',
-      genre:selectedGenres[0]||'general',duration:parseInt(selectedDuration)||5,
-      lang:localStorage.getItem('eleva_lang')||'ja',
-      ai_disclosed:disclosure.aiDisclosed,
-      commercial:disclosure.commercial,
-      ig_auto_tag_ai:disclosure.igAutoTagAI,
-      ...(inputImageUrl&&{input_image_url:inputImageUrl}),
-      ...(inputVideoUrl&&{input_video_url:inputVideoUrl}),
-      ...(sourceUrl&&{source_url:sourceUrl})
-    };
-    status.textContent='⚡ '+(window.elevaT?elevaT('generating_request'):'生成リクエストを送信中...');
-    const res=await fetch('/api/generate-video',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(body)
-    });
-    const data=await res.json();
-    console.log('generate-video response:',JSON.stringify(data));
-    if(data.error&&!data.success)throw new Error(data.error);
-    currentTaskId=data.taskId||data.task_id;
-    currentGenId=data.generationId||data.generation_id||data.id;
-    if(!currentTaskId){throw new Error('taskId not returned: '+JSON.stringify(data).slice(0,200));}
-    await pollStatus(currentTaskId,currentGenId);
-  }catch(e){
-    console.error('generateVideo error:',e);
-    status.textContent='エラー: '+e.message;
-    btn.disabled=false;if(btn.id==='final-generate-btn'){btn.innerHTML='🎬 <span data-i18n="generate_with_concept">'+elevaT('generate_with_concept')+'</span>';}else{btn.textContent=elevaT('generate_btn');}
-  }
-}
-
-function showResult(videoUrl,genId){
-  const area=document.getElementById('result-area');
-  document.getElementById('result-video').src=videoUrl;
-  area.style.display='block';
-  area.scrollIntoView({behavior:'smooth'});
-  if(Notification.permission==='granted'){
-    new Notification('ELEVA',{body:elevaT('push_completed'),icon:'/icon.png'});
-  }
-}
-
-async function checkSplitSuggestion(genId){
-  try{
-    const res=await fetch(SUPABASE_URL+'/functions/v1/video-split-suggest',{
-      method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY},
-      body:JSON.stringify({action:'suggest_split',generationId:genId,userId:currentUser?.id,durationSec:selectedDuration,platform:selectedSNS[0]||'instagram',lang:localStorage.getItem('eleva_lang')||'ja'})
-    });
-    const data=await res.json();
-    if(data.should_split){
-      const card=document.getElementById('split-card');
-      document.getElementById('split-body').innerHTML=`
-        <strong>${data.reason||'この動画は分割して投稿することで効果が高まります'}</strong><br/>
-        <span style="color:var(--gold);">${data.clips||2}本に分割 × 各${data.clip_duration||30}秒</span>
-      `;
-      card.style.display='block';
+    const data = await res.json();
+    if(!res.ok || data.success === false){
+      throw new Error(data.error || ('HTTP '+res.status));
     }
-  }catch(e){}
-}
-
-async function addToSchedule(){
-  try{
-    const entries=parseInt(document.getElementById('split-body').querySelector('span')?.textContent)||2;
-    for(let i=0;i<entries;i++){
-      await sb.from('content_calendar').insert({user_id:currentUser?.id,generation_id:currentGenId,platform:selectedSNS[0],clip_index:i});
-    }
-    alert('投稿スケジュールに追加しました！');
-    document.getElementById('split-card').style.display='none';
-  }catch(e){alert('スケジュールへの追加に失敗しました');}
-}
-
-function downloadVideo(){
-  const url=document.getElementById('result-video').src;
-  if(!url)return;
-  const a=document.createElement('a');a.href=url;a.download='eleva_video.mp4';a.click();
-}
-
-function shareVideo(){
-  const url=document.getElementById('result-video').src;
-  if(navigator.share){navigator.share({title:'ELEVA生成動画',url});}
-  else{navigator.clipboard.writeText(url).then(()=>alert('URLをコピーしました'));}
-}
-
-// ─ Posting Schedule ───────────────────────────────────────
-async function loadPostingSchedule(){
-  try{
-    const res=await fetch(SUPABASE_URL+'/functions/v1/video-insights',{
-      method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY},
-      body:JSON.stringify({action:'best_times',userId:currentUser?.id})
-    });
-    const data=await res.json();
-    const times=data.best_times||[];
-    if(!times.length){
-      // Default schedule
-      const _t=window.elevaT||function(k){return k;};
-      document.getElementById('schedule-body').innerHTML=`
-        <tr><td>TikTok</td><td style="color:var(--text-secondary);">${_t('genre_entertainment')}</td><td>火・木・土</td><td>19:00-21:00</td></tr>
-        <tr><td>Instagram</td><td style="color:var(--text-secondary);">${_t('genre_lifestyle')}</td><td>水・金</td><td>12:00-13:00</td></tr>
-        <tr><td>YouTube</td><td style="color:var(--text-secondary);">${_t('genre_education')}</td><td>土・日</td><td>20:00-22:00</td></tr>
-      `;
-      return;
-    }
-    document.getElementById('schedule-body').innerHTML=times.map(t=>`<tr><td>${t.platform}</td><td style="color:var(--text-secondary);">${t.genre||'-'}</td><td>${t.best_days||'-'}</td><td>${t.best_time||'-'}</td></tr>`).join('');
+    currentScenario = data.scenario || {scenes:[]};
+    currentScenarioJobId = data.job_id || null;
+    renderScenario(currentScenario, data);
+    goToStep(2);
   }catch(e){
-    const _t=window.elevaT||function(k){return k;};
-    document.getElementById('schedule-body').innerHTML=`
-      <tr><td>TikTok</td><td style="color:var(--text-secondary);">${_t('genre_general')}</td><td>火・木・土</td><td>19:00-21:00</td></tr>
-      <tr><td>Instagram</td><td style="color:var(--text-secondary);">${_t('genre_general')}</td><td>水・金</td><td>12:00-13:00</td></tr>
-    `;
-  }
-}
-
-// ─ Buzz Style (per-country) ────────────────────────────
-const BUZZ_STYLES={
-  'ja':{label:'🇯🇵 日本',items:[
-    {icon:'🎬',title:'動画スタイル',desc:'kawaii・美的感覚重視・清潔感。感情は控えめに、景色や物の美しさで魅せる。'},
-    {icon:'📝',title:'テロップ',desc:'大きな太字テキスト（白＋黒縁取り）を画面下部に配置。インパクトのある漢字。'},
-    {icon:'🎵',title:'BGM',desc:'シティポップ・lo-fi・J-pop・アップテンポ電子音楽・感情的なピアノ。'},
-    {icon:'⏱',title:'ペース',desc:'ミディアムペース。スムーズなトランジション。サティスファイング（満足感）な見せ方。'},
-    {icon:'⚠️',title:'注意',desc:'直接的な対立や攻撃的なコンテンツは避ける。繊細さが鍵。'}]},
-  'ko':{label:'🇰🇷 韓国',items:[
-    {icon:'🎬',title:'動画スタイル',desc:'K-drama/K-pop的な高品質映像。シネマティックな照明、トレンドファッション、洗練された見た目。'},
-    {icon:'📝',title:'テロップ',desc:'スタイリッシュな韓国語テキスト、グラデーションカラー、モダンフォント、ダイナミックなアニメーション。'},
-    {icon:'🎵',title:'BGM',desc:'K-pop・K-indie・トレンドの電子ビート。'},
-    {icon:'⏱',title:'ペース',desc:'パンチのあるカットで高速、高プロダクション品質。'},
-    {icon:'⚠️',title:'注意',desc:'映像品質への高い基準。ぼやけた・低品質なコンテンツはパフォーマンスが低い。'}]},
-  'en-us':{label:'🇺🇸 アメリカ',items:[
-    {icon:'🎬',title:'動画スタイル',desc:'本物らしく・リアルなアメリカンスタイル。最初の2秒で強いフック。ストーリーテリング形式が効果的。'},
-    {icon:'📝',title:'テロップ',desc:'太い英語キャプション、大フォント、高コントラスト。自動キャプション風が人気。'},
-    {icon:'🎵',title:'BGM',desc:'ヒップホップ・ポップ・カントリー・トレンドの音声クリップ。'},
-    {icon:'⏱',title:'ペース',desc:'超高速フック、その後は多様。POVやリアクション形式が人気。'},
-    {icon:'⚠️',title:'注意',desc:'政治的に敏感に見えるコンテンツは避ける。'}]},
-  'zh-tw':{label:'🇹🇼 台湾',items:[
-    {icon:'🎬',title:'動画スタイル',desc:'親しみやすさ・日常感・美食やペット重視。繁体字文化の表現。'},
-    {icon:'📝',title:'テロップ',desc:'繁体字の明瞭な大文字テキスト。カラフルでポップ。'},
-    {icon:'🎵',title:'BGM',desc:'C-pop・台湾インディー・バイラルアジア系サウンド。'},
-    {icon:'⏱',title:'ペース',desc:'ミディアム〜高速。コメディやツッコミのタイミングが重要。'},
-    {icon:'⚠️',title:'注意',desc:'政治的トピック（特に両岸問題）は避ける。'}]},
-  'zh-cn':{label:'🇨🇳 中国',items:[
-    {icon:'🎬',title:'動画スタイル',desc:'高品質・ドラマチック・感情的。都市景観や美食の美。Douyin向けは規制考慮。'},
-    {icon:'📝',title:'テロップ',desc:'簡体字の大きな太字。ネオン系カラー、動的アニメーション。'},
-    {icon:'🎵',title:'BGM',desc:'C-pop・中国風古风音楽・トレンドのDouyin音声。'},
-    {icon:'⏱',title:'ペース',desc:'高速カット、視覚インパクト重視。'},
-    {icon:'⚠️',title:'注意',desc:'政治・歴史的にセンシティブな内容は厳禁。プラットフォーム規制に従う。'}]},
-  'th':{label:'🇹🇭 タイ',items:[
-    {icon:'🎬',title:'動画スタイル',desc:'ユーモア・可愛さ・ライフスタイル感。"サヌック"（楽しむ文化）が鍵。'},
-    {icon:'📝',title:'テロップ',desc:'タイ語の明るいテキスト。絵文字多用、ポップカラー。'},
-    {icon:'🎵',title:'BGM',desc:'T-pop・モラム・バイラルタイソング。'},
-    {icon:'⏱',title:'ペース',desc:'ミディアム〜速め。コメディ系が特に強い。'},
-    {icon:'⚠️',title:'注意',desc:'王室・仏教への敬意必須（lèse-majesté法）。'}]},
-  'vi':{label:'🇻🇳 ベトナム',items:[
-    {icon:'🎬',title:'動画スタイル',desc:'家族重視・若者カルチャー・コメディ。都市と田舎両方のシーン。'},
-    {icon:'📝',title:'テロップ',desc:'ベトナム語の太字テキスト、明るい色、親しみやすい雰囲気。'},
-    {icon:'🎵',title:'BGM',desc:'V-pop・バイラルTikTokベトナム音源。'},
-    {icon:'⏱',title:'ペース',desc:'速くエネルギッシュ、コメディのタイミング重視。'},
-    {icon:'⚠️',title:'注意',desc:'政府批判的な内容は避ける。'}]},
-  'id':{label:'🇮🇩 インドネシア',items:[
-    {icon:'🎬',title:'動画スタイル',desc:'エネルギッシュ・コメディ・日常生活の共感。コミュニティと家族のテーマ。イスラムフレンドリーなコンテンツが最もパフォーマンス高い。'},
-    {icon:'📝',title:'テロップ',desc:'楽しいカラフルなインドネシア語テキスト、ミームスタイル、絵文字多用。'},
-    {icon:'🎵',title:'BGM',desc:'ダンドゥット・インドネシアポップ・バイラルローカルサウンド。'},
-    {icon:'⏱',title:'ペース',desc:'速くエンターテイニング、コメディのタイミングが重要。'},
-    {icon:'⚠️',title:'注意',desc:'イスラムの価値観を尊重。露出の多い服やアルコール関連は避ける。'}]},
-  'de':{label:'🇩🇪 ドイツ',items:[
-    {icon:'🎬',title:'動画スタイル',desc:'情報密度高め・実用的・機能美。過度な演出より中身重視。'},
-    {icon:'📝',title:'テロップ',desc:'ドイツ語の正確なテキスト、ミニマルデザイン、読みやすさ優先。'},
-    {icon:'🎵',title:'BGM',desc:'テクノ・エレクトロ・ロック・古典。'},
-    {icon:'⏱',title:'ペース',desc:'ミディアム。論理的な流れを大切にする。'},
-    {icon:'⚠️',title:'注意',desc:'プライバシー意識が高い。データ関連は慎重に。'}]},
-  'fr':{label:'🇫🇷 フランス',items:[
-    {icon:'🎬',title:'動画スタイル',desc:'エレガント・芸術的・ファッションと美食の洗練。ストーリーテリングを重視。'},
-    {icon:'📝',title:'テロップ',desc:'フランス語のセリフ体、モダンタイポグラフィ、落ち着いた色調。'},
-    {icon:'🎵',title:'BGM',desc:'シャンソン・エレクトロ・インディーポップ。'},
-    {icon:'⏱',title:'ペース',desc:'ミディアム。美しさと知性の両立。'},
-    {icon:'⚠️',title:'注意',desc:'直接的すぎる宣伝は嫌われる。洗練された表現を。'}]},
-  'es':{label:'🇪🇸 スペイン語圏',items:[
-    {icon:'🎬',title:'動画スタイル',desc:'情熱的・家族中心・カラフル。音楽とダンスの親和性。'},
-    {icon:'📝',title:'テロップ',desc:'明るいスペイン語テキスト、ボールドカラー、感情的。'},
-    {icon:'🎵',title:'BGM',desc:'レゲトン・ラテンポップ・フラメンコ系。'},
-    {icon:'⏱',title:'ペース',desc:'速くエネルギッシュ、リズム感重視。'},
-    {icon:'⚠️',title:'注意',desc:'地域差が大きい（スペイン vs 中南米）。ターゲットを絞る。'}]},
-  'pt-br':{label:'🇧🇷 ブラジル',items:[
-    {icon:'🎬',title:'動画スタイル',desc:'高エネルギー・情熱的・カラフル。ダンス・音楽・ユーモア・社会的コメンタリー。非常に表現力豊か。'},
-    {icon:'📝',title:'テロップ',desc:'太いポルトガル語テキスト、鮮やかな色、楽しいタイポグラフィ。'},
-    {icon:'🎵',title:'BGM',desc:'ファンクカリオカ・セルタネージョ・パゴジ・バイルファンク。'},
-    {icon:'⏱',title:'ペース',desc:'音楽のリズムに合わせた速くエネルギッシュな展開。'},
-    {icon:'⚠️',title:'注意',desc:'ブラジル人は非常に社交的。コミュニティエンゲージメントフックが効果的。'}]},
-  'it':{label:'🇮🇹 イタリア',items:[
-    {icon:'🎬',title:'動画スタイル',desc:'優雅・美食・ファッション・家族愛。ラ・ドルチェ・ヴィータの雰囲気。'},
-    {icon:'📝',title:'テロップ',desc:'イタリア語の洗練されたテキスト、セリフ体、アーティスティックなレイアウト。'},
-    {icon:'🎵',title:'BGM',desc:'イタリアンポップ・オペラ・オルタナティブロック。'},
-    {icon:'⏱',title:'ペース',desc:'ミディアム、美しさを堪能するテンポ。'},
-    {icon:'⚠️',title:'注意',desc:'食文化への敬意。パスタ料理法の誤りはバズり方が逆方向に。'}]},
-};
-
-function showBuzzStyle(){
-  const lang=localStorage.getItem('eleva_lang')||'ja';
-  const style=BUZZ_STYLES[lang]||BUZZ_STYLES['en-us'];
-  const titleSuffix=window.elevaT?elevaT('buzz_style_for'):'のバズり方';
-  document.getElementById('buzz-modal-title').textContent=style.label+' '+titleSuffix;
-  document.getElementById('buzz-modal-content').innerHTML=style.items.map(item=>`
-    <div style="margin-bottom:14px;padding:12px 14px;background:#0d0d0d;border-radius:10px;border-left:3px solid var(--gold);">
-      <div style="color:var(--gold);font-size:13px;font-weight:700;margin-bottom:6px;">${item.icon} ${item.title}</div>
-      <div style="color:#ccc;font-size:13px;line-height:1.6;">${item.desc}</div>
-    </div>`).join('');
-  document.getElementById('buzz-modal').style.display='block';
-}
-
-// ─ AI Proposal Flow ────────────────────────────────────
-let currentProposals = [];
-let selectedProposal = null;
-let chatHistory = [];
-let finalPrompt = '';
-let finalConcept = '';
-
-async function getVideoProposals(){
-  const btn=document.getElementById('get-proposals-btn');
-  const orig=btn.innerHTML;
-  btn.disabled=true;btn.innerHTML='⏳ '+(window.elevaT?elevaT('analyzing_trends'):'トレンドを分析中...');
-
-  try{
-    const genre=selectedGenres[0]||'general';
-    const platform=selectedSNS[0]||'tiktok';
-    const lang=localStorage.getItem('eleva_lang')||'ja';
-    const userPrompt=(document.getElementById('prompt-input')?.value||'').trim();
-    const target=(document.getElementById('target-input')?.value||'').trim();
-    const style=(document.getElementById('style-input')?.value||'').trim();
-
-    let trendingHashtags=[],trendingTopics=[];
-    try{
-      let tr=await sb.from('sns_trends').select('hashtags,topics').eq('platform',platform).eq('lang',lang).order('created_at',{ascending:false}).limit(1).maybeSingle();
-      if(!tr.data){
-        tr=await sb.from('sns_trends').select('hashtags,topics').eq('platform',platform).order('created_at',{ascending:false}).limit(1).maybeSingle();
-      }
-      trendingHashtags=tr.data?.hashtags||[];
-      trendingTopics=(tr.data?.topics||[]).map(t=>typeof t==='string'?t:(t.desc||t.name||'')).filter(Boolean);
-    }catch(e){console.warn('[proposals] sns_trends lookup failed',e);}
-
-    const res=await fetch('/api/generate-proposals',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({genre,platform,lang,userPrompt,target,style,trendingHashtags,trendingTopics,hasMedia:!!(inputImageUrl||inputVideoUrl||selectedPhotos.length)})
-    });
-    if(!res.ok){
-      const t=await res.text();
-      throw new Error('HTTP '+res.status+': '+t.slice(0,200));
-    }
-    const data=await res.json();
-    if(data.error)throw new Error(data.error);
-    currentProposals=data.proposals||[];
-    if(!currentProposals.length)throw new Error('提案が生成されませんでした');
-    displayProposals(currentProposals);
-  }catch(e){
-    console.error('[proposals]',e);
-    alert((window.elevaT?elevaT('proposal_failed'):'提案の取得に失敗しました')+': '+e.message);
+    console.error('[step1]', e);
+    showAlert('プロンプトの作成に失敗しました: ' + (e.message || e));
   }finally{
-    btn.disabled=false;btn.innerHTML=orig;
+    btn.disabled = false;
+    btn.textContent = 'プロンプトを作成する';
   }
 }
 
-function displayProposals(proposals){
-  const list=document.getElementById('proposals-list');
-  list.innerHTML=proposals.map((p,i)=>`
-    <div class="proposal-card" id="prop-${i}" onclick="selectProposal(${i})" style="border:1px solid #333;border-radius:10px;padding:16px;margin-bottom:12px;cursor:pointer;transition:all .2s;">
-      <div style="font-weight:700;color:var(--gold);margin-bottom:6px;font-size:14px;">${(window.elevaT?elevaT('case'):'案')}${i+1}: ${escapeHtml(p.title||'')}</div>
-      <div style="color:#fff;margin-bottom:6px;font-size:13px;line-height:1.6;">${escapeHtml(p.concept||'')}</div>
-      <div style="color:var(--text-muted);font-size:12px;">💡 ${escapeHtml(p.reason||'')}</div>
-      <div style="margin-top:10px;text-align:right;">
-        <button class="btn-outline" onclick="event.stopPropagation();selectProposal(${i})" style="font-size:12px;padding:6px 16px;" data-i18n="select_this">この案を選ぶ</button>
-      </div>
-    </div>
-  `).join('');
-  document.getElementById('proposals-area').style.display='block';
-  if(window.elevaApplyDeep)window.elevaApplyDeep(localStorage.getItem('eleva_lang')||'ja');
-}
-
-function selectProposal(idx){
-  selectedProposal=currentProposals[idx];
-  finalPrompt=selectedProposal.prompt_localized||selectedProposal.prompt_ja||selectedProposal.concept||'';
-  finalConcept=selectedProposal.concept||'';
-  chatHistory=[];
-  document.querySelectorAll('.proposal-card').forEach(el=>el.style.borderColor='#333');
-  const card=document.getElementById('prop-'+idx);
-  if(card)card.style.borderColor='var(--gold)';
-  document.getElementById('chat-area').style.display='block';
-  document.getElementById('generate-area').style.display='block';
-  document.getElementById('confirmed-concept-text').textContent=finalConcept;
-  document.getElementById('chat-messages').innerHTML='';
-  const greet=(window.elevaT?elevaT('proposal_selected'):'案を選択しました')+`「${selectedProposal.title}」\n\n`+finalConcept+'\n\n'+(window.elevaT?elevaT('chat_revise_hint'):'修正したい点があれば教えてください。問題なければそのまま生成できます。');
-  addChatMessage('eleva',greet);
-  document.getElementById('prompt-input').value=finalPrompt;
-}
-
-async function sendChatMessage(){
-  const input=document.getElementById('chat-input');
-  const msg=input.value.trim();
-  if(!msg||!selectedProposal)return;
-  addChatMessage('user',msg);
-  input.value='';
-  const btn=document.getElementById('chat-send-btn');
-  btn.disabled=true;
-  try{
-    const lang=localStorage.getItem('eleva_lang')||'ja';
-    const res=await fetch('/api/refine-concept',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({currentPrompt:finalPrompt,currentConcept:finalConcept,userMessage:msg,history:chatHistory.slice(-6),lang})
-    });
-    const data=await res.json();
-    if(data.error)throw new Error(data.error);
-    finalPrompt=data.updated_prompt||finalPrompt;
-    finalConcept=data.updated_concept||finalConcept;
-    document.getElementById('confirmed-concept-text').textContent=finalConcept;
-    document.getElementById('prompt-input').value=finalPrompt;
-    addChatMessage('eleva',data.reply||'更新しました');
-    chatHistory.push({role:'user',content:msg});
-    chatHistory.push({role:'assistant',content:data.reply||''});
-  }catch(e){
-    addChatMessage('eleva','⚠️ '+(window.elevaT?elevaT('refine_failed'):'更新に失敗しました')+': '+e.message);
-  }finally{
-    btn.disabled=false;
-  }
-}
-
-function addChatMessage(role,text){
-  const messages=document.getElementById('chat-messages');
-  const isEleva=role==='eleva';
-  const div=document.createElement('div');
-  div.style.cssText='margin-bottom:10px;'+(isEleva?'':'text-align:right;');
-  div.innerHTML=`<div style="display:inline-block;max-width:85%;padding:10px 14px;border-radius:14px;background:${isEleva?'rgba(201,168,76,0.08)':'#2A2A2A'};border:1px solid ${isEleva?'var(--border-gold)':'#444'};color:#fff;font-size:13px;white-space:pre-wrap;text-align:left;line-height:1.5;">${isEleva?'<div style="color:var(--gold);font-size:10px;margin-bottom:4px;letter-spacing:0.05em;">ELEVA</div>':''}${escapeHtml(text)}</div>`;
-  messages.appendChild(div);
-  messages.scrollTop=messages.scrollHeight;
-}
-
-// ─ Multi Photo ──────────────────────────────────────────
-let selectedPhotos=[];
-function handleMultiPhoto(input){
-  const files=Array.from(input.files||[]);
-  if(selectedPhotos.length+files.length>10){alert(window.elevaT?elevaT('max_10_photos'):'最大10枚まで選択できます');return;}
-  files.forEach(f=>{
-    const reader=new FileReader();
-    reader.onload=e=>{selectedPhotos.push({file:f,url:e.target.result});renderPhotoThumbs();};
-    reader.readAsDataURL(f);
-  });
-  input.value='';
-}
-function renderPhotoThumbs(){
-  const wrap=document.getElementById('multi-photo-preview');
-  if(!selectedPhotos.length){wrap.style.display='none';return;}
-  wrap.style.display='flex';
-  wrap.innerHTML=selectedPhotos.map((p,i)=>`<div style="position:relative;width:64px;height:64px;border-radius:8px;overflow:hidden;border:1px solid var(--border-gold);flex-shrink:0;">
-    <img src="${p.url}" style="width:100%;height:100%;object-fit:cover;">
-    <button onclick="removePhoto(${i})" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.7);color:#fff;border:none;width:18px;height:18px;border-radius:50%;font-size:11px;cursor:pointer;line-height:1;">×</button>
-  </div>`).join('')+`<div style="color:var(--text-muted);font-size:11px;align-self:center;margin-left:4px;">${selectedPhotos.length}/10</div>`;
-  if(selectedPhotos.length>0)inputImageUrl=selectedPhotos[0].url;
-}
-function removePhoto(idx){selectedPhotos.splice(idx,1);renderPhotoThumbs();if(!selectedPhotos.length)inputImageUrl=null;}
-
-// ─ Genre single-select ──────────────────────────────────
-let customGenreText='';
-let customGenreSaveTimer=null;
-function pickGenre(el,genre){
-  document.querySelectorAll('#genre-grid-personal .genre-btn, #genre-grid-business .genre-btn').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
-  const wrap=document.getElementById('custom-genre-wrap');
-  if(genre==='other'){
-    if(wrap)wrap.style.display='block';
-    const inp=document.getElementById('custom-genre-input');
-    if(inp){
-      if(customGenreText)inp.value=customGenreText;
-      inp.focus();
-    }
-    selectedGenres=[customGenreText||'other'];
-  } else {
-    if(wrap)wrap.style.display='none';
-    selectedGenres=[genre];
-  }
-  persistSelectedGenres();
-}
-function onCustomGenreInput(value){
-  customGenreText=(value||'').trim().slice(0,40);
-  // keep selectedGenres in sync while the user types
-  selectedGenres=[customGenreText||'other'];
-  // debounce profile save
-  clearTimeout(customGenreSaveTimer);
-  customGenreSaveTimer=setTimeout(saveCustomGenre,600);
-}
-async function saveCustomGenre(){
-  if(!currentUser||!sb)return;
-  try{
-    await sb.from('profiles').update({custom_genre:customGenreText||null}).eq('id',currentUser.id);
-  }catch(e){console.warn('[saveCustomGenre]',e);}
-}
-async function persistSelectedGenres(){
-  if(!currentUser||!sb)return;
-  try{
-    await sb.from('profiles').update({selected_genres:selectedGenres}).eq('id',currentUser.id);
-  }catch(e){/* soft-fail */}
-}
-function hydrateGenreFromProfile(prof){
-  if(!prof)return;
-  if(prof.custom_genre){
-    customGenreText=String(prof.custom_genre).slice(0,40);
-    const otherBtn=document.querySelector('#genre-grid-personal .genre-btn[onclick*="\'other\'"]');
-    if(otherBtn)pickGenre(otherBtn,'other');
-    const inp=document.getElementById('custom-genre-input');
-    if(inp)inp.value=customGenreText;
-    selectedGenres=[customGenreText];
-    return;
-  }
-  const saved=Array.isArray(prof.selected_genres)&&prof.selected_genres[0];
-  if(saved){
-    const btn=document.querySelector(`#genre-grid-personal .genre-btn[onclick*="'${saved}'"], #genre-grid-business .genre-btn[onclick*="'${saved}'"]`);
-    if(btn)pickGenre(btn,saved);
-  }
-}
-// Legacy alias — any remaining call sites fall through to single-select
-function toggleGenre(el,genre){ pickGenre(el,genre); }
-
-// ─ Posting Materials (BGM/Effects/Telop) ────────────────
-const EFFECT_MAP={
-  beauty:['グロー','ソフトフォーカス','パステル'],food:['温かみフィルター','ビネット','ブライトネス'],
-  travel:['シネマスコープ','カラーグレーディング','スローモーション'],fitness:['エナジェティック','コントラスト強調','スピードアップ'],
-  gaming:['ネオン','グリッチ','スピード'],music_genre:['ビジュアライザー','ビート同期','グロー'],
-  comedy:['ポップ','カートゥーン','ズーム'],dance:['スローモーション','ミラー','ストロボ'],
-  default:['ナチュラル','ビビッド','ヴィンテージ']
+// ---- Scenario rendering (Japanese-only) ----
+const CAMERA_JA = {
+  'close-up':'クローズアップ', 'wide':'ワイドショット', 'tracking':'トラッキング（追従）',
+  'top-down':'俯瞰（真上）', 'handheld':'ハンドヘルド（手ブレ）', 'dolly':'ドリーショット'
+};
+const HOOK_JA = {
+  'hook':'フック（つかみ）', 'build':'展開', 'payoff':'オチ', 'cta':'行動喚起（CTA）'
 };
 
-async function fetchPostingMaterials(genre,platform,lang){
-  const sb=ELEVA.getSupabase();
-  let trendData={hashtags:[],music:[],topics:[]};
+function renderScenario(scenario, meta){
+  const scenes = Array.isArray(scenario?.scenes) ? scenario.scenes : [];
+  document.getElementById('overall-title').textContent = scenario.overall_title || '(タイトル未設定)';
+  const totalSec = meta?.total_duration || scenes.reduce((a,s)=>a+(s.duration||0),0);
+  const metaBits = [];
+  if(scenes.length) metaBits.push(scenes.length + 'シーン構成');
+  if(totalSec) metaBits.push('合計 ' + totalSec + '秒');
+  if(scenario.target_audience) metaBits.push('ターゲット: ' + scenario.target_audience);
+  if(scenario.suggested_bgm) metaBits.push('BGM案: ' + scenario.suggested_bgm);
+  document.getElementById('overall-meta').textContent = metaBits.join(' ・ ');
+
+  document.getElementById('scenes-list').innerHTML = scenes.map((s,i)=>{
+    const cam = CAMERA_JA[s.camera_style] || s.camera_style || '';
+    const hook = HOOK_JA[s.hook_type] || s.hook_type || '';
+    return '<div class="scene-card">'
+      + '<div class="scene-head">'
+        + '<span class="scene-num">シーン ' + (i+1) + '</span>'
+        + (hook ? '<span class="scene-hook">' + esc(hook) + '</span>' : '')
+        + '<span class="scene-dur">' + (s.duration||0) + '秒</span>'
+      + '</div>'
+      + '<div class="scene-row"><span class="rlabel">説明</span><span class="rval">' + esc(s.prompt||'') + '</span></div>'
+      + '<div class="scene-meta">'
+        + '<div><strong>カメラスタイル</strong>' + esc(cam) + '</div>'
+        + '<div><strong>テロップ案</strong>' + esc(s.telop || '（なし）') + '</div>'
+      + '</div>'
+    + '</div>';
+  }).join('');
+  document.getElementById('chat-msgs').innerHTML = '';
+  addChat('bot', '3シーン構成のシナリオを作成しました。修正したい点があればチャットで教えてください。問題なければ画面下の「このプロンプトで生成する」を押してください。');
+}
+
+// ---- STEP 2 chat ----
+function addChat(role, text){
+  const wrap = document.getElementById('chat-msgs');
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + (role==='user' ? 'user' : 'bot');
+  div.textContent = text;
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+async function step2SendChat(){
+  const input = document.getElementById('chat-input');
+  const msg = (input.value||'').trim();
+  if(!msg) return;
+  addChat('user', msg);
+  input.value = '';
+  const btn = document.getElementById('chat-send-btn');
+  btn.disabled = true;
   try{
-    let r=await sb.from('sns_trends').select('hashtags,music,topics').eq('platform',platform).eq('lang',lang).order('created_at',{ascending:false}).limit(1).maybeSingle();
-    if(!r.data)r=await sb.from('sns_trends').select('hashtags,music,topics').eq('platform',platform).order('created_at',{ascending:false}).limit(1).maybeSingle();
-    if(r.data)trendData=r.data;
-  }catch(e){}
-  const res=await fetch('/api/generate-caption',{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({title:document.getElementById('prompt-input')?.value?.slice(0,100)||'',genre,platform,lang,trending_hashtags:trendData.hashtags||[],trending_topics:(trendData.topics||[]).slice(0,3)})
-  });
-  const aiData=await res.json().catch(()=>({}));
-  return {
-    bgm:(trendData.music||[]).slice(0,3),
-    hashtags:aiData.hashtags||trendData.hashtags||[],
-    caption:aiData.caption||'',
-    effects:EFFECT_MAP[genre]||EFFECT_MAP.default,
-    telop:aiData.telop||'',
-  };
-}
-
-async function generateAllPostMaterials(){
-  const btn=document.getElementById('gen-cap-btn');
-  btn.disabled=true;btn.textContent='生成中...';
-  try{
-    const genre=selectedGenres[0]||'general';
-    const lang=localStorage.getItem('eleva_lang')||'ja';
-    const materials=await fetchPostingMaterials(genre,postSNS,lang);
-    document.getElementById('post-caption').value=materials.caption;
-    document.getElementById('post-hashtags').value=(materials.hashtags||[]).join(' ');
-    document.getElementById('pm-telop').value=materials.telop;
-    const pmEl=document.getElementById('posting-materials');
-    pmEl.style.display='block';
-    document.getElementById('pm-bgm-list').innerHTML=materials.bgm.length
-      ?materials.bgm.map((m,i)=>`<div style="padding:4px 0;">${i+1}. ${typeof m==='string'?m:(m.title||m.name||'-')}</div>`).join('')
-      :'<div style="color:var(--text-muted);font-size:12px;">BGMデータなし</div>';
-    document.getElementById('pm-effects-list').innerHTML=materials.effects.map(e=>`<span style="background:rgba(201,168,76,0.1);border:1px solid var(--border-gold);padding:4px 10px;border-radius:6px;font-size:11px;color:var(--gold);">${e}</span>`).join('');
-  }catch(e){alert('生成に失敗しました: '+e.message);}
-  finally{btn.disabled=false;btn.textContent='✨ AI生成';}
-}
-
-// ─ Post Preparation ─────────────────────────────────────
-let postSNS='tiktok';
-const POST_GUIDES={
-  tiktok:{title:'TikTokに投稿する手順',steps:'① TikTokアプリを開く → ② 下部の＋ボタン → ③ ライブラリから動画を選択 → ④ キャプションを貼り付け → ⑤ 投稿'},
-  instagram:{title:'Instagramに投稿する手順',steps:'① Instagramアプリを開く → ② 下部の＋→リール → ③ ライブラリから動画を選択 → ④ キャプションを貼り付け → ⑤ シェア'},
-  x:{title:'Xに投稿する手順',steps:'① Xアプリを開く → ② ツイート作成 → ③ 動画を添付 → ④ テキストを貼り付け → ⑤ 投稿'},
-  youtube:{title:'YouTubeに投稿する手順',steps:'① YouTubeアプリを開く → ② 下部の＋ → ③ 動画をアップロード → ④ 説明欄にテキストを貼り付け → ⑤ 公開'},
-};
-
-function openPostPrepModal(){
-  const modal=document.getElementById('post-prep-modal');
-  modal.style.display='block';
-  const plan=currentUser?.user_metadata?.plan||'free';
-  const isPaid=['starter','growth','scale','free_forever'].includes(plan);
-  document.getElementById('post-prep-upsell').style.display=isPaid?'none':'block';
-  document.getElementById('post-prep-content').style.display=isPaid?'block':'none';
-  document.getElementById('post-guide').style.display='none';
-}
-function closePostPrepModal(){document.getElementById('post-prep-modal').style.display='none';}
-function selectPostSNS(platform,btn){
-  postSNS=platform;
-  document.querySelectorAll('.post-sns-btn').forEach(b=>{b.classList.remove('active');b.style.borderColor='';b.style.color='';});
-  btn.classList.add('active');btn.style.borderColor='var(--gold)';btn.style.color='var(--gold)';
-}
-
-async function generateAICaption(){
-  const btn=document.getElementById('gen-cap-btn');
-  btn.disabled=true;btn.textContent='生成中...';
-  try{
-    const prompt=document.getElementById('prompt-input')?.value||'';
-    const lang=localStorage.getItem('eleva_lang')||'ja';
-    const res=await fetch('/api/generate-caption',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({title:prompt.slice(0,100),genre:selectedGenres[0]||'general',platform:postSNS,lang})
-    });
-    const data=await res.json();
-    if(data.error)throw new Error(data.error);
-    document.getElementById('post-caption').value=data.caption||'';
-    document.getElementById('post-hashtags').value=(data.hashtags||[]).join(' ');
-  }catch(e){
-    alert('キャプション生成に失敗しました: '+e.message);
-  }finally{btn.disabled=false;btn.textContent='✨ AI生成';}
-}
-
-function copyPostContent(){
-  const caption=document.getElementById('post-caption').value;
-  const tags=document.getElementById('post-hashtags').value;
-  const full=caption+(tags?'\n\n'+tags:'');
-  navigator.clipboard.writeText(full).then(()=>{
-    const guide=POST_GUIDES[postSNS]||POST_GUIDES.tiktok;
-    document.getElementById('guide-title').textContent=guide.title;
-    document.getElementById('guide-steps').textContent=guide.steps;
-    document.getElementById('post-guide').style.display='block';
-    const btn=event.target;btn.textContent='✓ コピーしました！';
-    setTimeout(()=>{btn.textContent='📋 コピーしてSNSアプリで投稿する';},2000);
-  }).catch(()=>{alert('コピーに失敗しました');});
-}
-
-// ─ AI & Commercial Disclosure ────────────────────────────
-function getDisclosureState(){
-  const aiDisclosed=true; // Always true — UI checkbox is locked ON per TikTok/IG policy
-  const commercialEl=document.querySelector('input[name="commercial"]:checked');
-  const commercial=commercialEl?commercialEl.value:'none';
-  const igAutoTagAI=!!document.getElementById('ig-ai-tag')?.checked;
-  return {aiDisclosed,commercial,igAutoTagAI};
-}
-function hydrateDisclosureDefaults(user){
-  const meta=user?.user_metadata||{};
-  const commercial=meta.disclosure_commercial||localStorage.getItem('eleva_disclosure_commercial')||'none';
-  const igTagStored=meta.disclosure_ig_autotag;
-  const igTag=typeof igTagStored==='boolean'?igTagStored:(localStorage.getItem('eleva_disclosure_ig_autotag')!=='0');
-  document.querySelectorAll('input[name="commercial"]').forEach(r=>{r.checked=r.value===commercial;});
-  const tog=document.getElementById('ig-ai-tag');
-  if(tog)tog.checked=igTag;
-}
-
-// ─ Scenario Generator ────────────────────────────────────
-function openScenarioModal(){
-  document.getElementById('scenario-modal').style.display='block';
-  resetScenarioModal();
-}
-function closeScenarioModal(){
-  document.getElementById('scenario-modal').style.display='none';
-}
-function resetScenarioModal(){
-  document.getElementById('scenario-step-1').style.display='block';
-  document.getElementById('scenario-step-2').style.display='none';
-  document.getElementById('scenario-loading').style.display='block';
-  document.getElementById('scenario-error').style.display='none';
-  document.getElementById('scenario-patterns').style.display='none';
-  document.getElementById('scenario-patterns').innerHTML='';
-}
-async function pickScenarioCategory(category){
-  document.getElementById('scenario-step-1').style.display='none';
-  document.getElementById('scenario-step-2').style.display='block';
-  document.getElementById('scenario-loading').style.display='block';
-  document.getElementById('scenario-error').style.display='none';
-  document.getElementById('scenario-patterns').style.display='none';
-  try{
-    const res=await fetch('/api/generate-scenario',{
+    // Refine-concept endpoint keeps a natural-language prompt in sync with user feedback.
+    // We then re-run scenario-generate with the refined prompt to produce updated scenes.
+    const refineRes = await fetch('/api/refine-concept',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({category,lang:localStorage.getItem('eleva_lang')||'ja'}),
+      body: JSON.stringify({
+        currentPrompt: currentIntent,
+        currentConcept: currentScenario?.overall_title || currentIntent,
+        userMessage: msg,
+        history: [],
+        lang: 'ja',
+      })
     });
-    const data=await res.json();
-    if(!res.ok){throw new Error(data.error||'シナリオ生成に失敗しました');}
-    renderScenarioPatterns(data);
-  }catch(err){
-    document.getElementById('scenario-loading').style.display='none';
-    const errEl=document.getElementById('scenario-error');
-    errEl.textContent=err.message;
-    errEl.style.display='block';
+    const refined = await refineRes.json();
+    const newPrompt = refined.updated_prompt || currentIntent;
+    currentIntent = newPrompt;
+    addChat('bot', (refined.reply || '了解しました。シナリオを作り直します。') + '\n\n（シナリオを再生成しています...）');
+    // Re-run scenario-generate with the refined prompt
+    const headers = await authHeaders();
+    const res = await fetch(SUPABASE_FN_BASE + '/scenario-generate',{
+      method:'POST', headers,
+      body: JSON.stringify({
+        prompt: newPrompt,
+        platform: selectedPlatform,
+        target_duration_sec: selectedDuration,
+        aspect_ratio: '9:16',
+        genre: 'general',
+        userId: currentUser?.id,
+      })
+    });
+    const data = await res.json();
+    if(!res.ok || data.success === false){
+      throw new Error(data.error || ('HTTP '+res.status));
+    }
+    currentScenario = data.scenario || {scenes:[]};
+    currentScenarioJobId = data.job_id || null;
+    renderScenario(currentScenario, data);
+  }catch(e){
+    console.error('[chat]', e);
+    addChat('bot', '⚠️ 修正反映に失敗しました: ' + (e.message || e));
+  }finally{
+    btn.disabled = false;
   }
 }
-function renderScenarioPatterns(data){
-  document.getElementById('scenario-loading').style.display='none';
-  const wrap=document.getElementById('scenario-patterns');
-  const patterns=data.patterns||[];
-  if(!patterns.length){
-    wrap.innerHTML='<div style="color:var(--text-muted);text-align:center;padding:20px;">パターンが生成されませんでした</div>';
-    wrap.style.display='block';
+
+// ---- STEP 3: kick off video generation ----
+async function generateVideo(){
+  clearAlert();
+  if(!currentScenario || !currentScenario.scenes || !currentScenario.scenes.length){
+    showAlert('シナリオが確定していません。STEP 1 からやり直してください。');
     return;
   }
-  const badge=data.trendsUsed>0?`<span style="font-size:11px;color:var(--text-muted);">参照トレンド: ${data.trendsUsed}件</span>`:'<span style="font-size:11px;color:var(--text-muted);">トレンドデータなし</span>';
-  wrap.innerHTML=`<div style="margin-bottom:12px;">${badge}</div>`+patterns.map((p,i)=>{
-    const scenes=(p.scenes||[]).map(s=>`
-      <div style="background:rgba(255,255,255,0.03);padding:10px 12px;border-radius:8px;margin-bottom:6px;">
-        <div style="font-size:12px;color:var(--gold);font-weight:600;margin-bottom:4px;">シーン${s.scene||'-'} (${s.duration||'-'}秒)</div>
-        <div style="font-size:13px;color:#fff;margin-bottom:2px;">${escapeHtml(s.direction||'')}</div>
-        ${s.caption?`<div style="font-size:12px;color:var(--text-secondary);">💬 ${escapeHtml(s.caption)}</div>`:''}
-      </div>
-    `).join('');
-    return `
-      <div style="border:1px solid var(--border-gold);border-radius:12px;padding:16px;margin-bottom:14px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-          <div style="font-size:15px;font-weight:700;color:var(--gold);">パターン${p.id||(i+1)}</div>
-          <div style="font-size:12px;color:var(--text-secondary);">${p.duration||'-'}秒</div>
-        </div>
-        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;">🎥 アングル: <span style="color:#fff;">${escapeHtml(p.angle||'-')}</span></div>
-        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;">🖼️ 構図: <span style="color:#fff;">${escapeHtml(p.composition||'-')}</span></div>
-        ${p.hook?`<div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">⚡ フック: <span style="color:#fff;">${escapeHtml(p.hook)}</span></div>`:''}
-        <div style="margin-top:10px;">${scenes}</div>
-        <div style="margin-top:12px;text-align:right;">
-          <button class="btn-outline" style="font-size:12px;padding:6px 14px;" onclick="useScenarioPattern(${i})">このパターンを使う</button>
-        </div>
-      </div>
-    `;
-  }).join('');
-  wrap.style.display='block';
-  window._scenarioPatterns=patterns;
-}
-function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function useScenarioPattern(idx){
-  const p=(window._scenarioPatterns||[])[idx];
-  if(!p)return;
-  const scenesText=(p.scenes||[]).map(s=>`シーン${s.scene}(${s.duration}秒): ${s.direction}${s.caption?' / '+s.caption:''}`).join('\n');
-  const full=`【${p.angle||''}｜${p.composition||''}】\n${p.hook?'フック: '+p.hook+'\n':''}${scenesText}`;
-  const ta=document.getElementById('prompt-input');
-  if(ta){ta.value=full;ta.focus();}
-  closeScenarioModal();
-}
-
-function injectLeftDrawerExtras(prof){
-  const panel=document.getElementById('eleva-nav-panel');if(!panel)return;
-  // items container is the 2nd direct child of the panel
-  const itemsBox=panel.children[1];if(!itemsBox)return;
-  if(itemsBox.querySelector('[data-drawer-extras]'))return;
-  const credits=(window.ELEVA_ICONS?.lightning||'⚡')+' '+(prof?.credits_remaining??'--');
-  const extras=document.createElement('div');
-  extras.setAttribute('data-drawer-extras','1');
-  extras.innerHTML=`
-    <div style="padding:12px 20px 8px;border-top:1px solid rgba(201,168,76,0.15);margin-top:8px;">
-      <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);color:#c9a84c;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;">${credits}</div>
-    </div>
-    <a href="/trends.html" style="display:flex;align-items:center;gap:12px;padding:14px 20px;color:#fff;text-decoration:none;font-size:15px;transition:color 0.15s;" onmouseover="this.style.color='#c9a84c'" onmouseout="this.style.color='#fff'">
-      <span style="flex-shrink:0;display:inline-flex;align-items:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></svg></span>
-      世界のトレンド
-    </a>
-    ${prof?.is_admin?`<a href="/admin.html" data-i18n="admin" style="display:flex;align-items:center;gap:12px;padding:14px 20px;color:#c9a84c;text-decoration:none;font-size:15px;">
-      <span style="flex-shrink:0;width:18px;text-align:center;">⚙</span>管理画面
-    </a>`:''}
-    <div style="padding:10px 20px 14px;">
-      <button onclick="window.ELEVA.logout()" data-i18n="logout" style="width:100%;background:transparent;border:1px solid rgba(201,168,76,0.3);color:#c9a84c;padding:10px;border-radius:8px;cursor:pointer;font-size:13px;font-family:inherit;letter-spacing:.08em;font-weight:600;">LOGOUT</button>
-    </div>`;
-  itemsBox.appendChild(extras);
-}
-
-document.addEventListener('DOMContentLoaded',async()=>{
-  currentUser=await ELEVA.initElevaPage({page:'generate',onUser:u=>{currentUser=u;}});
-  hydrateDisclosureDefaults(currentUser);
-  ELEVA.applyLanguage(localStorage.getItem('eleva_lang')||'ja');
-  // 動画生成ページは全テキストを日本語に統一（localStorageは書き換えない）
-  (function forceJaOnGeneratePage(){
-    const ja=window.ELEVA_T&&window.ELEVA_T['ja'];
-    if(!ja)return;
-    document.querySelectorAll('[data-i18n]').forEach(el=>{
-      const v=ja[el.dataset.i18n];
-      if(!v)return;
-      if(el.tagName==='INPUT'||el.tagName==='TEXTAREA')el.placeholder=v;
-      else el.textContent=v;
-    });
-    document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
-      const v=ja[el.dataset.i18nPh];
-      if(v)el.placeholder=v;
-    });
-  })();
-  if(currentUser){
-    const {data:prof}=await sb.from('profiles').select('credits_remaining,is_admin,custom_genre,selected_genres').eq('id',currentUser.id).single();
-    if(prof){
-      const html=(window.ELEVA_ICONS?.lightning||'⚡')+' '+prof.credits_remaining;
-      document.getElementById('credits-badge').innerHTML=html;
-    }
-    hydrateGenreFromProfile(prof);
-    injectLeftDrawerExtras(prof);
-    // SNS apply banner: show when the user has no connected accounts
-    try{
-      const {count}=await sb.from('user_sns_accounts').select('id',{count:'exact',head:true}).eq('user_id',currentUser.id);
-      const banner=document.getElementById('sns-apply-banner');
-      if(banner&&(count==null||count===0))banner.style.display='flex';
-    }catch(e){/* ignore; banner stays hidden on error */}
-    loadPostingSchedule();
+  if(!currentUser){
+    showAlert('ログインが必要です。');
+    return;
   }
-  if(window.location.hash==='#generate'){
-    document.getElementById('generate-section').scrollIntoView({behavior:'smooth'});
+  goToStep(3);
+  document.getElementById('loader-text').textContent = '生成リクエストを送信中...';
+
+  try{
+    // Merge scene prompts into one prompt string for the single-shot Kling call.
+    // (multi-scene job handling is triggered by scenario-generate server-side when supported;
+    // here we send the consolidated prompt plus the total duration.)
+    const prompt = currentScenario.scenes.map(s=>s.prompt).filter(Boolean).join('\n\n');
+    const body = {
+      prompt,
+      userId: currentUser.id,
+      platform: selectedPlatform,
+      duration: selectedDuration,
+      lang: 'ja',
+      genre: 'general',
+      aspect_ratio: '9:16',
+      scenario_job_id: currentScenarioJobId,
+    };
+    const {data:{session}} = await sb.auth.getSession();
+    const res = await fetch('/api/generate-video', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization': 'Bearer ' + (session?.access_token || ''),
+      },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if(!res.ok || (data.error && !data.success)){
+      throw new Error(data.error || ('HTTP '+res.status));
+    }
+    currentTaskId = data.taskId || data.task_id;
+    currentGenId = data.generationId || data.generation_id || data.id;
+    if(!currentTaskId){
+      throw new Error('taskId が返ってきませんでした');
+    }
+    document.getElementById('loader-text').textContent = '生成中...';
+    document.getElementById('loader-sub').textContent = '通常1〜3分ほどかかります。このページを閉じても生成は続きます。';
+    pollStatus();
+  }catch(e){
+    console.error('[generate]', e);
+    showAlert('動画生成の開始に失敗しました: ' + (e.message || e));
+    goToStep(2);
+  }
+}
+
+function pollStatus(){
+  if(pollingInterval) clearInterval(pollingInterval);
+  let attempts = 0;
+  const MAX_ATTEMPTS = 60; // ~8 min at 8s interval
+  pollingInterval = setInterval(async ()=>{
+    attempts++;
+    if(attempts > MAX_ATTEMPTS){
+      clearInterval(pollingInterval);
+      showAlert('生成がタイムアウトしました。履歴から確認してください。');
+      goToStep(2);
+      return;
+    }
+    try{
+      const url = '/api/video-status?taskId=' + encodeURIComponent(currentTaskId) + (currentGenId ? '&generationId=' + encodeURIComponent(currentGenId) : '');
+      const res = await fetch(url);
+      const data = await res.json();
+      const vUrl = data.videoUrl || data.video_url || '';
+      if(data.status === 'completed' || vUrl){
+        clearInterval(pollingInterval);
+        if(vUrl){
+          document.getElementById('result-video').src = vUrl;
+          goToStep(4);
+        }else{
+          showAlert('動画URLが取得できませんでした。履歴から確認してください。');
+          goToStep(2);
+        }
+      }else if(data.status === 'failed'){
+        clearInterval(pollingInterval);
+        showAlert('生成に失敗しました: ' + (data.error || data.message || '不明なエラー'));
+        goToStep(2);
+      }else{
+        const mins = Math.floor(attempts * 8 / 60);
+        const secs = (attempts * 8) % 60;
+        document.getElementById('loader-text').textContent = '生成中... ('+mins+'分'+secs+'秒経過)';
+      }
+    }catch(e){
+      console.warn('[poll]', e);
+    }
+  }, 8000);
+}
+
+// ---- STEP 4 ----
+function downloadVideo(){
+  const url = document.getElementById('result-video').src;
+  if(!url) return;
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'eleva_video.mp4';
+  a.target = '_blank';
+  a.click();
+}
+function restartFlow(){
+  currentScenario = null;
+  currentScenarioJobId = null;
+  currentIntent = '';
+  currentTaskId = null;
+  currentGenId = null;
+  document.getElementById('intent-input').value = '';
+  document.getElementById('result-video').removeAttribute('src');
+  clearAlert();
+  goToStep(1);
+}
+
+// ---- Boot ----
+document.addEventListener('DOMContentLoaded', async ()=>{
+  try{
+    currentUser = await ELEVA.initElevaPage({page:'generate', onUser: u => {currentUser = u;}});
+    if(currentUser){
+      const {data:prof} = await sb.from('profiles').select('credits_remaining,is_admin').eq('id', currentUser.id).single();
+      if(prof){
+        document.getElementById('credits-badge').style.display = '';
+        document.getElementById('credits-badge').textContent = '⚡ ' + (prof.credits_remaining ?? '--');
+        if(prof.is_admin){
+          document.getElementById('admin-link').style.display = '';
+        }
+      }
+    }
+  }catch(e){
+    console.warn('[boot]', e);
   }
 });
 </script>
-<footer style="text-align:center;padding:24px 16px;margin-top:60px;border-top:1px solid #1A1A1A;color:#555;font-size:11px;letter-spacing:.05em;">
-  <div style="margin-bottom:8px;">
-    <a href="/commerce.html" target="_blank" style="color:#666;text-decoration:none;margin:0 12px;" data-i18n="footer_tokushoho">特定商取引法に基づく表記</a>
-    <a href="/privacy.html" target="_blank" style="color:#666;text-decoration:none;margin:0 12px;" data-i18n="privacy">プライバシーポリシー</a>
-    <a href="/terms.html" target="_blank" style="color:#666;text-decoration:none;margin:0 12px;" data-i18n="terms">利用規約</a>
-    <a href="mailto:support@letiziainc.com" style="color:#666;text-decoration:none;margin:0 12px;" data-i18n="contact">お問い合わせ</a>
-  </div>
-  <div>© 2025 株式会社LETIZIA All rights reserved.</div>
-</footer>
-
-<!-- Fixed bottom generate button — always visible at the bottom -->
-<div class="generate-bar">
-  <div class="generate-bar-inner">
-    <button class="generate-bar-btn" id="bottom-generate-btn" onclick="generateVideo()">動画を生成する</button>
-    <div class="generate-bar-hint">プロンプト・各設定を入力したらこのボタンで生成</div>
-  </div>
-</div>
 </body>
 </html>

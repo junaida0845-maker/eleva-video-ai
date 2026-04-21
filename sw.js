@@ -1,5 +1,5 @@
 // Service Worker — auto-update, network-first
-// Build marker: 2026-04-22-dashboard-ja-fixed-bottom-btn
+// Build marker: 2026-04-22-dashboard-4step-flow
 const CACHE_VERSION = 'v' + Date.now();
 const CACHE_NAME = 'app-cache-' + CACHE_VERSION;
 
