@@ -442,60 +442,89 @@ async function callAdmin(action,params={}){
 }
 
 // ─ Trends DB ────────────────────────────────────────
+// Data source: admin-stats?action=trends Edge Function (v20+).
+// Response shape:
+//   { success, trends:[...], summary:{latest_detected_at,total_active,by_platform,by_country,by_genre},
+//     tables:{global_buzz_data, youtube_trends, instagram_trending_hashtags, ...},
+//     sample_youtube_trends, sample_instagram, cron_jobs }
+// Legacy code that queried empty world_trends / trend_keywords tables has been removed.
 let _adminTrendsCache=null;
 async function loadAdminTrends(){
-  // Source of truth is global_buzz_data (archived=false). The legacy world_trends table
-  // stayed empty after we migrated collectors; admin page used to query the wrong source.
-  const [summaryRes,rowsRes]=await Promise.all([
-    sb.from('global_buzz_data').select('country_code,genre,buzz_detected_at').eq('archived',false),
-    sb.from('global_buzz_data').select('id,platform,country_code,genre,title,views,buzz_detected_at,video_url,thumbnail_url').eq('archived',false).order('buzz_detected_at',{ascending:false}).limit(50),
-  ]).catch(e=>{console.error('[admin-trends]',e);return [{error:e},{error:e}];});
+  const stbody=document.getElementById('trends-summary-tbody');
+  const rbody=document.getElementById('trends-rows-tbody');
+  // Error state helper — shown in both tables on fetch failure.
+  const showErr=(msg)=>{
+    const cell='<tr><td colspan="4" style="text-align:center;color:#ff6666;padding:24px;">'+msg+'</td></tr>';
+    const cell6='<tr><td colspan="6" style="text-align:center;color:#ff6666;padding:24px;">'+msg+'</td></tr>';
+    stbody.innerHTML=cell;
+    rbody.innerHTML=cell6;
+  };
 
-  const summary=summaryRes?.data||[];
-  const rows=rowsRes?.data||[];
-  _adminTrendsCache={summary,rows};
+  let data;
+  try{
+    const {data:{session}}=await sb.auth.getSession();
+    const token=session?.access_token;
+    if(!token){ showErr('ログインが必要です'); return; }
+    const res=await fetch(ELEVA.SUPABASE_URL+'/functions/v1/admin-stats?action=trends&limit=50',{
+      headers:{'apikey':ELEVA.SUPABASE_ANON_KEY,'Authorization':'Bearer '+token},
+    });
+    data=await res.json();
+    if(!res.ok||data.error){
+      showErr('トレンドDB取得に失敗: '+(data?.error||('HTTP '+res.status)));
+      return;
+    }
+  }catch(e){
+    console.error('[admin-trends]',e);
+    showErr('通信エラー: '+(e?.message||String(e)));
+    return;
+  }
 
-  // KPI
-  document.getElementById('trends-total').textContent=(summary||[]).length;
-  const countries=new Set((summary||[]).map(r=>r.country_code).filter(Boolean));
-  const genres=new Set((summary||[]).map(r=>r.genre).filter(Boolean));
-  document.getElementById('trends-country-count').textContent=countries.size;
-  document.getElementById('trends-genre-count').textContent=genres.size;
-  const latest=(summary||[]).reduce((max,r)=>{
-    const t=r.buzz_detected_at?new Date(r.buzz_detected_at).getTime():0;
-    return t>max?t:max;
-  },0);
-  document.getElementById('trends-latest').textContent=latest?new Date(latest).toLocaleString('ja-JP'):'—';
+  const trends=Array.isArray(data.trends)?data.trends:[];
+  const summary=data.summary||{};
+  _adminTrendsCache={trends,summary,tables:data.tables||{}};
 
-  // Summary table: country × genre
-  const key=r=>`${r.country_code||'-'}__${r.genre||'-'}`;
+  // KPIs sourced from server-side aggregates so counts reflect ALL rows, not just the 50 fetched.
+  document.getElementById('trends-total').textContent=Number(summary.total_active||0).toLocaleString();
+  document.getElementById('trends-country-count').textContent=Object.keys(summary.by_country||{}).length;
+  document.getElementById('trends-genre-count').textContent=Object.keys(summary.by_genre||{}).length;
+  document.getElementById('trends-latest').textContent=summary.latest_detected_at?new Date(summary.latest_detected_at).toLocaleString('ja-JP'):'—';
+
+  // Country × Genre breakdown — computed from the 50 most-recent rows (trends[]).
+  // summary.by_country / by_genre are flat totals; the cross-tab is intentionally
+  // scoped to the recent window so it fits on one screen.
   const bucket={};
-  (summary||[]).forEach(r=>{
-    const k=key(r);
+  trends.forEach(r=>{
+    const k=(r.country_code||'-')+'__'+(r.genre||'-');
     if(!bucket[k])bucket[k]={country:r.country_code||'-',genre:r.genre||'-',count:0,latest:0};
     bucket[k].count++;
     const t=r.buzz_detected_at?new Date(r.buzz_detected_at).getTime():0;
     if(t>bucket[k].latest)bucket[k].latest=t;
   });
-  const summaryRows=Object.values(bucket).sort((a,b)=>b.count-a.count);
-  const stbody=document.getElementById('trends-summary-tbody');
-  if(!summaryRows.length){stbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:24px;">データなし</td></tr>';}
-  else{stbody.innerHTML=summaryRows.map(r=>`<tr>
-    <td>${r.country}</td><td>${r.genre}</td><td>${r.count}</td><td class="secondary" style="font-size:11px;">${r.latest?new Date(r.latest).toLocaleString('ja-JP'):'—'}</td>
-  </tr>`).join('');}
+  const crossRows=Object.values(bucket).sort((a,b)=>b.count-a.count);
+  if(!crossRows.length){
+    stbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:24px;">データなし</td></tr>';
+  }else{
+    stbody.innerHTML=crossRows.map(r=>'<tr>'
+      +'<td>'+r.country+'</td><td>'+r.genre+'</td><td>'+r.count+'</td>'
+      +'<td class="secondary" style="font-size:11px;">'+(r.latest?new Date(r.latest).toLocaleString('ja-JP'):'—')+'</td>'
+      +'</tr>').join('');
+  }
 
-  // Populate filter options
+  // Filter dropdowns populated from the server-side full-catalog aggregates so
+  // users can filter by countries/genres that aren't in the top-50 sample.
   const cSel=document.getElementById('trends-country-filter');
   const gSel=document.getElementById('trends-genre-filter');
-  cSel.innerHTML='<option value="">全国</option>'+[...countries].sort().map(c=>`<option value="${c}">${c}</option>`).join('');
-  gSel.innerHTML='<option value="">全ジャンル</option>'+[...genres].sort().map(g=>`<option value="${g}">${g}</option>`).join('');
+  const countries=Object.keys(summary.by_country||{}).filter(c=>c&&c!=='null').sort();
+  const genres=Object.keys(summary.by_genre||{}).filter(g=>g&&g!=='other').sort();
+  cSel.innerHTML='<option value="">全国</option>'+countries.map(c=>'<option value="'+c+'">'+c+'</option>').join('');
+  gSel.innerHTML='<option value="">全ジャンル</option>'+genres.map(g=>'<option value="'+g+'">'+g+'</option>').join('');
   cSel.onchange=gSel.onchange=document.getElementById('trends-platform-filter').onchange=renderAdminTrendsRows;
 
   renderAdminTrendsRows();
 }
 
 function renderAdminTrendsRows(){
-  const rows=_adminTrendsCache?.rows||[];
+  const rows=_adminTrendsCache?.trends||[];
   const c=document.getElementById('trends-country-filter').value;
   const g=document.getElementById('trends-genre-filter').value;
   const p=document.getElementById('trends-platform-filter').value;
