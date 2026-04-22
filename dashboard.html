@@ -69,17 +69,49 @@ textarea::placeholder,input[type=text]::placeholder{color:var(--text-muted);}
 .btn-outline{background:transparent;border:1px solid var(--gold);color:var(--gold);padding:11px 18px;border-radius:10px;font-size:13px;transition:all .15s;}
 .btn-outline:hover{background:rgba(201,168,76,0.1);}
 
-/* Scenario (flat) display */
-.sc-summary{font-size:16px;line-height:1.7;color:#fff;font-weight:500;padding:16px 18px;background:var(--black-border);border:1px solid var(--border-gold);border-radius:14px;margin-bottom:14px;}
-.sc-row{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.04);}
-.sc-row:last-of-type{border-bottom:none;}
-.sc-label{font-size:11px;color:var(--gold);font-weight:700;letter-spacing:.08em;text-transform:uppercase;}
-.sc-val{font-size:14px;line-height:1.55;color:#fff;}
-.sc-telop{font-weight:700;letter-spacing:.04em;}
+/* Scenario display (summary block + timeline) */
+.sc-summary{font-size:16px;line-height:1.7;color:#fff;font-weight:500;padding:16px 18px;background:var(--black-border);border:1px solid var(--border-gold);border-radius:14px;margin-bottom:18px;}
+.sc-section-title{font-size:11px;color:var(--gold);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin:18px 0 10px;}
+
+/* Vertical timeline */
+.tl{position:relative;padding-left:36px;margin:0 0 18px;}
+.tl::before{content:'';position:absolute;left:12px;top:8px;bottom:8px;width:2px;background:linear-gradient(to bottom,var(--gold) 0%,rgba(201,168,76,0.35) 50%,var(--gold) 100%);border-radius:2px;}
+.tl-item{position:relative;padding:12px 14px;margin-bottom:14px;background:var(--black-border);border:1px solid rgba(201,168,76,0.2);border-radius:12px;}
+.tl-item::before{content:'';position:absolute;left:-30px;top:18px;width:14px;height:14px;background:var(--gold);border:3px solid var(--black);border-radius:50%;box-shadow:0 0 0 2px var(--gold);}
+.tl-item .tl-time{position:absolute;left:-70px;top:14px;width:56px;text-align:right;font-size:11px;color:var(--gold);font-weight:700;letter-spacing:.02em;}
+@media (max-width:520px){
+  .tl{padding-left:28px;}
+  .tl::before{left:8px;}
+  .tl-item::before{left:-26px;width:12px;height:12px;box-shadow:0 0 0 1.5px var(--gold);}
+  .tl-item .tl-time{position:static;width:auto;text-align:left;display:block;margin-bottom:6px;}
+}
+.tl-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+.tl-num{background:var(--gold);color:#000;font-size:10.5px;font-weight:800;padding:3px 10px;border-radius:999px;letter-spacing:.08em;}
+.tl-hook{font-size:11px;color:var(--gold);font-weight:600;letter-spacing:.02em;}
+.tl-dur{font-size:11px;color:var(--text-muted);margin-left:auto;}
+.tl-chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 8px;}
+.tl-chip{font-size:10.5px;color:#ddd;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);padding:3px 8px;border-radius:999px;letter-spacing:.02em;}
+.tl-telop{font-size:14px;font-weight:700;color:#fff;letter-spacing:.04em;padding:8px 10px;background:rgba(255,255,255,0.04);border-left:3px solid var(--gold);border-radius:6px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.tl-telop-txt{flex:1;}
+.tl-desc{font-size:12px;color:#b8b8b8;line-height:1.55;padding:4px 2px;}
+
+/* Inline copy button */
+.copy-btn{background:transparent;border:1px solid rgba(201,168,76,0.35);color:var(--gold);font-size:10.5px;padding:4px 10px;border-radius:999px;letter-spacing:.05em;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:4px;flex-shrink:0;}
+.copy-btn:hover{background:rgba(201,168,76,0.12);border-color:var(--gold);}
+.copy-btn.copied{background:rgba(120,200,120,0.15);border-color:#7fbf7f;color:#7fbf7f;}
+
+/* Collapsible kling_prompt block */
 .sc-details{margin-top:8px;padding:12px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;}
-.sc-details summary{cursor:pointer;color:var(--gold);font-size:12px;font-weight:700;letter-spacing:.05em;outline:none;}
+.sc-details summary{cursor:pointer;color:var(--gold);font-size:12px;font-weight:700;letter-spacing:.05em;outline:none;display:flex;align-items:center;justify-content:space-between;gap:8px;}
 .sc-details[open] summary{margin-bottom:8px;}
-.sc-kling{color:#cfcfcf;font-size:12px;line-height:1.6;background:#0a0a0a;border:1px solid rgba(255,255,255,0.05);border-radius:8px;padding:12px;white-space:pre-wrap;word-break:break-word;font-family:'SFMono-Regular',Menlo,Consolas,monospace;}
+.sc-kling-wrap{position:relative;}
+.sc-kling-wrap .copy-btn{position:absolute;top:8px;right:8px;}
+.sc-kling{color:#cfcfcf;font-size:12px;line-height:1.6;background:#0a0a0a;border:1px solid rgba(255,255,255,0.05);border-radius:8px;padding:12px 44px 12px 12px;white-space:pre-wrap;word-break:break-word;font-family:'SFMono-Regular',Menlo,Consolas,monospace;}
+
+/* Meta row (hook / bgm) */
+.sc-meta-row{display:flex;gap:12px;padding:10px 14px;background:var(--black-border);border:1px solid rgba(255,255,255,0.06);border-radius:10px;margin-bottom:10px;align-items:flex-start;}
+.sc-meta-row .sc-meta-lab{font-size:10.5px;color:var(--gold);font-weight:700;letter-spacing:.08em;text-transform:uppercase;min-width:64px;padding-top:2px;flex-shrink:0;}
+.sc-meta-row .sc-meta-val{font-size:13.5px;line-height:1.55;color:#fff;flex:1;}
 
 /* Scene cards (legacy — kept for fallback paths) */
 .scene-card{background:var(--black-border);border:1px solid rgba(201,168,76,0.2);border-radius:14px;padding:16px 18px;margin-bottom:12px;}
@@ -280,6 +312,9 @@ textarea::placeholder,input[type=text]::placeholder{color:var(--text-muted);}
       <button class="btn-gold" id="download-btn" onclick="downloadVideo()" style="margin-top:0;">ダウンロード</button>
       <button class="btn-outline" onclick="restartFlow()" style="padding:14px;">もう一度作る</button>
     </div>
+    <div style="margin-top:12px;text-align:center;">
+      <button class="copy-btn" id="copy-url-btn" type="button" onclick="handleCopyVideoUrl(this)">動画URLをコピー</button>
+    </div>
   </section>
 </div>
 
@@ -326,6 +361,67 @@ const MAX_MATERIALS = 5;
 
 // ---- Utils ----
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+// ---- Clipboard: iOS Safari + Android WebView safe copy ----
+// 1) Modern navigator.clipboard.writeText (HTTPS + secure context)
+// 2) Fallback: hidden <textarea> + execCommand('copy'). iOS Safari requires
+//    the element to be .contentEditable and selected via Range+Selection,
+//    otherwise the selection silently fails there.
+async function copyText(text){
+  const str = String(text == null ? '' : text);
+  if(!str) return false;
+
+  // Path 1 — async Clipboard API
+  if(navigator.clipboard && window.isSecureContext){
+    try{
+      await navigator.clipboard.writeText(str);
+      return true;
+    }catch(_){
+      // fall through to legacy path
+    }
+  }
+
+  // Path 2 — legacy textarea hack, tuned for iOS Safari
+  try{
+    const ta = document.createElement('textarea');
+    ta.value = str;
+    ta.setAttribute('readonly','');
+    ta.contentEditable = 'true';
+    ta.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0;pointer-events:none;font-size:16px;';
+    document.body.appendChild(ta);
+
+    const range = document.createRange();
+    range.selectNodeContents(ta);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    ta.setSelectionRange(0, str.length);
+
+    const ok = document.execCommand('copy');
+    sel.removeAllRanges();
+    document.body.removeChild(ta);
+    return !!ok;
+  }catch(_){
+    return false;
+  }
+}
+
+// Click handler for inline .copy-btn[data-copy] buttons.
+// Swaps the label to "✓ コピー完了" for 1.5s on success, "コピー失敗" on error.
+async function handleCopyClick(btn){
+  if(!btn) return;
+  const text = btn.getAttribute('data-copy') || '';
+  const original = btn.textContent;
+  const ok = await copyText(text);
+  btn.textContent = ok ? '✓ コピー完了' : 'コピー失敗';
+  btn.classList.toggle('copied', ok);
+  setTimeout(()=>{
+    btn.textContent = original;
+    btn.classList.remove('copied');
+  }, 1500);
+}
+window.handleCopyClick = handleCopyClick;
+window.copyText = copyText;
 function showAlert(msg, type){
   type = type || 'error';
   document.getElementById('global-alert').innerHTML = '<div class="alert '+type+'">'+esc(msg)+'</div>';
@@ -569,47 +665,108 @@ async function step1Submit(){
   }
 }
 
-// ---- Scenario rendering (flat spec: summary / kling_prompt / telop / hook / bgm) ----
+// ---- Scenario rendering: summary → timeline → overall prompts ----
+const CAMERA_JA = {
+  'close-up':'クローズアップ', 'wide':'ワイドショット', 'tracking':'トラッキング',
+  'top-down':'俯瞰', 'handheld':'ハンドヘルド', 'dolly':'ドリーショット'
+};
+const HOOK_JA = {
+  'hook':'フック（つかみ）', 'build':'展開', 'payoff':'オチ', 'cta':'CTA'
+};
+
+// Format seconds as "0:05" / "0:15" / "1:00"
+function fmtTime(sec){
+  sec = Math.max(0, Math.floor(sec||0));
+  const m = Math.floor(sec/60);
+  const s = sec % 60;
+  return m + ':' + String(s).padStart(2,'0');
+}
+
 function renderScenario(scenario, meta){
-  // Header card (title + meta bits)
+  // Header card
   document.getElementById('overall-title').textContent = scenario.title || scenario.overall_title || '(タイトル未設定)';
-  const totalSec = meta?.total_duration || (Array.isArray(scenario.scenes) ? scenario.scenes.reduce((a,s)=>a+(s.duration||0),0) : 0);
+  const scenes = Array.isArray(scenario.scenes) ? scenario.scenes : [];
+  const totalSec = meta?.total_duration || scenes.reduce((a,s)=>a+(s.duration||0),0);
   const metaBits = [];
   if(totalSec) metaBits.push('合計 ' + totalSec + '秒');
+  if(scenes.length) metaBits.push(scenes.length + 'シーン');
   if(scenario.target_audience) metaBits.push('ターゲット: ' + scenario.target_audience);
   document.getElementById('overall-meta').textContent = metaBits.join(' ・ ');
 
-  // Body: large summary, then hook / telop / bgm, then collapsible English prompt.
-  const rows = [];
+  const parts = [];
+
+  // 1) Summary (big JA block)
   if(scenario.summary){
-    rows.push(
-      '<div class="sc-summary">' + esc(scenario.summary) + '</div>'
-    );
+    parts.push('<div class="sc-summary">' + esc(scenario.summary) + '</div>');
   }
+
+  // 2) Hook + BGM at-a-glance
   if(scenario.hook){
-    rows.push(
-      '<div class="sc-row"><div class="sc-label">つかみ案</div><div class="sc-val">' + esc(scenario.hook) + '</div></div>'
+    parts.push(
+      '<div class="sc-meta-row">'
+        + '<div class="sc-meta-lab">つかみ案</div>'
+        + '<div class="sc-meta-val">' + esc(scenario.hook) + '</div>'
+      + '</div>'
     );
   }
-  if(scenario.telop){
-    rows.push(
-      '<div class="sc-row"><div class="sc-label">テロップ案</div><div class="sc-val sc-telop">' + esc(scenario.telop) + '</div></div>'
+  const bgm = scenario.bgm || scenario.suggested_bgm;
+  if(bgm){
+    parts.push(
+      '<div class="sc-meta-row">'
+        + '<div class="sc-meta-lab">BGM提案</div>'
+        + '<div class="sc-meta-val">' + esc(bgm) + '</div>'
+      + '</div>'
     );
   }
-  if(scenario.bgm || scenario.suggested_bgm){
-    rows.push(
-      '<div class="sc-row"><div class="sc-label">BGM提案</div><div class="sc-val">' + esc(scenario.bgm || scenario.suggested_bgm) + '</div></div>'
-    );
+
+  // 3) Timeline (per-scene cards along a vertical gold line)
+  if(scenes.length){
+    parts.push('<div class="sc-section-title">シーン構成（タイムライン）</div>');
+    let cursor = 0;
+    const items = scenes.map((s,i)=>{
+      const startSec = cursor;
+      cursor += (s.duration || 0);
+      const endSec = cursor;
+      const cam = CAMERA_JA[s.camera_style] || s.camera_style || '';
+      const hook = HOOK_JA[s.hook_type] || s.hook_type || '';
+      const telop = s.telop || '';
+      const chips = [];
+      if(cam) chips.push('<span class="tl-chip">📷 ' + esc(cam) + '</span>');
+      const telopBlock = telop
+        ? '<div class="tl-telop">'
+            + '<span class="tl-telop-txt">' + esc(telop) + '</span>'
+            + '<button class="copy-btn" type="button" data-copy="' + esc(telop) + '" onclick="handleCopyClick(this)">コピー</button>'
+          + '</div>'
+        : '';
+      return '<div class="tl-item">'
+        + '<div class="tl-time">' + fmtTime(startSec) + ' – ' + fmtTime(endSec) + '</div>'
+        + '<div class="tl-head">'
+          + '<span class="tl-num">シーン ' + (i+1) + '</span>'
+          + (hook ? '<span class="tl-hook">' + esc(hook) + '</span>' : '')
+          + '<span class="tl-dur">' + (s.duration||0) + '秒</span>'
+        + '</div>'
+        + (chips.length ? '<div class="tl-chips">' + chips.join('') + '</div>' : '')
+        + telopBlock
+        + (s.prompt ? '<div class="tl-desc">' + esc(s.prompt) + '</div>' : '')
+      + '</div>';
+    }).join('');
+    parts.push('<div class="tl">' + items + '</div>');
   }
+
+  // 4) Collapsible English Kling prompt (with copy button)
   if(scenario.kling_prompt){
-    rows.push(
+    parts.push(
       '<details class="sc-details">'
-        + '<summary>生成プロンプト（英語） <span style="color:var(--text-muted);font-size:11px;">クリックで展開</span></summary>'
-        + '<div class="sc-kling">' + esc(scenario.kling_prompt) + '</div>'
+        + '<summary>生成プロンプト（英語） <span style="color:var(--text-muted);font-size:11px;font-weight:500;">クリックで展開</span></summary>'
+        + '<div class="sc-kling-wrap">'
+          + '<button class="copy-btn" type="button" data-copy="' + esc(scenario.kling_prompt) + '" onclick="handleCopyClick(this)">コピー</button>'
+          + '<div class="sc-kling">' + esc(scenario.kling_prompt) + '</div>'
+        + '</div>'
       + '</details>'
     );
   }
-  document.getElementById('scenes-list').innerHTML = rows.join('');
+
+  document.getElementById('scenes-list').innerHTML = parts.join('');
 
   document.getElementById('chat-msgs').innerHTML = '';
   addChat('bot', 'シナリオを作成しました。修正したい点があればチャットで教えてください。問題なければ画面下の「このプロンプトで生成する」を押してください。');
@@ -808,6 +965,21 @@ function downloadVideo(){
   a.target = '_blank';
   a.click();
 }
+
+async function handleCopyVideoUrl(btn){
+  const url = document.getElementById('result-video').src || '';
+  if(!url){
+    btn.textContent = 'URLがありません';
+    setTimeout(()=>{ btn.textContent = '動画URLをコピー'; }, 1500);
+    return;
+  }
+  const original = btn.textContent;
+  const ok = await copyText(url);
+  btn.textContent = ok ? '✓ URLをコピーしました' : 'コピー失敗';
+  btn.classList.toggle('copied', ok);
+  setTimeout(()=>{ btn.textContent = original; btn.classList.remove('copied'); }, 1800);
+}
+window.handleCopyVideoUrl = handleCopyVideoUrl;
 function restartFlow(){
   currentScenario = null;
   currentScenarioJobId = null;

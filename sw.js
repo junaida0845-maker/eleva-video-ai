@@ -1,5 +1,5 @@
 // Service Worker — auto-update, network-first
-// Build marker: 2026-04-22-login-no-drawer-23lang
+// Build marker: 2026-04-22-timeline-copytext
 const CACHE_VERSION = 'v' + Date.now();
 const CACHE_NAME = 'app-cache-' + CACHE_VERSION;
 
