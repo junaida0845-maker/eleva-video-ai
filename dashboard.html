@@ -69,7 +69,19 @@ textarea::placeholder,input[type=text]::placeholder{color:var(--text-muted);}
 .btn-outline{background:transparent;border:1px solid var(--gold);color:var(--gold);padding:11px 18px;border-radius:10px;font-size:13px;transition:all .15s;}
 .btn-outline:hover{background:rgba(201,168,76,0.1);}
 
-/* Scene cards */
+/* Scenario (flat) display */
+.sc-summary{font-size:16px;line-height:1.7;color:#fff;font-weight:500;padding:16px 18px;background:var(--black-border);border:1px solid var(--border-gold);border-radius:14px;margin-bottom:14px;}
+.sc-row{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.04);}
+.sc-row:last-of-type{border-bottom:none;}
+.sc-label{font-size:11px;color:var(--gold);font-weight:700;letter-spacing:.08em;text-transform:uppercase;}
+.sc-val{font-size:14px;line-height:1.55;color:#fff;}
+.sc-telop{font-weight:700;letter-spacing:.04em;}
+.sc-details{margin-top:8px;padding:12px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;}
+.sc-details summary{cursor:pointer;color:var(--gold);font-size:12px;font-weight:700;letter-spacing:.05em;outline:none;}
+.sc-details[open] summary{margin-bottom:8px;}
+.sc-kling{color:#cfcfcf;font-size:12px;line-height:1.6;background:#0a0a0a;border:1px solid rgba(255,255,255,0.05);border-radius:8px;padding:12px;white-space:pre-wrap;word-break:break-word;font-family:'SFMono-Regular',Menlo,Consolas,monospace;}
+
+/* Scene cards (legacy — kept for fallback paths) */
 .scene-card{background:var(--black-border);border:1px solid rgba(201,168,76,0.2);border-radius:14px;padding:16px 18px;margin-bottom:12px;}
 .scene-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
 .scene-num{background:var(--gold);color:#000;font-size:11px;font-weight:800;padding:3px 10px;border-radius:999px;letter-spacing:.08em;}
@@ -504,89 +516,103 @@ async function step1Submit(){
   btn.textContent = '⏳ プロンプトを作成中...';
 
   try{
-    // Resolve current userId from the live Supabase session so the Edge Function
-    // always sees the correct caller even if currentUser is stale.
-    const {data:{session}} = await sb.auth.getSession();
-    const resolvedUserId = session?.user?.id || currentUser?.id;
+    // Spec-matching session pull. getSession() returns {data:{session:{access_token,user:{id,...}}}}.
+    const session = await sb.auth.getSession();
+    const token = session?.data?.session?.access_token;
+    const userId = session?.data?.session?.user?.id;
 
-    // Split uploaded materials into base64 image array + URL array (spec shape).
-    // images: pure base64 (no `data:image/jpeg;base64,` prefix) per spec —
-    // compressed in handleFilePick via compressImage().
+    if(!token || !userId){
+      showAlert('セッションが切れています。再度ログインしてください。');
+      setTimeout(()=>{location.href='/login.html';}, 1500);
+      return;
+    }
+
+    // images: pure base64 (no `data:image/jpeg;base64,` prefix) — compressed in handleFilePick().
     const images = materials.filter(m=>m.kind==='image').map(m=>m.base64);
     const videos = materials.filter(m=>m.kind==='video').map(m=>m.dataUrl);
     const urls   = materials.filter(m=>m.kind==='url').map(m=>m.url);
 
-    const headers = await authHeaders();
-    const res = await fetch(SUPABASE_FN_BASE + '/scenario-generate', {
-      method:'POST',
-      headers,
-      body: JSON.stringify({
-        prompt: intent,
-        platform: selectedPlatform,
-        target_duration_sec: selectedDuration,
-        aspect_ratio: '9:16',
-        genre: 'general',
-        userId: resolvedUserId,
-        images,
-        videos,
-        urls,
-      })
-    });
+    const res = await fetch(
+      'https://syxctolgqhdtcoaothwi.supabase.co/functions/v1/scenario-generate',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({
+          userId: userId,
+          prompt: intent,
+          platform: selectedPlatform,
+          duration: selectedDuration,
+          images,
+          videos,
+          urls,
+        })
+      }
+    );
     const data = await res.json();
-    if(!res.ok || data.success === false){
-      throw new Error(data.error || ('HTTP '+res.status));
+    if (!data.success) {
+      showAlert('失敗: ' + (data.error || '不明なエラー'));
+      return;
     }
-    currentScenario = data.scenario || {scenes:[]};
+    currentScenario = data.scenario || {};
     currentScenarioJobId = data.job_id || null;
     renderScenario(currentScenario, data);
     goToStep(2);
   }catch(e){
     console.error('[step1]', e);
-    showAlert('プロンプトの作成に失敗しました: ' + (e?.message || String(e)));
+    showAlert('失敗: ' + (e?.message || String(e)));
   }finally{
     btn.disabled = false;
     btn.textContent = 'プロンプトを作成する';
   }
 }
 
-// ---- Scenario rendering (Japanese-only) ----
-const CAMERA_JA = {
-  'close-up':'クローズアップ', 'wide':'ワイドショット', 'tracking':'トラッキング（追従）',
-  'top-down':'俯瞰（真上）', 'handheld':'ハンドヘルド（手ブレ）', 'dolly':'ドリーショット'
-};
-const HOOK_JA = {
-  'hook':'フック（つかみ）', 'build':'展開', 'payoff':'オチ', 'cta':'行動喚起（CTA）'
-};
-
+// ---- Scenario rendering (flat spec: summary / kling_prompt / telop / hook / bgm) ----
 function renderScenario(scenario, meta){
-  const scenes = Array.isArray(scenario?.scenes) ? scenario.scenes : [];
-  document.getElementById('overall-title').textContent = scenario.overall_title || '(タイトル未設定)';
-  const totalSec = meta?.total_duration || scenes.reduce((a,s)=>a+(s.duration||0),0);
+  // Header card (title + meta bits)
+  document.getElementById('overall-title').textContent = scenario.title || scenario.overall_title || '(タイトル未設定)';
+  const totalSec = meta?.total_duration || (Array.isArray(scenario.scenes) ? scenario.scenes.reduce((a,s)=>a+(s.duration||0),0) : 0);
   const metaBits = [];
-  if(scenes.length) metaBits.push(scenes.length + 'シーン構成');
   if(totalSec) metaBits.push('合計 ' + totalSec + '秒');
   if(scenario.target_audience) metaBits.push('ターゲット: ' + scenario.target_audience);
-  if(scenario.suggested_bgm) metaBits.push('BGM案: ' + scenario.suggested_bgm);
   document.getElementById('overall-meta').textContent = metaBits.join(' ・ ');
 
-  document.getElementById('scenes-list').innerHTML = scenes.map((s,i)=>{
-    const cam = CAMERA_JA[s.camera_style] || s.camera_style || '';
-    const hook = HOOK_JA[s.hook_type] || s.hook_type || '';
-    return '<div class="scene-card">'
-      + '<div class="scene-head">'
-        + '<span class="scene-num">シーン ' + (i+1) + '</span>'
-        + (hook ? '<span class="scene-hook">' + esc(hook) + '</span>' : '')
-        + '<span class="scene-dur">' + (s.duration||0) + '秒</span>'
-      + '</div>'
-      + '<div class="scene-row"><span class="rlabel">説明</span><span class="rval">' + esc(s.prompt||'') + '</span></div>'
-      + '<div class="scene-meta">'
-        + '<div><strong>カメラスタイル</strong>' + esc(cam) + '</div>'
-        + '<div><strong>テロップ案</strong>' + esc(s.telop || '（なし）') + '</div>'
-      + '</div>'
-    + '</div>';
-  }).join('');
+  // Body: large summary, then hook / telop / bgm, then collapsible English prompt.
+  const rows = [];
+  if(scenario.summary){
+    rows.push(
+      '<div class="sc-summary">' + esc(scenario.summary) + '</div>'
+    );
+  }
+  if(scenario.hook){
+    rows.push(
+      '<div class="sc-row"><div class="sc-label">つかみ案</div><div class="sc-val">' + esc(scenario.hook) + '</div></div>'
+    );
+  }
+  if(scenario.telop){
+    rows.push(
+      '<div class="sc-row"><div class="sc-label">テロップ案</div><div class="sc-val sc-telop">' + esc(scenario.telop) + '</div></div>'
+    );
+  }
+  if(scenario.bgm || scenario.suggested_bgm){
+    rows.push(
+      '<div class="sc-row"><div class="sc-label">BGM提案</div><div class="sc-val">' + esc(scenario.bgm || scenario.suggested_bgm) + '</div></div>'
+    );
+  }
+  if(scenario.kling_prompt){
+    rows.push(
+      '<details class="sc-details">'
+        + '<summary>生成プロンプト（英語） <span style="color:var(--text-muted);font-size:11px;">クリックで展開</span></summary>'
+        + '<div class="sc-kling">' + esc(scenario.kling_prompt) + '</div>'
+      + '</details>'
+    );
+  }
+  document.getElementById('scenes-list').innerHTML = rows.join('');
+
   document.getElementById('chat-msgs').innerHTML = '';
-  addChat('bot', '3シーン構成のシナリオを作成しました。修正したい点があればチャットで教えてください。問題なければ画面下の「このプロンプトで生成する」を押してください。');
+  addChat('bot', 'シナリオを作成しました。修正したい点があればチャットで教えてください。問題なければ画面下の「このプロンプトで生成する」を押してください。');
 }
 
 // ---- STEP 2 chat ----
@@ -625,34 +651,39 @@ async function step2SendChat(){
     const newPrompt = refined.updated_prompt || currentIntent;
     currentIntent = newPrompt;
     addChat('bot', (refined.reply || '了解しました。シナリオを作り直します。') + '\n\n（シナリオを再生成しています...）');
-    // Re-run scenario-generate with the refined prompt, carrying materials forward
-    const {data:{session}} = await sb.auth.getSession();
-    const resolvedUserId = session?.user?.id || currentUser?.id;
-    // images: pure base64 (no `data:image/jpeg;base64,` prefix) per spec —
-    // compressed in handleFilePick via compressImage().
+    // Re-run scenario-generate with the refined prompt, spec-matching fetch shape.
+    const session = await sb.auth.getSession();
+    const token = session?.data?.session?.access_token;
+    const userId = session?.data?.session?.user?.id;
+    // images: pure base64 (no prefix) — compressed in handleFilePick via compressImage().
     const images = materials.filter(m=>m.kind==='image').map(m=>m.base64);
     const videos = materials.filter(m=>m.kind==='video').map(m=>m.dataUrl);
     const urls   = materials.filter(m=>m.kind==='url').map(m=>m.url);
-    const headers = await authHeaders();
-    const res = await fetch(SUPABASE_FN_BASE + '/scenario-generate',{
-      method:'POST', headers,
-      body: JSON.stringify({
-        prompt: newPrompt,
-        platform: selectedPlatform,
-        target_duration_sec: selectedDuration,
-        aspect_ratio: '9:16',
-        genre: 'general',
-        userId: resolvedUserId,
-        images,
-        videos,
-        urls,
-      })
-    });
+    const res = await fetch(
+      'https://syxctolgqhdtcoaothwi.supabase.co/functions/v1/scenario-generate',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({
+          userId: userId,
+          prompt: newPrompt,
+          platform: selectedPlatform,
+          duration: selectedDuration,
+          images,
+          videos,
+          urls,
+        })
+      }
+    );
     const data = await res.json();
-    if(!res.ok || data.success === false){
-      throw new Error(data.error || ('HTTP '+res.status));
+    if (!data.success) {
+      addChat('bot', '⚠️ 失敗: ' + (data.error || '不明なエラー'));
+      return;
     }
-    currentScenario = data.scenario || {scenes:[]};
+    currentScenario = data.scenario || {};
     currentScenarioJobId = data.job_id || null;
     renderScenario(currentScenario, data);
   }catch(e){
@@ -666,11 +697,18 @@ async function step2SendChat(){
 // ---- STEP 3: kick off video generation ----
 async function generateVideo(){
   clearAlert();
-  if(!currentScenario || !currentScenario.scenes || !currentScenario.scenes.length){
+  // Accept either the flat shape (kling_prompt) or the legacy multi-scene shape (scenes[]).
+  const hasKling = currentScenario && typeof currentScenario.kling_prompt === 'string' && currentScenario.kling_prompt.trim();
+  const hasScenes = currentScenario && Array.isArray(currentScenario.scenes) && currentScenario.scenes.length;
+  if(!hasKling && !hasScenes){
     showAlert('シナリオが確定していません。STEP 1 からやり直してください。');
     return;
   }
-  if(!currentUser){
+  // Pull fresh session (user could be null on cold load)
+  const session = await sb.auth.getSession();
+  const token = session?.data?.session?.access_token;
+  const userId = session?.data?.session?.user?.id || currentUser?.id;
+  if(!token || !userId){
     showAlert('ログインが必要です。');
     return;
   }
@@ -678,13 +716,13 @@ async function generateVideo(){
   document.getElementById('loader-text').textContent = '生成リクエストを送信中...';
 
   try{
-    // Merge scene prompts into one prompt string for the single-shot Kling call.
-    // (multi-scene job handling is triggered by scenario-generate server-side when supported;
-    // here we send the consolidated prompt plus the total duration.)
-    const prompt = currentScenario.scenes.map(s=>s.prompt).filter(Boolean).join('\n\n');
+    // Prefer the flat kling_prompt (new schema); fall back to merging scene prompts.
+    const prompt = hasKling
+      ? currentScenario.kling_prompt
+      : currentScenario.scenes.map(s=>s.prompt).filter(Boolean).join('\n\n');
     const body = {
       prompt,
-      userId: currentUser.id,
+      userId,
       platform: selectedPlatform,
       duration: selectedDuration,
       lang: 'ja',
@@ -692,12 +730,11 @@ async function generateVideo(){
       aspect_ratio: '9:16',
       scenario_job_id: currentScenarioJobId,
     };
-    const {data:{session}} = await sb.auth.getSession();
     const res = await fetch('/api/generate-video', {
       method:'POST',
       headers:{
         'Content-Type':'application/json',
-        'Authorization': 'Bearer ' + (session?.access_token || ''),
+        'Authorization': 'Bearer ' + token,
       },
       body: JSON.stringify(body)
     });

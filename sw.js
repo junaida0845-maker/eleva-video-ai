@@ -1,5 +1,5 @@
 // Service Worker — auto-update, network-first
-// Build marker: 2026-04-22-dashboard-err-unobj
+// Build marker: 2026-04-22-scenario-flat-schema
 const CACHE_VERSION = 'v' + Date.now();
 const CACHE_NAME = 'app-cache-' + CACHE_VERSION;
 
