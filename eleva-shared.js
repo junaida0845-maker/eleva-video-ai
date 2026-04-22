@@ -86,10 +86,27 @@ function applyLanguage(code){
   }).catch(()=>{});}
 }
 
+// Hardcoded fallback so the 23-language picker always renders all flags +
+// native names even if eleva-i18n.js hasn't finished loading or was blocked
+// by a cache mismatch. Kept in sync with ELEVA_LANG_NAMES.
+const LANG_NAMES_FALLBACK={
+  'ja':{native:'日本語',flag:'🇯🇵'},'en-us':{native:'English (US)',flag:'🇺🇸'},'en-gb':{native:'English (UK)',flag:'🇬🇧'},
+  'ko':{native:'한국어',flag:'🇰🇷'},'zh-tw':{native:'繁體中文',flag:'🇹🇼'},'zh-cn':{native:'简体中文',flag:'🇨🇳'},
+  'de':{native:'Deutsch',flag:'🇩🇪'},'fr':{native:'Français',flag:'🇫🇷'},'es':{native:'Español',flag:'🇪🇸'},
+  'pt-br':{native:'Português (BR)',flag:'🇧🇷'},'th':{native:'ภาษาไทย',flag:'🇹🇭'},'vi':{native:'Tiếng Việt',flag:'🇻🇳'},
+  'id':{native:'Bahasa Indonesia',flag:'🇮🇩'},'ar':{native:'العربية',flag:'🇸🇦'},'hi':{native:'हिन्दी',flag:'🇮🇳'},
+  'ms':{native:'Bahasa Melayu',flag:'🇲🇾'},'tl':{native:'Filipino',flag:'🇵🇭'},'tr':{native:'Türkçe',flag:'🇹🇷'},
+  'ru':{native:'Русский',flag:'🇷🇺'},'nl':{native:'Nederlands',flag:'🇳🇱'},'sv':{native:'Svenska',flag:'🇸🇪'},
+  'it':{native:'Italiano',flag:'🇮🇹'},'pl':{native:'Polski',flag:'🇵🇱'}
+};
+
 function showLanguageModal(){
   const existing=document.getElementById('lang-modal');if(existing)existing.remove();
   const lang=localStorage.getItem('eleva_lang')||'ja';
-  const names=win.ELEVA_LANG_NAMES||{};
+  // Use the loaded dictionary when available; otherwise fall back to the
+  // hardcoded 23-entry map so every flag + native label is guaranteed.
+  const loaded=win.ELEVA_LANG_NAMES||{};
+  const names={...LANG_NAMES_FALLBACK,...loaded};
   const langs=Object.keys(names);
   const modal=document.createElement('div');
   modal.id='lang-modal';
@@ -312,13 +329,16 @@ async function uploadToStorage(file,userId){
 }
 
 // ── Main Init ─────────────────────────────────────────────
-async function initElevaPage({page,requireAuth=true,redirectIfAuth=false,onUser,skipSplash}={}){
+async function initElevaPage({page,requireAuth=true,redirectIfAuth=false,onUser,skipSplash,showHamburger=true}={}){
   detectLanguage();
   if(!skipSplash)showSplash();
   applyLanguage(localStorage.getItem('eleva_lang')||'ja');
   const user=await checkAuth({requireAuth,redirectIfAuth,onUser});
   if(requireAuth&&!user)return;
-  if(page&&page!=='landing'){
+  // Auth pages (login / signup / reset) pass showHamburger:false so the drawer
+  // never appears for unauthenticated visitors. requireAuth guards on other
+  // pages still redirect unauthenticated URL-direct access to /login.html.
+  if(page&&page!=='landing'&&showHamburger){
     initHamburger(page);
     initChatbot();
     initBackgroundGen();

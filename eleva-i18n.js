@@ -44,8 +44,9 @@ window.ELEVA_LANG_NAMES = {
   'de':{native:'Deutsch',flag:'🇩🇪'},'fr':{native:'Français',flag:'🇫🇷'},'es':{native:'Español',flag:'🇪🇸'},
   'pt-br':{native:'Português (BR)',flag:'🇧🇷'},'th':{native:'ภาษาไทย',flag:'🇹🇭'},'vi':{native:'Tiếng Việt',flag:'🇻🇳'},
   'id':{native:'Bahasa Indonesia',flag:'🇮🇩'},'ar':{native:'العربية',flag:'🇸🇦'},'hi':{native:'हिन्दी',flag:'🇮🇳'},
-  'ms':{native:'Bahasa Melayu',flag:'🇲🇾'},'tr':{native:'Türkçe',flag:'🇹🇷'},'ru':{native:'Русский',flag:'🇷🇺'},
-  'nl':{native:'Nederlands',flag:'🇳🇱'},'it':{native:'Italiano',flag:'🇮🇹'},'pl':{native:'Polski',flag:'🇵🇱'}
+  'ms':{native:'Bahasa Melayu',flag:'🇲🇾'},'tl':{native:'Filipino',flag:'🇵🇭'},'tr':{native:'Türkçe',flag:'🇹🇷'},
+  'ru':{native:'Русский',flag:'🇷🇺'},'nl':{native:'Nederlands',flag:'🇳🇱'},'sv':{native:'Svenska',flag:'🇸🇪'},
+  'it':{native:'Italiano',flag:'🇮🇹'},'pl':{native:'Polski',flag:'🇵🇱'}
 };
 
 window.elevaT = function(key, lang) {

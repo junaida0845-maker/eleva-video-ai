@@ -46,7 +46,9 @@ input::placeholder{color:var(--text-muted);}
 .auth-footer{text-align:center;margin-top:24px;color:var(--text-muted);font-size:13px;}
 .auth-footer a{color:var(--gold);text-decoration:none;}
 .lang-bar{position:fixed;top:16px;right:16px;z-index:10;}
-.lang-bar button{background:rgba(17,17,17,0.9);border:1px solid var(--border-gold);color:var(--gold);padding:8px 14px;border-radius:20px;cursor:pointer;font-size:13px;}
+.lang-bar button{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;background:rgba(17,17,17,0.92);border:1px solid var(--gold);color:var(--gold);border-radius:50%;cursor:pointer;transition:all 0.15s ease;box-shadow:0 2px 8px rgba(0,0,0,0.3);}
+.lang-bar button:hover{background:rgba(201,168,76,0.12);color:var(--gold-light);border-color:var(--gold-light);box-shadow:0 4px 14px rgba(201,168,76,0.28);}
+.lang-bar button svg{width:20px;height:20px;}
 /* リセットモーダル */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:100;display:none;}
 .modal-overlay.show{display:flex;}
@@ -67,7 +69,13 @@ input::placeholder{color:var(--text-muted);}
 <body>
 
 <div class="lang-bar">
-  <button onclick="ELEVA.showLanguageModal()">🌐</button>
+  <button onclick="ELEVA.showLanguageModal()" aria-label="Select language" title="Select language">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="2" y1="12" x2="22" y2="12"/>
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+    </svg>
+  </button>
 </div>
 
 <!-- パスワードリセットモーダル -->
@@ -154,6 +162,7 @@ input::placeholder{color:var(--text-muted);}
   </div>
 </div>
 
+<script src="/eleva-icons.js"></script>
 <script src="/eleva-i18n.js"></script>
 <script src="/eleva-shared.js"></script>
 <script>
@@ -237,7 +246,9 @@ async function doSignup(){
 function showError(el,msg){el.textContent=msg;el.style.display='block';}
 
 document.addEventListener('DOMContentLoaded',async()=>{
-  ELEVA.initElevaPage({page:'login',requireAuth:false,redirectIfAuth:true});
+  // showHamburger:false → suppress the drawer entirely on the login page so
+  // unauthenticated visitors can't open the nav and peek at authenticated routes.
+  ELEVA.initElevaPage({page:'login',requireAuth:false,redirectIfAuth:true,showHamburger:false});
   ELEVA.applyLanguage(localStorage.getItem('eleva_lang')||'ja');
   if(window.location.hash==='#signup')switchTab('signup');
 
