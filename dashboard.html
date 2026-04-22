@@ -160,7 +160,11 @@ textarea::placeholder,input[type=text]::placeholder{color:var(--text-muted);}
 .loader-sub{font-size:12px;color:var(--text-muted);text-align:center;line-height:1.6;}
 
 /* Result */
-.result-video{width:100%;border-radius:14px;border:1px solid var(--gold);background:#000;display:block;}
+.video-wrap{position:relative;width:100%;border-radius:14px;overflow:hidden;border:1px solid var(--gold);background:#000;}
+.result-video{width:100%;display:block;background:#000;}
+/* CapCut-style shimmer watermark — positioned bottom-right, pointer-events off so it doesn't block the video controls. */
+.wm-canvas{position:absolute;right:10px;bottom:12px;width:96px;height:26px;pointer-events:none;z-index:2;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.55));}
+.wm-canvas.wm-hidden{display:none;}
 .result-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;}
 
 /* Alert / error */
@@ -307,7 +311,10 @@ textarea::placeholder,input[type=text]::placeholder{color:var(--text-muted);}
   <!-- STEP 4 — Completed -->
   <section class="card hidden" id="step4-card">
     <div class="card-title"><span class="step-badge">STEP 4</span> 完了</div>
-    <video class="result-video" id="result-video" controls playsinline></video>
+    <div class="video-wrap" id="video-wrap">
+      <video class="result-video" id="result-video" controls playsinline></video>
+      <canvas id="wm-canvas" class="wm-canvas wm-hidden" aria-hidden="true"></canvas>
+    </div>
     <div class="result-actions">
       <button class="btn-gold" id="download-btn" onclick="downloadVideo()" style="margin-top:0;">ダウンロード</button>
       <button class="btn-outline" onclick="restartFlow()" style="padding:14px;">もう一度作る</button>
@@ -358,6 +365,15 @@ let pollingInterval = null;
 // Material uploads (STEP 1). Each item: {kind:'image'|'video'|'url', name, dataUrl?, url?}
 let materials = [];
 const MAX_MATERIALS = 5;
+
+// Watermark tier config. plan_id values in production include:
+//   free / advance / trial → ELEVA shimmer WM (cannot remove)
+//   pro / pro_plus / business / enterprise → hidden
+//   studio → custom text (user-defined in profiles.custom_watermark_text), falls back to ELEVA if empty
+const HIDE_WM_PLANS = new Set(['pro','pro_plus','business','enterprise']);
+const CUSTOM_WM_PLANS = new Set(['studio']);
+let userPlanId = null;
+let userCustomWatermarkText = '';
 
 // ---- Utils ----
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -936,6 +952,7 @@ function pollStatus(){
         if(vUrl){
           document.getElementById('result-video').src = vUrl;
           goToStep(4);
+          setupWatermark();
         }else{
           showAlert('動画URLが取得できませんでした。履歴から確認してください。');
           goToStep(2);
@@ -956,6 +973,94 @@ function pollStatus(){
 }
 
 // ---- STEP 4 ----
+// ---- Watermark (CapCut-style shimmer, Canvas overlay preview only) ----
+// Tier rules (from product spec):
+//   free / advance / trial / unknown → always show "ELEVA" shimmer
+//   pro / pro_plus / business        → hidden
+//   studio                           → custom text (profiles.custom_watermark_text), falls back to "ELEVA"
+function watermarkMode(planId){
+  const p = String(planId || '').toLowerCase();
+  if(HIDE_WM_PLANS.has(p)) return 'hidden';
+  if(CUSTOM_WM_PLANS.has(p)) return 'custom';
+  return 'eleva';
+}
+
+let _wmRaf = 0;
+let _wmStart = 0;
+
+function setupWatermark(){
+  const canvas = document.getElementById('wm-canvas');
+  if(!canvas) return;
+  // Stop any previous loop before re-configuring.
+  teardownWatermark();
+
+  const mode = watermarkMode(userPlanId);
+  if(mode === 'hidden'){
+    canvas.classList.add('wm-hidden');
+    return;
+  }
+  const text = (mode === 'custom' && userCustomWatermarkText) ? userCustomWatermarkText : 'ELEVA';
+
+  // Use devicePixelRatio-aware backing store so the shimmer stays crisp on HiDPI.
+  const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
+  // CSS 96×26 — keep in sync with .wm-canvas width/height.
+  const cssW = 96, cssH = 26;
+  canvas.width = Math.floor(cssW * dpr);
+  canvas.height = Math.floor(cssH * dpr);
+  canvas.classList.remove('wm-hidden');
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'center';
+  ctx.font = '800 13px Inter, "Noto Sans JP", sans-serif';
+
+  _wmStart = performance.now();
+  const loop = (now) => {
+    // CSS coords (scale already applied).
+    ctx.clearRect(0, 0, cssW, cssH);
+
+    // 2.4s shimmer loop: a bright highlight streaks across the gold base.
+    const t = ((now - _wmStart) % 2400) / 2400;   // 0 → 1
+    const shimmerX = -cssW + t * (2 * cssW);      // -W → W
+    const grad = ctx.createLinearGradient(shimmerX, 0, shimmerX + cssW, 0);
+    grad.addColorStop(0.00, '#a07830');           // gold-dark
+    grad.addColorStop(0.42, '#c9a84c');           // gold
+    grad.addColorStop(0.50, '#f5e28a');           // highlight
+    grad.addColorStop(0.58, '#c9a84c');
+    grad.addColorStop(1.00, '#a07830');
+
+    // Readability: dark outer glow under the text so it stays visible on any video bg.
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.65)';
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetY = 1;
+    ctx.fillStyle = '#000';
+    ctx.fillText(text, cssW / 2, cssH / 2);
+    ctx.restore();
+
+    // Gold shimmer layer on top.
+    ctx.fillStyle = grad;
+    ctx.fillText(text, cssW / 2, cssH / 2);
+
+    _wmRaf = requestAnimationFrame(loop);
+  };
+  _wmRaf = requestAnimationFrame(loop);
+}
+
+function teardownWatermark(){
+  if(_wmRaf){
+    cancelAnimationFrame(_wmRaf);
+    _wmRaf = 0;
+  }
+  const canvas = document.getElementById('wm-canvas');
+  if(canvas){
+    canvas.classList.add('wm-hidden');
+    const ctx = canvas.getContext('2d');
+    if(ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+}
+
 function downloadVideo(){
   const url = document.getElementById('result-video').src;
   if(!url) return;
@@ -988,6 +1093,7 @@ function restartFlow(){
   currentGenId = null;
   materials = [];
   renderThumbs();
+  teardownWatermark();
   document.getElementById('intent-input').value = '';
   document.getElementById('material-url').value = '';
   document.getElementById('result-video').removeAttribute('src');
@@ -1000,13 +1106,15 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   try{
     currentUser = await ELEVA.initElevaPage({page:'generate', onUser: u => {currentUser = u;}});
     if(currentUser){
-      const {data:prof} = await sb.from('profiles').select('credits_remaining,is_admin').eq('id', currentUser.id).single();
+      const {data:prof} = await sb.from('profiles').select('credits_remaining,is_admin,plan_id,custom_watermark_text').eq('id', currentUser.id).single();
       if(prof){
         document.getElementById('credits-badge').style.display = '';
         document.getElementById('credits-badge').textContent = '⚡ ' + (prof.credits_remaining ?? '--');
         if(prof.is_admin){
           document.getElementById('admin-link').style.display = '';
         }
+        userPlanId = prof.plan_id || null;
+        userCustomWatermarkText = (prof.custom_watermark_text || '').trim();
       }
     }
   }catch(e){
