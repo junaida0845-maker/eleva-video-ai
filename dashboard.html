@@ -228,8 +228,8 @@ textarea::placeholder,input[type=text]::placeholder{color:var(--text-muted);}
     <div style="margin-top:18px;">
       <label>動画尺</label>
       <div class="opt-grid" id="duration-grid">
-        <button class="opt-btn" data-dur="15" type="button">15秒</button>
-        <button class="opt-btn active" data-dur="30" type="button">30秒</button>
+        <button class="opt-btn active" data-dur="15" type="button">15秒</button>
+        <button class="opt-btn" data-dur="30" type="button">30秒</button>
         <button class="opt-btn" data-dur="60" type="button">60秒</button>
       </div>
     </div>
@@ -312,7 +312,7 @@ const sb = ELEVA.getSupabase();
 let currentUser = null;
 let currentStep = 1;
 let selectedPlatform = 'tiktok';
-let selectedDuration = 30;
+let selectedDuration = 15;
 let currentScenario = null;        // scenario returned by scenario-generate
 let currentScenarioJobId = null;   // multi_scene_jobs.id
 let currentIntent = '';            // the original user intent text
