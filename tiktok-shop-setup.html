@@ -210,10 +210,12 @@ input,select{font-family:inherit;}
       <label for="az-confirm">Amazon の連携が完了しました</label>
     </label>
 
+    <div class="status-msg" id="az-status"></div>
+
     <div class="btn-row">
       <a href="/tiktok-shop-guide.pdf" target="_blank" rel="noopener" class="btn btn-ghost">PDFガイドを見る</a>
       <button class="btn btn-ghost" onclick="skipAmazon()">スキップ（Amazon未出品の場合）</button>
-      <button class="btn btn-gold" id="az-next-btn" disabled onclick="goStep(3)">次へ  →</button>
+      <button class="btn btn-gold" id="az-next-btn" disabled onclick="confirmAmazonAndNext()">次へ  →</button>
     </div>
   </div>
 
@@ -235,9 +237,11 @@ input,select{font-family:inherit;}
       <label for="tt-confirm">TikTok Shop の連携が完了しました</label>
     </label>
 
+    <div class="status-msg" id="tt-status"></div>
+
     <div class="btn-row">
       <a href="/tiktok-shop-guide.pdf" target="_blank" rel="noopener" class="btn btn-ghost">PDFガイドを見る</a>
-      <button class="btn btn-gold" id="tt-next-btn" disabled onclick="goStep(4)">次へ  →</button>
+      <button class="btn btn-gold" id="tt-next-btn" disabled onclick="confirmTikTokAndNext()">次へ  →</button>
     </div>
   </div>
 
@@ -248,9 +252,11 @@ input,select{font-family:inherit;}
 
     <div id="products-list"></div>
 
+    <div class="status-msg" id="done-status"></div>
+
     <div class="btn-row">
       <button class="btn btn-outline" onclick="addProduct()">+ 商品を追加</button>
-      <button class="btn btn-gold btn-big" onclick="goComplete()">セットアップ完了  →</button>
+      <button class="btn btn-gold btn-big" id="done-btn" onclick="goComplete()">セットアップ完了  →</button>
     </div>
   </div>
 
@@ -321,14 +327,24 @@ function goStep(n){
   persistState();
   if(n===4&&state.products.length===0)addProduct();
 }
-function goComplete(){
-  // Move indicator fully lit, show done pane
+async function goComplete(){
+  const btn=document.getElementById('done-btn');
+  lockBtn(btn,'保存中...');
+  hideStatus('done-status');
+  const validProducts=state.products.filter(p=>p.name&&p.price);
+  const r=await callConnectApi('complete_setup',{products:validProducts});
+  if(!r.ok){
+    showStatus('done-status','err','保存に失敗しました: '+(r.error||'不明なエラー'));
+    unlockBtn(btn);
+    return;
+  }
   currentStep=4;
   document.querySelectorAll('.step-dot').forEach(el=>{el.classList.remove('active');el.classList.add('done');});
   showPane('done');
   renderSummary();
   window.scrollTo({top:0,behavior:'smooth'});
   persistState();
+  unlockBtn(btn);
 }
 
 // ── Status msg helper ─────────────
@@ -343,17 +359,52 @@ function hideStatus(id){
   if(el){el.className='status-msg';el.innerHTML='';}
 }
 
+// ── Unified API call (tiktok-shop-connect) ─────────────
+async function callConnectApi(action,extra){
+  const sb=ELEVA.getSupabase();
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){location.href='/login.html?next=/tiktok-shop-setup.html';return{ok:false};}
+  try{
+    const res=await fetch(SUPABASE_URL+'/functions/v1/tiktok-shop-connect',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        apikey:SUPABASE_ANON_KEY,
+        'Authorization':'Bearer '+session.access_token,
+      },
+      body:JSON.stringify(Object.assign({action},extra||{})),
+    });
+    const json=await res.json().catch(()=>({}));
+    if(!res.ok)return{ok:false,status:res.status,error:json.error||json.message||('HTTP '+res.status)};
+    return{ok:true,json};
+  }catch(e){
+    return{ok:false,error:e?.message||String(e)};
+  }
+}
+
+function lockBtn(btn,txt){if(btn){btn.dataset.prev=btn.textContent;btn.disabled=true;btn.textContent=txt||'送信中...';}}
+function unlockBtn(btn){if(btn){btn.disabled=false;if(btn.dataset.prev){btn.textContent=btn.dataset.prev;delete btn.dataset.prev;}}}
+
 // ── Step 1: 4Seller confirm ─────────────
-function confirmFourSeller(){
+async function confirmFourSeller(){
   const email=document.getElementById('fs-email').value.trim();
   if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
     showStatus('fs-status','err','メールアドレスを正しい形式で入力してください。');
     return;
   }
+  const btn=document.getElementById('fs-next-btn');
+  lockBtn(btn);
+  hideStatus('fs-status');
+  const r=await callConnectApi('register_fouseller',{fouseller_email:email});
+  if(!r.ok){
+    showStatus('fs-status','err','登録に失敗しました: '+(r.error||'不明なエラー'));
+    unlockBtn(btn);
+    return;
+  }
   state.fourSellerEmail=email;
   state.fourSellerDone=true;
   persistState();
-  hideStatus('fs-status');
+  unlockBtn(btn);
   goStep(2);
 }
 
@@ -365,10 +416,36 @@ function onAmazonConfirmChange(){
   document.getElementById('az-next-btn').disabled=!cb.checked;
   persistState();
 }
-function skipAmazon(){
+async function confirmAmazonAndNext(){
+  const btn=document.getElementById('az-next-btn');
+  lockBtn(btn);
+  const r=await callConnectApi('confirm_amazon');
+  if(!r.ok){
+    showStatus('az-status','err','送信に失敗しました: '+(r.error||'不明なエラー'));
+    unlockBtn(btn);
+    return;
+  }
+  state.amazonDone=true;
+  state.amazonSkipped=false;
+  persistState();
+  unlockBtn(btn);
+  hideStatus('az-status');
+  goStep(3);
+}
+async function skipAmazon(){
+  const btn=event?.target;
+  lockBtn(btn,'スキップ中...');
+  const r=await callConnectApi('skip_amazon');
+  if(!r.ok){
+    showStatus('az-status','err','送信に失敗しました: '+(r.error||'不明なエラー'));
+    unlockBtn(btn);
+    return;
+  }
   state.amazonDone=false;
   state.amazonSkipped=true;
   persistState();
+  unlockBtn(btn);
+  hideStatus('az-status');
   goStep(3);
 }
 
@@ -378,6 +455,21 @@ function onTikTokConfirmChange(){
   state.tiktokDone=cb.checked;
   document.getElementById('tt-next-btn').disabled=!cb.checked;
   persistState();
+}
+async function confirmTikTokAndNext(){
+  const btn=document.getElementById('tt-next-btn');
+  lockBtn(btn);
+  const r=await callConnectApi('confirm_tiktok');
+  if(!r.ok){
+    showStatus('tt-status','err','送信に失敗しました: '+(r.error||'不明なエラー'));
+    unlockBtn(btn);
+    return;
+  }
+  state.tiktokDone=true;
+  persistState();
+  unlockBtn(btn);
+  hideStatus('tt-status');
+  goStep(4);
 }
 
 // ── Step 4: Products ─────────────
@@ -467,37 +559,9 @@ function renderSummary(){
   document.getElementById('summary').innerHTML=rows.join('');
 }
 
-async function finishSetup(){
-  const btn=event.target;
-  btn.disabled=true;btn.textContent='保存中...';
-  try{
-    const sb=ELEVA.getSupabase();
-    const {data:{session}}=await sb.auth.getSession();
-    if(!session){location.href='/login.html?next=/tiktok-shop-setup.html';return;}
-    const validProducts=state.products.filter(p=>p.name&&p.price);
-    const res=await fetch(SUPABASE_URL+'/functions/v1/tiktok-shop-setup-complete',{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        apikey:SUPABASE_ANON_KEY,
-        'Authorization':'Bearer '+session.access_token,
-      },
-      body:JSON.stringify({
-        four_seller_email:state.fourSellerEmail,
-        four_seller_done:state.fourSellerDone,
-        amazon_done:state.amazonDone,
-        amazon_skipped:state.amazonSkipped,
-        tiktok_done:state.tiktokDone,
-        products:validProducts,
-      }),
-    });
-    if(!res.ok)console.warn('[setup-complete] non-OK:',res.status);
-    localStorage.removeItem(STORAGE_KEY);
-    location.href='/mypage.html';
-  }catch(e){
-    console.warn('[finish]',e);
-    location.href='/mypage.html';
-  }
+function finishSetup(){
+  localStorage.removeItem(STORAGE_KEY);
+  location.href='/mypage.html';
 }
 
 // ── State persistence ─────────────
