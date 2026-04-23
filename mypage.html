@@ -112,6 +112,18 @@ footer{margin-top:60px;border-top:1px solid var(--border);padding:30px 20px;text
   .card{padding:20px 18px;}
   .plan-name-big{font-size:24px;}
 }
+
+/* Yearly upgrade banner */
+.upgrade-banner{margin:20px 0;padding:20px 24px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.3);border-radius:4px;}
+.upgrade-banner-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.upgrade-banner-title{font-family:'DM Sans','Inter',sans-serif;font-size:15px;font-weight:500;color:#fff;margin:0 0 6px;}
+.upgrade-banner-title span{color:#c9a84c;}
+.upgrade-banner-sub{font-family:'DM Sans','Inter',sans-serif;font-size:12px;color:rgba(255,255,255,0.45);margin:0;line-height:1.6;max-width:420px;}
+.upgrade-banner-right{display:flex;align-items:center;gap:16px;flex-shrink:0;}
+.upgrade-banner-saving{font-family:'Cormorant Garamond',serif;font-size:22px;color:#c9a84c;margin:0;white-space:nowrap;}
+.upgrade-banner-btn{padding:10px 20px;background:#c9a84c;border:none;border-radius:2px;color:#000;font-family:'DM Sans','Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background 0.2s;}
+.upgrade-banner-btn:hover{background:#d4b460;}
+.upgrade-banner-btn:disabled{opacity:0.6;cursor:not-allowed;}
 </style>
 <!-- eleva-sw-register --><script>if('serviceWorker' in navigator){window.addEventListener('load',async()=>{try{const reg=await navigator.serviceWorker.register('/sw.js');reg.addEventListener('updatefound',()=>{const nw=reg.installing;nw.addEventListener('statechange',()=>{if(nw.state==='installed'&&navigator.serviceWorker.controller){nw.postMessage('skipWaiting');navigator.serviceWorker.addEventListener('controllerchange',()=>window.location.reload());}});});setInterval(()=>reg.update(),30*60*1000);}catch(e){console.log('SW registration failed:',e);}});}</script>
 </head>
@@ -150,6 +162,27 @@ footer{margin-top:60px;border-top:1px solid var(--border);padding:30px 20px;text
     <div class="usage-text"><span id="usage-current" data-i18n="usage_label">今月の使用</span><span id="usage-stat">—</span></div>
 
     <div class="row" style="margin-top:18px;"><span class="row-label" data-i18n="next_billing">次回請求日</span><span class="row-value" id="next-billing">—</span></div>
+  </div>
+
+  <!-- Yearly upgrade banner -->
+  <div id="yearly-upgrade-banner" style="display:none;" class="upgrade-banner">
+    <div class="upgrade-banner-inner">
+      <div class="upgrade-banner-text">
+        <p class="upgrade-banner-title">
+          年額プランで<span>20% お得</span>に
+        </p>
+        <p class="upgrade-banner-sub">
+          今すぐ切り替えると、残り日数分は差し引いた金額だけご請求されます。
+          自動更新・返金なし。
+        </p>
+      </div>
+      <div class="upgrade-banner-right">
+        <p class="upgrade-banner-saving" id="upgrade-saving-text"></p>
+        <button class="upgrade-banner-btn" onclick="upgradeToYearly()">
+          年額に切り替える
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Card / Billing -->
@@ -451,12 +484,76 @@ async function loadAffiliate(){
   }catch(e){console.warn('[affiliate] load failed',e);}
 }
 
+// ─ Yearly upgrade banner ───────────────────────────
+async function checkUpgradeBanner(){
+  try{
+    const sb=ELEVA.getSupabase();
+    const {data:{user:u}}=await sb.auth.getUser();
+    if(!u)return;
+
+    const {data:profile}=await sb.from('profiles')
+      .select('plan_id, billing_cycle, subscription_id')
+      .eq('id',u.id)
+      .single();
+    if(!profile)return;
+
+    if(profile.billing_cycle!=='monthly')return;
+    if(!profile.plan_id||profile.plan_id==='free_v2')return;
+
+    const savings={
+      'advance':          {monthly:4980, yearly:47808},
+      'pro_v2':           {monthly:19800,yearly:190080},
+      'studio_v2':        {monthly:29800,yearly:286080},
+      'enterprise_lite':  {monthly:99800,yearly:957600},
+      'tiktok_shop_lite': {monthly:4980, yearly:47808},
+      'tiktok_shop_pro':  {monthly:34800,yearly:334080},
+    };
+    const s=savings[profile.plan_id];
+    if(!s)return;
+
+    const annualIfMonthly=s.monthly*12;
+    const savedAmount=annualIfMonthly-s.yearly;
+    document.getElementById('upgrade-saving-text').textContent='年間 ¥'+savedAmount.toLocaleString()+' お得';
+    document.getElementById('yearly-upgrade-banner').style.display='block';
+  }catch(e){console.warn('[upgrade banner]',e);}
+}
+
+async function upgradeToYearly(){
+  const btn=document.querySelector('.upgrade-banner-btn');
+  if(btn){btn.disabled=true;btn.textContent='処理中...';}
+  try{
+    const sb=ELEVA.getSupabase();
+    const {data:{session}}=await sb.auth.getSession();
+    const res=await fetch(SUPABASE_URL+'/functions/v1/stripe-upgrade-to-yearly',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        apikey:SUPABASE_ANON_KEY,
+        'Authorization':'Bearer '+(session?.access_token||''),
+      },
+      body:JSON.stringify({}),
+    });
+    const json=await res.json().catch(()=>({}));
+    if(json.success){
+      alert('年額プランに切り替えました。差額分のみご請求されます。');
+      location.reload();
+    }else{
+      alert('エラーが発生しました: '+(json.error||'不明なエラー'));
+      if(btn){btn.disabled=false;btn.textContent='年額に切り替える';}
+    }
+  }catch(e){
+    alert('通信エラーが発生しました。');
+    if(btn){btn.disabled=false;btn.textContent='年額に切り替える';}
+  }
+}
+
 document.addEventListener('DOMContentLoaded',async()=>{
   if(window.ELEVA?.applyLanguage)ELEVA.applyLanguage(localStorage.getItem('eleva_lang')||'ja');
   await loadProfile();
   if(user){
     setupBiometric();
     loadAffiliate();
+    checkUpgradeBanner();
   }
 });
 </script>
