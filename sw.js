@@ -1,5 +1,5 @@
 // Service Worker — auto-update, network-first
-// Build marker: 2026-04-24-blackbox-tech-names
+// Build marker: 2026-04-24-lp-login-btn-plus-sukoshi-removal
 const CACHE_VERSION = 'v' + Date.now();
 const CACHE_NAME = 'app-cache-' + CACHE_VERSION;
 
