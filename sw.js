@@ -1,5 +1,5 @@
 // Service Worker — auto-update, network-first
-// Build marker: 2026-04-23-chat-widget-plus-sns-multiaccount
+// Build marker: 2026-04-24-pricing-tiktokshop-section
 const CACHE_VERSION = 'v' + Date.now();
 const CACHE_NAME = 'app-cache-' + CACHE_VERSION;
 

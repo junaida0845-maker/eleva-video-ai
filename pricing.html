@@ -81,7 +81,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .plan-features li:last-child{border-bottom:none;}
 .plan-features .icon-check{flex-shrink:0;width:14px;height:14px;color:var(--gold);margin-top:3px;}
 .plan-features .muted{color:var(--text-3);}
-.plan-cta{width:100%;padding:13px 18px;border-radius:12px;font-weight:700;font-size:13px;letter-spacing:.5px;transition:transform .15s,box-shadow .15s,background .15s;}
+.plan-cta{width:100%;padding:13px 18px;border-radius:12px;font-weight:700;font-size:13px;letter-spacing:.5px;transition:transform .15s,box-shadow .15s,background .15s;display:inline-block;text-align:center;text-decoration:none;box-sizing:border-box;cursor:pointer;}
 .plan-cta.solid{background:linear-gradient(135deg,var(--gold) 0%,var(--gold-2) 100%);color:#0a0a0a;}
 .plan-cta.solid:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(212,175,55,0.35);}
 .plan-cta.outline{background:transparent;color:var(--gold);border:1px solid var(--gold);}
@@ -131,6 +131,18 @@ footer{margin-top:80px;border-top:1px solid var(--border);padding:36px 20px 28px
 .country-row.active{background:var(--gold-soft);color:var(--gold);}
 .country-flag{width:24px;text-align:center;}
 
+/* ─ TikTok Shop section ─────────────────── */
+.tts-section{padding:72px 20px 60px;background:linear-gradient(180deg,rgba(201,168,76,0.03) 0%,rgba(201,168,76,0) 100%);border-top:1px solid rgba(212,175,55,0.2);border-bottom:1px solid rgba(212,175,55,0.2);margin-top:24px;}
+.tts-inner{max-width:1100px;margin:0 auto;}
+.tts-head{text-align:center;margin-bottom:40px;}
+.tts-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.35);color:var(--gold);font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:6px 14px;border-radius:999px;margin-bottom:16px;}
+.tts-badge svg{width:12px;height:12px;flex-shrink:0;}
+.tts-title{font-size:30px;font-weight:800;letter-spacing:0.5px;margin-bottom:10px;color:#fff;}
+.tts-sub{color:var(--text-2);font-size:14px;line-height:1.75;max-width:580px;margin:0 auto;}
+.tts-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;max-width:820px;margin:0 auto;}
+.tts-note{text-align:center;color:var(--text-3);font-size:12px;margin-top:28px;letter-spacing:0.3px;}
+.tts-note strong{color:var(--gold);font-weight:600;}
+
 /* ─ Responsive ──────────────────────────── */
 @media (max-width:640px){
   .nav-inner{padding:12px 16px;}
@@ -140,6 +152,10 @@ footer{margin-top:80px;border-top:1px solid var(--border);padding:36px 20px 28px
   .cycle-tab{padding:9px 12px;font-size:12px;}
   .plan-card{padding:22px 18px;}
   .plan-price .amt{font-size:30px;}
+  .tts-section{padding:52px 16px 40px;}
+  .tts-title{font-size:24px;}
+  .tts-sub{font-size:13px;}
+  .tts-grid{grid-template-columns:1fr;gap:16px;max-width:420px;}
 }
 </style>
 <!-- eleva-sw-register --><script>if('serviceWorker' in navigator){window.addEventListener('load',async()=>{try{const reg=await navigator.serviceWorker.register('/sw.js');reg.addEventListener('updatefound',()=>{const nw=reg.installing;nw.addEventListener('statechange',()=>{if(nw.state==='installed'&&navigator.serviceWorker.controller){nw.postMessage('skipWaiting');navigator.serviceWorker.addEventListener('controllerchange',()=>window.location.reload());}});});setInterval(()=>reg.update(),30*60*1000);}catch(e){console.log('SW registration failed:',e);}});}</script>
@@ -188,6 +204,60 @@ footer{margin-top:80px;border-top:1px solid var(--border);padding:36px 20px 28px
       <span data-i18n="cycle_two_year">2年払い</span>
       <span class="save-badge" data-i18n="save_15">15% OFF</span>
     </button>
+  </div>
+</section>
+
+<!-- ── TikTok Shop ─────────────────────────── -->
+<section class="tts-section" id="tiktok-shop">
+  <div class="tts-inner">
+    <div class="tts-head">
+      <div class="tts-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 7v13a2 2 0 002 2h14a2 2 0 002-2V7l-3-5H6zM3 7h18M16 11a4 4 0 01-8 0"/></svg>
+        <span>Amazon × TikTok Shop 特化</span>
+      </div>
+      <h2 class="tts-title">ELEVA for TikTok Shop</h2>
+      <p class="tts-sub">4Seller 経由で Amazon FBA から自動出荷。動画生成は ELEVA、物販運用は TikTok Shop に任せて、1人でも回る EC を組み立てます。</p>
+    </div>
+
+    <div class="tts-grid">
+
+      <!-- Lite -->
+      <div class="plan-card">
+        <div class="plan-name">TikTok Shop Lite</div>
+        <div class="plan-tagline">はじめて物販を試したい方に</div>
+        <div class="plan-price"><span class="amt">¥4,980</span><span class="cycle">/月</span></div>
+        <div class="plan-price-sub">月額・税込</div>
+        <ul class="plan-features">
+          <li><svg class="icon-check"><use href="#i-check"/></svg><span>15秒 AI 動画 月10本</span></li>
+          <li><svg class="icon-check"><use href="#i-check"/></svg><span>TikTok Shop 商品登録 最大5件</span></li>
+          <li><svg class="icon-check"><use href="#i-check"/></svg><span>4Seller 連携・Amazon FBA 自動出荷</span></li>
+          <li><svg class="icon-check"><use href="#i-check"/></svg><span>利益計算・原価管理機能</span></li>
+          <li><svg class="icon-check"><use href="#i-check"/></svg><span>ELEVA サポートチャット</span></li>
+        </ul>
+        <a href="/register?plan=tiktok_shop_lite" class="plan-cta outline">Lite を始める</a>
+      </div>
+
+      <!-- Pro (featured) -->
+      <div class="plan-card featured">
+        <div class="plan-badge">おすすめ</div>
+        <div class="plan-name">TikTok Shop Pro</div>
+        <div class="plan-tagline">売上を伸ばしていくフェーズに</div>
+        <div class="plan-price"><span class="amt">¥34,800</span><span class="cycle">/月</span></div>
+        <div class="plan-price-sub">月額・税込</div>
+        <ul class="plan-features">
+          <li><svg class="icon-check"><use href="#i-check"/></svg><span>60秒 AI 動画 月10本（+ 15秒も無制限）</span></li>
+          <li><svg class="icon-check"><use href="#i-check"/></svg><span>TikTok Shop 商品登録 無制限</span></li>
+          <li><svg class="icon-check"><use href="#i-check"/></svg><span>4Seller 連携・Amazon FBA 自動出荷</span></li>
+          <li><svg class="icon-check"><use href="#i-check"/></svg><span>売上ダッシュボード・利益分析</span></li>
+          <li><svg class="icon-check"><use href="#i-check"/></svg><span>ウォーターマーク非表示</span></li>
+          <li><svg class="icon-check"><use href="#i-check"/></svg><span>優先サポート・導入コンサル</span></li>
+        </ul>
+        <a href="/register?plan=tiktok_shop_pro" class="plan-cta solid">Pro を始める</a>
+      </div>
+
+    </div>
+
+    <p class="tts-note"><strong>Lite で試して、売れたら Pro へ。</strong> いつでも切り替え可能です。</p>
   </div>
 </section>
 
