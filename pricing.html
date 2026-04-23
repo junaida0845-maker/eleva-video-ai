@@ -271,7 +271,7 @@ footer{margin-top:80px;border-top:1px solid var(--border);padding:36px 20px 28px
       <div class="plan-card">
         <div class="plan-name">TikTok Shop Lite</div>
         <div class="plan-tagline">はじめて物販を試したい方に</div>
-        <div class="plan-price"><span class="amt">¥4,980</span><span class="cycle">/月</span></div>
+        <div class="plan-price"><span class="amt" id="price-tiktok_shop_lite-monthly">¥4,980</span><span class="cycle">/月</span></div>
         <div class="plan-price-sub">月額・税込</div>
         <ul class="plan-features">
           <li><svg class="icon-check"><use href="#i-check"/></svg><span>15秒 AI 動画 月10本</span></li>
@@ -288,7 +288,7 @@ footer{margin-top:80px;border-top:1px solid var(--border);padding:36px 20px 28px
         <div class="plan-badge">おすすめ</div>
         <div class="plan-name">TikTok Shop Pro</div>
         <div class="plan-tagline">売上を伸ばしていくフェーズに</div>
-        <div class="plan-price"><span class="amt">¥34,800</span><span class="cycle">/月</span></div>
+        <div class="plan-price"><span class="amt" id="price-tiktok_shop_pro-monthly">¥34,800</span><span class="cycle">/月</span></div>
         <div class="plan-price-sub">月額・税込</div>
         <ul class="plan-features">
           <li><svg class="icon-check"><use href="#i-check"/></svg><span>60秒 AI 動画 月10本（+ 15秒も無制限）</span></li>
@@ -463,8 +463,26 @@ function renderPlans(){
   const cycleLabel={monthly:'/月',yearly:'/年',two_year:'/2年'};
   const cycleLabelI18n={monthly:'cycle_per_month',yearly:'cycle_per_year',two_year:'cycle_per_two_year'};
   const sorted=[...pricingData.plans].sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+  // Split out TikTok Shop plans — they are rendered by the static section below.
+  // Here we just patch their price amounts from the API response.
+  const ttsIds=new Set();
+  const regular=[];
+  sorted.forEach(p=>{
+    const pid=(p.plan_id||'').toLowerCase();
+    if(pid.indexOf('tiktok_shop')===0){
+      ttsIds.add(pid);
+      ['monthly','yearly','two_year'].forEach(c=>{
+        const amt=p.pricing?.[c]?.amount;
+        if(amt==null)return;
+        const el=document.getElementById('price-'+pid+'-'+c);
+        if(el)el.textContent=fmtPrice(amt,cur);
+      });
+    }else{
+      regular.push(p);
+    }
+  });
   const grid=document.getElementById('plans-grid');
-  grid.innerHTML=sorted.map(plan=>{
+  grid.innerHTML=regular.map(plan=>{
     const isFeatured=(plan.plan_id||'').toLowerCase()==='pro';
     const name=(plan.name_i18n&&(plan.name_i18n[lang]||plan.name_i18n.en))||plan.plan_name||plan.plan_id;
     const tagline=(plan.description_i18n&&(plan.description_i18n[lang]||plan.description_i18n.en))||'';

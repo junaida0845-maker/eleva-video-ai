@@ -1,5 +1,5 @@
 // Service Worker — auto-update, network-first
-// Build marker: 2026-04-24-pricing-tts-moved-below
+// Build marker: 2026-04-24-pricing-tts-dynamic-price
 const CACHE_VERSION = 'v' + Date.now();
 const CACHE_NAME = 'app-cache-' + CACHE_VERSION;
 
