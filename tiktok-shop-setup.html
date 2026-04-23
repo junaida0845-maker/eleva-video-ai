@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="/icons/icon-180.png"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png"/>
+<meta name="theme-color" content="#0a0a0a"/>
+<title>ELEVA for TikTok Shop セットアップ</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#0a0a0a;--bg-2:#0f0f0f;--bg-3:#161616;--border:#1f1f1f;
+  --gold:#c9a84c;--gold-light:#f0d070;--gold-soft:rgba(201,168,76,0.12);
+  --text:#fff;--text-2:#a8a8a8;--text-3:#6b6b6b;
+  --danger:#c97676;--ok:#76c99a;
+}
+*,*::before,*::after{box-sizing:border-box;}
+*{margin:0;padding:0;}
+html,body{overflow-x:hidden;width:100%;max-width:100vw;position:relative;}
+img,video,iframe{max-width:100%;}
+body{font-family:'DM Sans','Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;padding-bottom:80px;line-height:1.6;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+input,select{font-family:inherit;}
+
+/* ── Header ─────────────────── */
+.nav{position:sticky;top:0;z-index:50;background:rgba(10,10,10,0.9);backdrop-filter:saturate(180%) blur(12px);border-bottom:1px solid var(--border);}
+.nav-inner{max-width:720px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:14px;}
+.brand{font-family:'DM Sans',sans-serif;font-weight:800;font-size:18px;letter-spacing:3px;color:var(--gold);}
+
+.page{max-width:720px;margin:0 auto;padding:32px 24px;}
+.page-title{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:600;letter-spacing:0.5px;margin-bottom:8px;line-height:1.25;}
+.page-sub{color:var(--text-3);font-size:13px;margin-bottom:32px;letter-spacing:0.5px;}
+
+/* ── Step indicator ─────────────── */
+.stepper{display:flex;align-items:center;justify-content:space-between;margin-bottom:36px;gap:0;}
+.step-dot{flex:1;display:flex;align-items:center;gap:0;min-width:0;}
+.step-circle{width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--bg-2);color:var(--text-3);display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;flex-shrink:0;transition:all .25s;}
+.step-line{flex:1;height:1px;background:var(--border);margin:0 6px;min-width:8px;}
+.step-dot:last-child .step-line{display:none;}
+.step-dot.active .step-circle{background:var(--gold);color:#000;border-color:var(--gold);box-shadow:0 0 20px rgba(201,168,76,0.35);}
+.step-dot.done .step-circle{background:transparent;color:var(--gold);border-color:var(--gold);}
+.step-dot.done .step-line{background:var(--gold);}
+.step-label{display:none;}
+
+/* ── Step pane ─────────────── */
+.pane{display:none;animation:fadeIn .35s ease;}
+.pane.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+.pane-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--gold);margin-bottom:12px;letter-spacing:0.3px;line-height:1.35;}
+.pane-desc{color:var(--text-2);font-size:13px;margin-bottom:24px;line-height:1.75;}
+
+/* ── Form ─────────────── */
+.field{margin-bottom:18px;}
+.field-label{display:block;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:8px;letter-spacing:0.8px;text-transform:uppercase;}
+.field-label .opt{color:var(--text-3);text-transform:none;font-weight:400;font-size:11px;margin-left:6px;letter-spacing:0;}
+.input,.select{width:100%;padding:12px 14px;background:var(--bg-3);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:14px;transition:border .15s,background .15s;}
+.input::placeholder{color:var(--text-3);}
+.input:focus,.select:focus{outline:none;border-color:var(--gold);background:#191919;}
+.select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='%23c9a84c' d='M6 8L0 0h12z'/></svg>");background-repeat:no-repeat;background-position:right 14px center;padding-right:38px;}
+.hint{font-size:11px;color:var(--text-3);margin-top:6px;line-height:1.5;}
+
+.row-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media (max-width:520px){.row-grid{grid-template-columns:1fr;}}
+
+/* ── Buttons ─────────────── */
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 22px;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;letter-spacing:0.3px;cursor:pointer;transition:background .15s,transform .12s,box-shadow .15s;border:none;white-space:nowrap;}
+.btn-gold{background:var(--gold);color:#000;}
+.btn-gold:hover:not(:disabled){background:var(--gold-light);}
+.btn-gold:disabled{opacity:0.4;cursor:not-allowed;}
+.btn-outline{background:transparent;color:var(--gold);border:1px solid var(--gold);}
+.btn-outline:hover:not(:disabled){background:var(--gold-soft);}
+.btn-ghost{background:transparent;color:var(--text-2);border:1px solid var(--border);}
+.btn-ghost:hover:not(:disabled){color:var(--text);border-color:var(--text-3);}
+.btn-big{padding:16px 30px;font-size:15px;letter-spacing:0.8px;}
+.btn:disabled{cursor:not-allowed;}
+
+/* ── Status chips ─────────────── */
+.status-msg{margin-top:14px;padding:10px 14px;border-radius:4px;font-size:12px;display:none;gap:8px;align-items:center;line-height:1.5;}
+.status-msg.show{display:flex;}
+.status-msg.ok{background:rgba(118,201,154,0.08);border:1px solid rgba(118,201,154,0.3);color:var(--ok);}
+.status-msg.err{background:rgba(201,118,118,0.08);border:1px solid rgba(201,118,118,0.3);color:var(--danger);}
+.status-msg svg{flex-shrink:0;}
+
+/* ── Product cards (Step 3) ─────────────── */
+.product-card{background:var(--bg-2);border:1px solid var(--border);border-radius:4px;padding:20px;margin-bottom:16px;position:relative;}
+.product-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.product-card-title{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:var(--gold);letter-spacing:1px;text-transform:uppercase;}
+.product-remove{background:transparent;border:none;color:var(--text-3);cursor:pointer;font-size:18px;padding:4px 10px;border-radius:2px;}
+.product-remove:hover{color:var(--danger);}
+.profit-box{margin-top:12px;padding:14px 16px;background:var(--bg-3);border:1px solid var(--border);border-left:2px solid var(--gold);border-radius:2px;}
+.profit-label{font-size:11px;color:var(--text-3);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px;}
+.profit-value{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold);font-weight:600;letter-spacing:0.3px;}
+.profit-value .pct{font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text-2);margin-left:10px;letter-spacing:0.3px;font-weight:400;}
+
+/* ── Summary (Step 4) ─────────────── */
+.summary{background:var(--bg-2);border:1px solid var(--border);border-radius:4px;padding:24px;margin:24px 0;}
+.summary-row{display:flex;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:14px;}
+.summary-row:last-child{border-bottom:none;}
+.summary-row .check{width:22px;height:22px;flex-shrink:0;}
+.summary-row.done{color:var(--text);}
+.summary-row.skipped{color:var(--text-3);}
+.summary-row.skipped .check path{stroke:var(--text-3);}
+
+.hero-done{text-align:center;padding:30px 0 40px;}
+.hero-done-title{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:600;color:var(--gold-light);margin-bottom:12px;letter-spacing:0.5px;line-height:1.25;}
+.hero-done-sub{color:var(--text-2);font-size:14px;margin-bottom:4px;}
+
+.footer{text-align:center;padding:30px 16px 10px;margin-top:40px;border-top:1px solid var(--border);}
+.footer a{color:var(--text-3);font-size:12px;text-decoration:none;}
+.footer a:hover{color:var(--gold);}
+
+/* ── Mobile ─────────────── */
+@media (max-width:600px){
+  .page{padding:24px 16px;}
+  .page-title{font-size:25px;}
+  .pane-title{font-size:19px;}
+  .stepper{margin-bottom:28px;}
+  .btn-big{padding:14px 24px;font-size:14px;}
+}
+</style>
+<!-- eleva-sw-register --><script>if('serviceWorker' in navigator){window.addEventListener('load',async()=>{try{const reg=await navigator.serviceWorker.register('/sw.js');reg.addEventListener('updatefound',()=>{const nw=reg.installing;nw.addEventListener('statechange',()=>{if(nw.state==='installed'&&navigator.serviceWorker.controller){nw.postMessage('skipWaiting');navigator.serviceWorker.addEventListener('controllerchange',()=>window.location.reload());}});});setInterval(()=>reg.update(),30*60*1000);}catch(e){console.log('SW registration failed:',e);}});}</script>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/dashboard.html" class="brand">ELEVA</a>
+    <span style="color:var(--text-3);font-size:12px;letter-spacing:0.5px;">for TikTok Shop</span>
+  </div>
+</nav>
+
+<div class="page">
+  <h1 class="page-title">ELEVA for TikTok Shop<br/>セットアップ</h1>
+  <div class="page-sub">4つのステップで API 接続を完了します</div>
+
+  <!-- Step indicator -->
+  <div class="stepper" id="stepper">
+    <div class="step-dot" data-step="1"><div class="step-circle">1</div><div class="step-line"></div></div>
+    <div class="step-dot" data-step="2"><div class="step-circle">2</div><div class="step-line"></div></div>
+    <div class="step-dot" data-step="3"><div class="step-circle">3</div><div class="step-line"></div></div>
+    <div class="step-dot" data-step="4"><div class="step-circle">4</div></div>
+  </div>
+
+  <!-- ── Step 1: TikTok Shop 連携 ────────── -->
+  <div class="pane" id="pane-1">
+    <h2 class="pane-title">TikTok Shopのセラーアカウントを連携します</h2>
+    <p class="pane-desc">TikTok Shop Partner Portalで発行した App ID と App Secret を入力してください。取得方法はPDFガイドをご参照ください。</p>
+
+    <div class="field">
+      <label class="field-label" for="tt-app-id">TikTok Shop App ID</label>
+      <input class="input" type="text" id="tt-app-id" autocomplete="off" placeholder="例: 7000000000000000000"/>
+    </div>
+    <div class="field">
+      <label class="field-label" for="tt-app-secret">TikTok Shop App Secret</label>
+      <input class="input" type="password" id="tt-app-secret" autocomplete="off" placeholder="••••••••••••"/>
+    </div>
+    <div class="field">
+      <label class="field-label" for="tt-shop-id">Shop ID</label>
+      <input class="input" type="text" id="tt-shop-id" autocomplete="off" placeholder="例: 7000000000000000000"/>
+    </div>
+
+    <div class="status-msg" id="tt-status"></div>
+
+    <div class="btn-row">
+      <a href="/tiktok-shop-guide.pdf" target="_blank" rel="noopener" class="btn btn-ghost">PDFガイドを見る</a>
+      <button class="btn btn-outline" id="tt-test-btn" onclick="testTikTok()">連携テストする</button>
+      <button class="btn btn-gold" id="tt-next-btn" disabled onclick="goStep(2)">次へ →</button>
+    </div>
+  </div>
+
+  <!-- ── Step 2: Amazon 連携（任意） ────────── -->
+  <div class="pane" id="pane-2">
+    <h2 class="pane-title">Amazon Seller Centralと連携します（任意）</h2>
+    <p class="pane-desc">Amazonセラーの SP-API キーを入力すると FBA在庫が自動同期されます。お持ちでない場合はスキップできます。</p>
+
+    <div class="field">
+      <label class="field-label" for="az-seller-id">Seller ID</label>
+      <input class="input" type="text" id="az-seller-id" autocomplete="off" placeholder="例: A1B2C3D4E5F6G7"/>
+    </div>
+    <div class="field">
+      <label class="field-label" for="az-token">MWS Auth Token</label>
+      <input class="input" type="password" id="az-token" autocomplete="off" placeholder="••••••••••••"/>
+    </div>
+    <div class="field">
+      <label class="field-label" for="az-marketplace">Marketplace ID</label>
+      <input class="input" type="text" id="az-marketplace" autocomplete="off" placeholder="日本: A1VC38T7YXB528"/>
+      <div class="hint">主要マーケットプレイス: 日本 A1VC38T7YXB528 / 米国 ATVPDKIKX0DER</div>
+    </div>
+
+    <div class="status-msg" id="az-status"></div>
+
+    <div class="btn-row">
+      <a href="/amazon-spapi-guide.pdf" target="_blank" rel="noopener" class="btn btn-ghost">PDFガイドを見る</a>
+      <button class="btn btn-outline" onclick="testAmazon()">連携テストする</button>
+      <button class="btn btn-ghost" onclick="skipAmazon()">スキップ</button>
+      <button class="btn btn-gold" id="az-next-btn" onclick="goStep(3)">次へ →</button>
+    </div>
+  </div>
+
+  <!-- ── Step 3: 商品登録 ────────── -->
+  <div class="pane" id="pane-3">
+    <h2 class="pane-title">販売する商品を登録します</h2>
+    <p class="pane-desc">TikTok Shopで販売したい商品の情報を入力してください。あとから追加・変更できます。</p>
+
+    <div id="products-list"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-outline" onclick="addProduct()">+ 商品を追加</button>
+      <button class="btn btn-gold" onclick="goStep(4)">次へ →</button>
+    </div>
+  </div>
+
+  <!-- ── Step 4: 完了 ────────── -->
+  <div class="pane" id="pane-4">
+    <div class="hero-done">
+      <div class="hero-done-title">セットアップ完了</div>
+      <div class="hero-done-sub">動画を作って、TikTok Shopで売り始めましょう</div>
+    </div>
+
+    <div class="summary" id="summary">
+      <!-- injected by JS -->
+    </div>
+
+    <div style="text-align:center;margin-top:32px;">
+      <button class="btn btn-gold btn-big" onclick="finishSetup()">動画を生成する  →</button>
+    </div>
+  </div>
+
+  <div class="footer">
+    <a href="/contact.html">わからないことがあれば サポートへ</a>
+  </div>
+</div>
+
+<script src="/eleva-i18n.js?v=20260419"></script>
+<script src="/eleva-shared.js?v=20260419"></script>
+<script>
+const SUPABASE_URL='https://syxctolgqhdtcoaothwi.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5eGN0b2xncWhkdGNvYW90aHdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MDk5NjksImV4cCI6MjA5MDM4NTk2OX0.h38gOPGOcdIw_w8p4AEYVLHCaWuC8k2XRrjLPcFAtUw';
+
+const STORAGE_KEY='eleva_tiktok_setup_v1';
+let user=null;
+let currentStep=1;
+let state={
+  tiktokVerified:false,
+  amazonVerified:false,
+  amazonSkipped:false,
+  products:[],
+};
+
+// ── Gold SVG icon factory ─────────────
+const ICON_CHECK='<svg class="check" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 12.5 10 17.5 20 7" stroke="#c9a84c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const ICON_DASH='<svg class="check" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 12H18" stroke="#6b6b6b" stroke-width="2" stroke-linecap="round"/></svg>';
+const ICON_OK='<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12.5 10 17.5 20 7" stroke="#76c99a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const ICON_ERR='<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6 6L18 18M18 6L6 18" stroke="#c97676" stroke-width="2.2" stroke-linecap="round"/></svg>';
+
+// ── Step navigation ─────────────
+function renderStepper(){
+  document.querySelectorAll('.step-dot').forEach(el=>{
+    const n=Number(el.dataset.step);
+    el.classList.remove('active','done');
+    if(n<currentStep)el.classList.add('done');
+    else if(n===currentStep)el.classList.add('active');
+  });
+}
+function showPane(n){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+  const el=document.getElementById('pane-'+n);
+  if(el)el.classList.add('active');
+}
+function goStep(n){
+  currentStep=n;
+  renderStepper();
+  showPane(n);
+  window.scrollTo({top:0,behavior:'smooth'});
+  persistState();
+  if(n===4)renderSummary();
+  if(n===3&&state.products.length===0)addProduct();
+}
+
+// ── Status msg helper ─────────────
+function showStatus(id,type,msg){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.className='status-msg show '+type;
+  el.innerHTML=(type==='ok'?ICON_OK:ICON_ERR)+'<span>'+msg+'</span>';
+}
+function hideStatus(id){
+  const el=document.getElementById(id);
+  if(el){el.className='status-msg';el.innerHTML='';}
+}
+
+// ── Step 1: TikTok Shop test ─────────────
+async function testTikTok(){
+  const appId=document.getElementById('tt-app-id').value.trim();
+  const appSecret=document.getElementById('tt-app-secret').value;
+  const shopId=document.getElementById('tt-shop-id').value.trim();
+
+  if(!appId||!appSecret||!shopId){
+    showStatus('tt-status','err','すべての項目を入力してください。');
+    return;
+  }
+
+  const btn=document.getElementById('tt-test-btn');
+  btn.disabled=true;btn.textContent='テスト中...';
+  hideStatus('tt-status');
+
+  try{
+    const sb=ELEVA.getSupabase();
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session){
+      showStatus('tt-status','err','ログインが必要です。');
+      location.href='/login.html?next=/tiktok-shop-setup.html';
+      return;
+    }
+    const res=await fetch(SUPABASE_URL+'/functions/v1/tiktok-shop-verify',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        apikey:SUPABASE_ANON_KEY,
+        'Authorization':'Bearer '+session.access_token,
+      },
+      body:JSON.stringify({app_id:appId,app_secret:appSecret,shop_id:shopId}),
+    });
+    const json=await res.json().catch(()=>({}));
+    if(res.ok&&json.success){
+      state.tiktokVerified=true;
+      state.tiktokCreds={app_id:appId,shop_id:shopId};
+      persistState();
+      showStatus('tt-status','ok','連携に成功しました。');
+      document.getElementById('tt-next-btn').disabled=false;
+    }else{
+      showStatus('tt-status','err','連携に失敗しました: '+(json.error||json.message||'不明なエラー'));
+    }
+  }catch(e){
+    showStatus('tt-status','err','通信エラー: '+(e?.message||String(e)));
+  }finally{
+    btn.disabled=false;btn.textContent='連携テストする';
+  }
+}
+
+// ── Step 2: Amazon test / skip ─────────────
+async function testAmazon(){
+  const sellerId=document.getElementById('az-seller-id').value.trim();
+  const token=document.getElementById('az-token').value;
+  const marketplace=document.getElementById('az-marketplace').value.trim();
+
+  if(!sellerId||!token||!marketplace){
+    showStatus('az-status','err','すべての項目を入力してください。');
+    return;
+  }
+
+  hideStatus('az-status');
+  try{
+    const sb=ELEVA.getSupabase();
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session){location.href='/login.html?next=/tiktok-shop-setup.html';return;}
+    const res=await fetch(SUPABASE_URL+'/functions/v1/amazon-verify',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        apikey:SUPABASE_ANON_KEY,
+        'Authorization':'Bearer '+session.access_token,
+      },
+      body:JSON.stringify({seller_id:sellerId,auth_token:token,marketplace_id:marketplace}),
+    });
+    const json=await res.json().catch(()=>({}));
+    if(res.ok&&json.success){
+      state.amazonVerified=true;
+      state.amazonSkipped=false;
+      state.amazonCreds={seller_id:sellerId,marketplace_id:marketplace};
+      persistState();
+      showStatus('az-status','ok','連携に成功しました。');
+    }else{
+      showStatus('az-status','err','連携に失敗しました: '+(json.error||json.message||'不明なエラー'));
+    }
+  }catch(e){
+    showStatus('az-status','err','通信エラー: '+(e?.message||String(e)));
+  }
+}
+function skipAmazon(){
+  state.amazonVerified=false;
+  state.amazonSkipped=true;
+  persistState();
+  goStep(3);
+}
+
+// ── Step 3: Products ─────────────
+function productCardHtml(idx,p){
+  const profit=calcProfit(p.price,p.cost);
+  return (
+    '<div class="product-card" data-idx="'+idx+'">'
+    +'<div class="product-card-head">'
+    +'<div class="product-card-title">商品 '+(idx+1)+'</div>'
+    +(idx>0?'<button class="product-remove" onclick="removeProduct('+idx+')" aria-label="削除">×</button>':'')
+    +'</div>'
+    +'<div class="field"><label class="field-label">商品名</label>'
+    +'<input class="input" type="text" data-key="name" value="'+escapeAttr(p.name||'')+'" placeholder="例: ポータブル空気清浄機"/></div>'
+    +'<div class="row-grid">'
+    +'<div class="field"><label class="field-label">TikTok販売価格 <span class="opt">円</span></label>'
+    +'<input class="input" type="number" inputmode="numeric" data-key="price" value="'+(p.price||'')+'" placeholder="3980"/></div>'
+    +'<div class="field"><label class="field-label">仕入れ原価 <span class="opt">円</span></label>'
+    +'<input class="input" type="number" inputmode="numeric" data-key="cost" value="'+(p.cost||'')+'" placeholder="1500"/></div>'
+    +'</div>'
+    +'<div class="row-grid">'
+    +'<div class="field"><label class="field-label">商品サイズ</label>'
+    +'<select class="select" data-key="size">'
+    +['小型','標準','標準大','大型'].map(s=>'<option value="'+s+'"'+(p.size===s?' selected':'')+'>'+s+'</option>').join('')
+    +'</select></div>'
+    +'<div class="field"><label class="field-label">Amazon SKU <span class="opt">（任意）</span></label>'
+    +'<input class="input" type="text" data-key="sku" value="'+escapeAttr(p.sku||'')+'" placeholder="B0XXXXXXXXX"/></div>'
+    +'</div>'
+    +'<div class="profit-box">'
+    +'<div class="profit-label">想定利益</div>'
+    +'<div class="profit-value" id="profit-'+idx+'">'+profit.html+'</div>'
+    +'</div>'
+    +'</div>'
+  );
+}
+function escapeAttr(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function calcProfit(price,cost){
+  const p=Number(price)||0,c=Number(cost)||0;
+  if(!p||p<=c)return{html:'¥— <span class="pct">—</span>',profit:0,margin:0};
+  const profit=p-c;
+  const margin=Math.round((profit/p)*100);
+  return{html:'¥'+profit.toLocaleString()+' / 個 <span class="pct">利益率 '+margin+'%</span>',profit,margin};
+}
+
+function renderProducts(){
+  const wrap=document.getElementById('products-list');
+  wrap.innerHTML=state.products.map((p,i)=>productCardHtml(i,p)).join('');
+  // bind inputs
+  wrap.querySelectorAll('.product-card').forEach(card=>{
+    const idx=Number(card.dataset.idx);
+    card.querySelectorAll('[data-key]').forEach(inp=>{
+      inp.addEventListener('input',()=>{
+        const key=inp.dataset.key;
+        state.products[idx][key]=inp.value;
+        if(key==='price'||key==='cost'){
+          const pr=calcProfit(state.products[idx].price,state.products[idx].cost);
+          const box=document.getElementById('profit-'+idx);
+          if(box)box.innerHTML=pr.html;
+        }
+        persistState();
+      });
+      inp.addEventListener('change',persistState);
+    });
+  });
+}
+function addProduct(){
+  state.products.push({name:'',price:'',cost:'',size:'標準',sku:''});
+  renderProducts();
+  persistState();
+}
+function removeProduct(i){
+  state.products.splice(i,1);
+  if(state.products.length===0)addProduct();
+  else renderProducts();
+  persistState();
+}
+
+// ── Step 4: Summary + Finish ─────────────
+function renderSummary(){
+  const validProducts=state.products.filter(p=>p.name&&p.price);
+  const rows=[];
+  rows.push('<div class="summary-row '+(state.tiktokVerified?'done':'skipped')+'">'+(state.tiktokVerified?ICON_CHECK:ICON_DASH)+'<span>TikTok Shop 連携'+(state.tiktokVerified?'済み':' 未完了')+'</span></div>');
+  if(state.amazonVerified){
+    rows.push('<div class="summary-row done">'+ICON_CHECK+'<span>Amazon 連携済み</span></div>');
+  }else{
+    rows.push('<div class="summary-row skipped">'+ICON_DASH+'<span>Amazon 連携（スキップ）</span></div>');
+  }
+  rows.push('<div class="summary-row '+(validProducts.length>0?'done':'skipped')+'">'+(validProducts.length>0?ICON_CHECK:ICON_DASH)+'<span>商品 '+validProducts.length+'件 登録済み</span></div>');
+  document.getElementById('summary').innerHTML=rows.join('');
+}
+
+async function finishSetup(){
+  const btn=event.target;
+  btn.disabled=true;btn.textContent='保存中...';
+  try{
+    const sb=ELEVA.getSupabase();
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session){location.href='/login.html?next=/tiktok-shop-setup.html';return;}
+    const validProducts=state.products.filter(p=>p.name&&p.price);
+    const res=await fetch(SUPABASE_URL+'/functions/v1/tiktok-shop-setup-complete',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        apikey:SUPABASE_ANON_KEY,
+        'Authorization':'Bearer '+session.access_token,
+      },
+      body:JSON.stringify({
+        tiktok_verified:state.tiktokVerified,
+        amazon_verified:state.amazonVerified,
+        amazon_skipped:state.amazonSkipped,
+        products:validProducts,
+      }),
+    });
+    // even on endpoint error, don't block the user — setup data is in state / localStorage
+    if(!res.ok)console.warn('[setup-complete] non-OK:',res.status);
+    localStorage.removeItem(STORAGE_KEY);
+    location.href='/mypage.html';
+  }catch(e){
+    console.warn('[finish]',e);
+    // fail open — proceed to mypage anyway
+    location.href='/mypage.html';
+  }
+}
+
+// ── State persistence ─────────────
+function persistState(){
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify({step:currentStep,state}));}catch(e){}
+}
+function restoreState(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(!raw)return;
+    const parsed=JSON.parse(raw);
+    if(parsed.state)state=Object.assign(state,parsed.state);
+    if(parsed.step)currentStep=parsed.step;
+  }catch(e){}
+}
+
+// ── Init ─────────────
+document.addEventListener('DOMContentLoaded',async()=>{
+  if(window.ELEVA?.applyLanguage)ELEVA.applyLanguage(localStorage.getItem('eleva_lang')||'ja');
+  user=await ELEVA.initElevaPage({page:'tiktok-shop-setup',requireAuth:true,onUser:u=>{user=u;}});
+  if(!user)return;
+
+  restoreState();
+
+  // Pre-fill if tiktok already verified
+  if(state.tiktokVerified){
+    document.getElementById('tt-next-btn').disabled=false;
+    if(state.tiktokCreds){
+      document.getElementById('tt-app-id').value=state.tiktokCreds.app_id||'';
+      document.getElementById('tt-shop-id').value=state.tiktokCreds.shop_id||'';
+    }
+    showStatus('tt-status','ok','連携済み');
+  }
+  if(state.amazonVerified&&state.amazonCreds){
+    document.getElementById('az-seller-id').value=state.amazonCreds.seller_id||'';
+    document.getElementById('az-marketplace').value=state.amazonCreds.marketplace_id||'';
+    showStatus('az-status','ok','連携済み');
+  }
+  if(state.products.length===0)addProduct();
+  else renderProducts();
+
+  renderStepper();
+  showPane(currentStep);
+});
+</script>
+</body>
+</html>
