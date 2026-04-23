@@ -12,7 +12,10 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--gold:#c9a84c;--gold-light:#f0d070;--black:#0a0a0a;--black-card:#111111;--black-border:#1a1a1a;--border-gold:rgba(201,168,76,0.2);--text-primary:#fff;--text-secondary:#aaa;--text-muted:#666;}
-*{margin:0;padding:0;box-sizing:border-box;}
+*,*::before,*::after{box-sizing:border-box;}
+*{margin:0;padding:0;}
+html,body{overflow-x:hidden;width:100%;max-width:100vw;position:relative;}
+img,video,iframe{max-width:100%;}
 body{font-family:'Inter',sans-serif;background:var(--black);color:var(--text-primary);min-height:100vh;padding-top:56px;}
 ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-thumb{background:rgba(201,168,76,0.3);}
 .top-bar{position:fixed;top:0;left:0;right:0;height:56px;background:rgba(10,10,10,0.95);border-bottom:1px solid var(--border-gold);display:flex;align-items:center;justify-content:flex-end;padding:0 20px;z-index:100;}

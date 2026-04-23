@@ -19,7 +19,10 @@
   --gold:#d4af37;--gold-2:#b8941f;--gold-soft:rgba(212,175,55,0.12);
   --text:#ffffff;--text-2:#a8a8a8;--text-3:#6b6b6b;
 }
-*{margin:0;padding:0;box-sizing:border-box;}
+*,*::before,*::after{box-sizing:border-box;}
+*{margin:0;padding:0;}
+html,body{overflow-x:hidden;width:100%;max-width:100vw;position:relative;}
+img,video,iframe{max-width:100%;}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
 body{font-family:'Inter','Noto Sans JP',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;}
 ::selection{background:var(--gold-soft);color:var(--gold);}
@@ -427,7 +430,7 @@ async function onPlanCta(planId,priceId,isFree){
     else throw new Error('No checkout URL returned');
   }catch(err){
     console.error('[checkout] error',err);
-    alert('決済画面への遷移に失敗しました。\n'+(err.message||err));
+    alert('決済画面への遷移に失敗しました。\n'+(err?.message||String(err)));
   }
 }
 
