@@ -100,13 +100,13 @@ textarea::placeholder,input[type=text]::placeholder{color:var(--text-muted);}
 .copy-btn:hover{background:rgba(201,168,76,0.12);border-color:var(--gold);}
 .copy-btn.copied{background:rgba(120,200,120,0.15);border-color:#7fbf7f;color:#7fbf7f;}
 
-/* Collapsible kling_prompt block */
+/* Collapsible engine-prompt block */
 .sc-details{margin-top:8px;padding:12px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:10px;}
 .sc-details summary{cursor:pointer;color:var(--gold);font-size:12px;font-weight:700;letter-spacing:.05em;outline:none;display:flex;align-items:center;justify-content:space-between;gap:8px;}
 .sc-details[open] summary{margin-bottom:8px;}
-.sc-kling-wrap{position:relative;}
-.sc-kling-wrap .copy-btn{position:absolute;top:8px;right:8px;}
-.sc-kling{color:#cfcfcf;font-size:12px;line-height:1.6;background:#0a0a0a;border:1px solid rgba(255,255,255,0.05);border-radius:8px;padding:12px 44px 12px 12px;white-space:pre-wrap;word-break:break-word;font-family:'SFMono-Regular',Menlo,Consolas,monospace;}
+.sc-engine-wrap{position:relative;}
+.sc-engine-wrap .copy-btn{position:absolute;top:8px;right:8px;}
+.sc-engine{color:#cfcfcf;font-size:12px;line-height:1.6;background:#0a0a0a;border:1px solid rgba(255,255,255,0.05);border-radius:8px;padding:12px 44px 12px 12px;white-space:pre-wrap;word-break:break-word;font-family:'SFMono-Regular',Menlo,Consolas,monospace;}
 
 /* Meta row (hook / bgm) */
 .sc-meta-row{display:flex;gap:12px;padding:10px 14px;background:var(--black-border);border:1px solid rgba(255,255,255,0.06);border-radius:10px;margin-bottom:10px;align-items:flex-start;}
@@ -769,14 +769,15 @@ function renderScenario(scenario, meta){
     parts.push('<div class="tl">' + items + '</div>');
   }
 
-  // 4) Collapsible English Kling prompt (with copy button)
-  if(scenario.kling_prompt){
+  // 4) Collapsible English engine prompt (with copy button)
+  const enginePrompt = scenario.kling_prompt;
+  if(enginePrompt){
     parts.push(
       '<details class="sc-details">'
         + '<summary>生成プロンプト（英語） <span style="color:var(--text-muted);font-size:11px;font-weight:500;">クリックで展開</span></summary>'
-        + '<div class="sc-kling-wrap">'
-          + '<button class="copy-btn" type="button" data-copy="' + esc(scenario.kling_prompt) + '" onclick="handleCopyClick(this)">コピー</button>'
-          + '<div class="sc-kling">' + esc(scenario.kling_prompt) + '</div>'
+        + '<div class="sc-engine-wrap">'
+          + '<button class="copy-btn" type="button" data-copy="' + esc(enginePrompt) + '" onclick="handleCopyClick(this)">コピー</button>'
+          + '<div class="sc-engine">' + esc(enginePrompt) + '</div>'
         + '</div>'
       + '</details>'
     );
@@ -870,10 +871,11 @@ async function step2SendChat(){
 // ---- STEP 3: kick off video generation ----
 async function generateVideo(){
   clearAlert();
-  // Accept either the flat shape (kling_prompt) or the legacy multi-scene shape (scenes[]).
-  const hasKling = currentScenario && typeof currentScenario.kling_prompt === 'string' && currentScenario.kling_prompt.trim();
+  // Accept either the flat shape (engine prompt) or the legacy multi-scene shape (scenes[]).
+  const enginePromptRaw = currentScenario && currentScenario.kling_prompt;
+  const hasEngine = typeof enginePromptRaw === 'string' && enginePromptRaw.trim();
   const hasScenes = currentScenario && Array.isArray(currentScenario.scenes) && currentScenario.scenes.length;
-  if(!hasKling && !hasScenes){
+  if(!hasEngine && !hasScenes){
     showAlert('シナリオが確定していません。STEP 1 からやり直してください。');
     return;
   }
@@ -889,9 +891,9 @@ async function generateVideo(){
   document.getElementById('loader-text').textContent = '生成リクエストを送信中...';
 
   try{
-    // Prefer the flat kling_prompt (new schema); fall back to merging scene prompts.
-    const prompt = hasKling
-      ? currentScenario.kling_prompt
+    // Prefer the flat engine prompt (new schema); fall back to merging scene prompts.
+    const prompt = hasEngine
+      ? enginePromptRaw
       : currentScenario.scenes.map(s=>s.prompt).filter(Boolean).join('\n\n');
     const body = {
       prompt,

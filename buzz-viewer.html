@@ -369,7 +369,7 @@ function renderScene(seg,idx,buzz){
   return `
   <div class="scene">
     <div class="scene-img-wrap">
-      ${url?`<img src="${escapeHtml(url)}" alt="Scene ${segIdx}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"/><div class="scene-img-fallback" style="display:none;">画像生成失敗<br/>(Pollinations)</div>`
+      ${url?`<img src="${escapeHtml(url)}" alt="Scene ${segIdx}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"/><div class="scene-img-fallback" style="display:none;">画像生成失敗</div>`
         :`<div class="scene-img-fallback">画像 URL なし</div>`}
     </div>
     <div class="scene-body">

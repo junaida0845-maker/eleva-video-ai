@@ -8,7 +8,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png"/>
 <meta name="theme-color" content="#0a0a0a"/>
 <title>ELEVA — SNS動画に特化した、AI動画生成</title>
-<meta name="description" content="TikTok・Instagram・YouTube ショート動画に特化した設計。商品を動かしたい時は Kling v3、ストーリーを作りたい時は Seedance 2.0。SNSに合わせて2つのAIを使い分けます。"/>
+<meta name="description" content="TikTok・Instagram・YouTube ショート動画に特化した設計。ELEVA 独自のAIエンジンが、商品動画とストーリー動画を用途に応じて自動で使い分けます。"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
@@ -188,7 +188,7 @@ footer{padding:48px 22px 38px;text-align:center;color:var(--gray-500);font-size:
       <div class="hero-text">
         <span class="eyebrow">SNS-Native AI Video</span>
         <h1 class="hero-title serif">SNS動画に特化した設計だから、<br/>他のAIより、<span style="color:var(--gold-light);">ちょっとだけ速く</span>作れる、かもしれません。</h1>
-        <p class="hero-sub">商品を動かしたい時は <span class="accent">Kling v3</span>。<br/>ストーリーを作りたい時は <span class="accent">Seedance 2.0</span>。<br/>SNSに合わせて、2つのAIを使い分けます。</p>
+        <p class="hero-sub">商品を動かしたい時も、<br/>ストーリーを作りたい時も。<br/><span class="accent">ELEVA の AI エンジン</span>が用途に合わせて最適な生成を選びます。</p>
         <div class="cta-row">
           <a href="/register.html" class="btn-primary">無料で試してみる
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
@@ -196,12 +196,8 @@ footer{padding:48px 22px 38px;text-align:center;color:var(--gray-500);font-size:
           <a href="#pricing" class="btn-secondary">料金プランを見る</a>
         </div>
       </div>
-      <div class="hero-media">
-        <!-- TODO: Seedance 2.0 サンプル動画 URL 差し替え（音声付き、ミュート自動再生） -->
-        <video id="hero-video" autoplay muted loop playsinline preload="metadata" poster="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-          <source src="" type="video/mp4">
-        </video>
-        <div class="placeholder">SNS動画サンプル<br/>（Seedance 2.0 出力）</div>
+      <div class="hero-media" style="display:none;">
+        <!-- Sample video hidden until real asset is available -->
       </div>
     </div>
   </div>
@@ -232,7 +228,7 @@ footer{padding:48px 22px 38px;text-align:center;color:var(--gray-500);font-size:
           <rect x="3" y="3" width="7" height="7" rx="1.4"/><rect x="14" y="3" width="7" height="7" rx="1.4"/><rect x="3" y="14" width="7" height="7" rx="1.4"/><rect x="14" y="14" width="7" height="7" rx="1.4"/>
         </svg>
         <h3 class="feature-title">2つのAIを使い分け</h3>
-        <p class="feat-body">商品写真を動かしてレビュー動画にするなら Kling v3（TikTokの関連企業 Kuaishou 社が開発）。ストーリーのあるシーン動画を作るなら Seedance 2.0（TikTok 運営元 ByteDance が開発）。ELEVA はジャンルに合わせて自動で使い分けます。手動切り替えもできます。</p>
+        <p class="feat-body">商品写真を動かしてレビュー動画にする用途と、ストーリーのあるシーン動画を作る用途で、ELEVA は内部の AI エンジンを自動で使い分けます。ジャンルに応じた最適化が走るので、毎回設定を切り替える手間がありません。</p>
       </article>
 
       <article class="feat-card">
@@ -273,25 +269,8 @@ footer{padding:48px 22px 38px;text-align:center;color:var(--gray-500);font-size:
   </div>
 </section>
 
-<!-- ── Demo (Seedance sample, audio-on with mute autoplay) ── -->
-<section class="section-demo" id="demo">
-  <div class="container">
-    <div class="section-head-center">
-      <span class="eyebrow">Sample</span>
-      <h2 class="section-title serif">音声付きの仕上がり、<br/>こんな感じです。</h2>
-      <p class="lead muted">Seedance 2.0 で生成したサンプル。タップで音声をオンにできます。</p>
-    </div>
-
-    <div class="demo-wrap">
-      <!-- TODO: Seedance 2.0 音声付きサンプル URL 差し替え -->
-      <video autoplay muted loop playsinline preload="metadata" controls onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-        <source src="" type="video/mp4">
-      </video>
-      <div class="placeholder">音声付きサンプル<br/>（公開準備中）</div>
-    </div>
-    <p class="demo-cap">※ ブラウザの仕様により、初期再生は無音で始まります。タップで音声がオンになります。</p>
-  </div>
-</section>
+<!-- ── Demo section hidden until sample video is ready ── -->
+<section class="section-demo" id="demo" style="display:none;" aria-hidden="true"></section>
 
 <!-- ── Pricing ──────────────────────────────────────── -->
 <section class="section-pricing" id="pricing">
@@ -322,7 +301,7 @@ footer{padding:48px 22px 38px;text-align:center;color:var(--gray-500);font-size:
         <ul class="price-feats">
           <li>15 本/月 × 15 秒</li>
           <li>無音（音声は別オプション）</li>
-          <li>Kling v3 で商品系も対応</li>
+          <li>商品動画ジャンルにも対応</li>
         </ul>
         <a href="/pricing.html#advance" class="price-cta">契約する</a>
       </div>
@@ -360,7 +339,7 @@ footer{padding:48px 22px 38px;text-align:center;color:var(--gray-500);font-size:
         <ul class="price-feats">
           <li>50 本/月 × 30 秒</li>
           <li>音声込み</li>
-          <li>Seedance Fast</li>
+          <li>標準品質エンジン</li>
         </ul>
         <a href="/contact.html" class="price-cta">相談する</a>
       </div>
@@ -371,7 +350,7 @@ footer{padding:48px 22px 38px;text-align:center;color:var(--gray-500);font-size:
         <ul class="price-feats">
           <li>100 本/月 × 30 秒</li>
           <li>音声込み</li>
-          <li>Seedance Fast</li>
+          <li>標準品質エンジン</li>
         </ul>
         <a href="/contact.html" class="price-cta">相談する</a>
       </div>
@@ -381,8 +360,8 @@ footer{padding:48px 22px 38px;text-align:center;color:var(--gray-500);font-size:
         <div class="price-amount">¥398,000<span class="unit">/月</span></div>
         <ul class="price-feats">
           <li>200 本/月 × 30 秒</li>
-          <li>プレミアム品質モデル</li>
-          <li>Seedance Standard</li>
+          <li>プレミアム品質エンジン</li>
+          <li>高精細モード対応</li>
         </ul>
         <a href="/contact.html" class="price-cta">相談する</a>
       </div>
