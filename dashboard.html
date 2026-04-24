@@ -905,31 +905,31 @@ async function generateVideo(){
     const prompt = hasEngine
       ? enginePromptRaw
       : currentScenario.scenes.map(s=>s.prompt).filter(Boolean).join('\n\n');
-    console.log('[generate-video] scenario_id:', currentScenarioJobId);
+    console.log('[generate-multi-scene-video] scenario_id:', currentScenarioJobId);
+    // Body intentionally omits userId — the Edge Function derives it from the JWT.
     const body = {
+      scenario_id: currentScenarioJobId,
       prompt,
-      userId,
       platform: selectedPlatform,
       duration: selectedDuration,
       lang: 'ja',
       genre: 'general',
       aspect_ratio: '9:16',
-      scenario_id: currentScenarioJobId,      // canonical field name (generate-multi-scene-video)
-      scenario_job_id: currentScenarioJobId,  // legacy alias kept for backend compat
     };
-    const res = await fetch('/api/generate-video', {
+    const res = await fetch(SUPABASE_FN_BASE + '/generate-multi-scene-video', {
       method:'POST',
       headers:{
         'Content-Type':'application/json',
+        apikey: SUPABASE_ANON_KEY,
         'Authorization': 'Bearer ' + token,
       },
       body: JSON.stringify(body)
     });
-    const data = await res.json();
+    const data = await res.json().catch(()=>({}));
     if(!res.ok || (data.error && !data.success)){
-      throw new Error(data.error || ('HTTP '+res.status));
+      throw new Error(data.error || data.message || ('HTTP '+res.status));
     }
-    currentTaskId = data.taskId || data.task_id;
+    currentTaskId = data.taskId || data.task_id || data.job_id;
     currentGenId = data.generationId || data.generation_id || data.id;
     if(!currentTaskId){
       throw new Error('taskId が返ってきませんでした');
