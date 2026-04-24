@@ -1,5 +1,5 @@
 // Service Worker — auto-update, network-first
-// Build marker: 2026-04-24-credits-badge-check-balance
+// Build marker: 2026-04-25-scenario-id-uuid-guard
 const CACHE_VERSION = 'v' + Date.now();
 const CACHE_NAME = 'app-cache-' + CACHE_VERSION;
 
