@@ -1110,13 +1110,37 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     if(currentUser){
       const {data:prof} = await sb.from('profiles').select('credits_remaining,is_admin,plan_id,custom_watermark_text').eq('id', currentUser.id).single();
       if(prof){
-        document.getElementById('credits-badge').style.display = '';
-        document.getElementById('credits-badge').textContent = '⚡ ' + (prof.credits_remaining ?? '--');
         if(prof.is_admin){
           document.getElementById('admin-link').style.display = '';
         }
         userPlanId = prof.plan_id || null;
         userCustomWatermarkText = (prof.custom_watermark_text || '').trim();
+      }
+      // ELEVA credit badge — fetched from check-balance (v22+ returns display_credits)
+      try{
+        const {data:{session}} = await sb.auth.getSession();
+        const bres = await fetch(SUPABASE_FN_BASE + '/check-balance',{
+          method:'POST',
+          headers:{
+            'Content-Type':'application/json',
+            apikey:SUPABASE_ANON_KEY,
+            'Authorization':'Bearer ' + (session?.access_token || SUPABASE_ANON_KEY),
+          },
+          body:JSON.stringify({}),
+        });
+        const bjson = await bres.json().catch(()=>({}));
+        const badge = document.getElementById('credits-badge');
+        let label = bjson.display_credits;
+        if(label==null){
+          label = bjson.is_unlimited ? '∞' : (bjson.credits_remaining ?? bjson.videos_remaining ?? prof?.credits_remaining ?? '--');
+        }
+        badge.textContent = '⚡ ' + label;
+        badge.style.display = '';
+      }catch(e){
+        // Graceful fallback if check-balance unavailable — show profiles value
+        const badge = document.getElementById('credits-badge');
+        badge.textContent = '⚡ ' + (prof?.credits_remaining ?? '--');
+        badge.style.display = '';
       }
     }
   }catch(e){
