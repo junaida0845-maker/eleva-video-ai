@@ -358,8 +358,7 @@ let selectedDuration = 15;
 let currentScenario = null;        // scenario returned by scenario-generate
 let currentScenarioJobId = null;   // multi_scene_jobs.id
 let currentIntent = '';            // the original user intent text
-let currentTaskId = null;
-let currentGenId = null;
+let currentGenerationIds = [];   // generate-multi-scene-video returns generation_ids: [UUID, ...]
 let pollingInterval = null;
 
 // Material uploads (STEP 1). Each item: {kind:'image'|'video'|'url', name, dataUrl?, url?}
@@ -929,14 +928,18 @@ async function generateVideo(){
     if(!res.ok || (data.error && !data.success)){
       throw new Error(data.error || data.message || ('HTTP '+res.status));
     }
-    currentTaskId = data.taskId || data.task_id || data.job_id;
-    currentGenId = data.generationId || data.generation_id || data.id;
-    if(!currentTaskId){
-      throw new Error('taskId が返ってきませんでした');
+    // generate-multi-scene-video response shape:
+    // { success, scenario_id, generation_ids: [UUID...], total_scenes, status, message }
+    const genIds = Array.isArray(data.generation_ids) ? data.generation_ids.filter(Boolean) : [];
+    if(genIds.length === 0){
+      console.error('[generate-multi-scene-video] no generation_ids in response:', data);
+      throw new Error('動画生成の開始に失敗しました');
     }
+    currentGenerationIds = genIds;
+    console.log('[generate-multi-scene-video] generation_ids:', genIds, 'total_scenes:', data.total_scenes);
     document.getElementById('loader-text').textContent = '生成中...';
     document.getElementById('loader-sub').textContent = '通常1〜3分ほどかかります。このページを閉じても生成は続きます。';
-    pollStatus();
+    startPolling(currentGenerationIds);
   }catch(e){
     console.error('[generate]', e);
     showAlert('動画生成の開始に失敗しました: ' + (e?.message || String(e)));
@@ -944,87 +947,59 @@ async function generateVideo(){
   }
 }
 
-function pollStatus(){
+function startPolling(generationIds){
   if(pollingInterval) clearInterval(pollingInterval);
+  if(!Array.isArray(generationIds) || generationIds.length === 0){
+    showAlert('生成IDが取得できていません。');
+    goToStep(2);
+    return;
+  }
   let attempts = 0;
-  const POLL_INTERVAL = 10000;        // 10s
-  const MAX_ATTEMPTS = 60;             // ~10 min total
+  const POLL_INTERVAL = 10000;   // 10s
+  const MAX_ATTEMPTS = 24;        // ~4 min ceiling per spec
   pollingInterval = setInterval(async ()=>{
     attempts++;
     if(attempts > MAX_ATTEMPTS){
       clearInterval(pollingInterval);
-      showAlert('生成がタイムアウトしました。履歴から確認してください。');
+      showAlert('生成がタイムアウトしました。再度お試しください。');
       goToStep(2);
       return;
     }
     try{
-      const {data:{session}} = await sb.auth.getSession();
-      const token = session?.access_token;
-      if(!token){
-        clearInterval(pollingInterval);
-        showAlert('セッションが切れました。ログインし直してください。');
+      const {data:gens, error} = await sb
+        .from('generations')
+        .select('id,status,video_url,scene_index')
+        .in('id', generationIds)
+        .order('scene_index', {ascending:true});
+      if(error){
+        console.warn('[poll] db error', error);
         return;
       }
-      const res = await fetch(SUPABASE_FN_BASE + '/sync-generation-status', {
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          apikey: SUPABASE_ANON_KEY,
-          'Authorization':'Bearer ' + token,
-        },
-        body: JSON.stringify({}),
-      });
-      const data = await res.json().catch(()=>({}));
+      const rows = gens || [];
+      const completed = rows.filter(g => g.status === 'completed' && g.video_url);
+      const failed = rows.filter(g => g.status === 'failed');
 
-      const jobs = data.jobs || {};
-      const completed = jobs.jobs_completed ?? 0;
-      const failed = jobs.jobs_failed ?? 0;
-
-      if(completed > 0){
+      if(completed.length === generationIds.length){
         clearInterval(pollingInterval);
-        // Try to find the video URL: response shape varies, so probe a few.
-        const vUrl =
-          data.video_url
-          || data.videoUrl
-          || jobs.video_url
-          || jobs.completed?.[0]?.video_url
-          || jobs.completed?.[0]?.videoUrl
-          || (Array.isArray(data.completed) ? data.completed[0]?.video_url : '')
-          || '';
-        if(vUrl){
-          document.getElementById('result-video').src = vUrl;
+        // Show first scene's video — multi-scene UI is a separate concern.
+        const firstUrl = completed[0]?.video_url;
+        if(firstUrl){
+          document.getElementById('result-video').src = firstUrl;
           goToStep(4);
           setupWatermark();
         }else{
-          // Fall back to generations table lookup
-          let url = '';
-          try{
-            if(currentGenId){
-              const {data:row} = await sb.from('generations').select('video_url').eq('id', currentGenId).single();
-              url = row?.video_url || '';
-            }
-            if(!url){
-              const {data:rows} = await sb.from('generations').select('video_url,created_at').eq('user_id', currentUser?.id).order('created_at',{ascending:false}).limit(1);
-              url = rows?.[0]?.video_url || '';
-            }
-          }catch(_){}
-          if(url){
-            document.getElementById('result-video').src = url;
-            goToStep(4);
-            setupWatermark();
-          }else{
-            showAlert('動画URLが取得できませんでした。履歴から確認してください。');
-            goToStep(2);
-          }
+          showAlert('動画URLが取得できませんでした。履歴から確認してください。');
+          goToStep(2);
         }
-      }else if(failed > 0){
+      }else if(failed.length === generationIds.length){
         clearInterval(pollingInterval);
-        showAlert('生成に失敗しました: ' + (jobs.error || data.error || '不明なエラー'));
+        showAlert('動画生成に失敗しました。再度お試しください。');
         goToStep(2);
       }else{
         const mins = Math.floor(attempts * 10 / 60);
         const secs = (attempts * 10) % 60;
-        document.getElementById('loader-text').textContent = '生成中... ('+mins+'分'+secs+'秒経過)';
+        const progress = rows.length > 0 ? ' ('+completed.length+'/'+generationIds.length+'シーン完了)' : '';
+        document.getElementById('loader-text').textContent = '生成中... '+mins+'分'+secs+'秒経過'+progress;
       }
     }catch(e){
       console.warn('[poll]', e);
@@ -1149,8 +1124,7 @@ function restartFlow(){
   currentScenario = null;
   currentScenarioJobId = null;
   currentIntent = '';
-  currentTaskId = null;
-  currentGenId = null;
+  currentGenerationIds = [];
   materials = [];
   renderThumbs();
   teardownWatermark();

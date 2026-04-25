@@ -1,7 +1,7 @@
 // Service Worker — auto-update, network-first
-// Build marker: 2026-04-25-cache-v2-poll-sync-status
+// Build marker: 2026-04-25-cache-v3-generation-ids-poll
 // Bump CACHE_GENERATION any time you need to invalidate every client cache.
-const CACHE_GENERATION = 2;
+const CACHE_GENERATION = 3;
 const CACHE_NAME = 'eleva-cache-v' + CACHE_GENERATION;
 
 // Install: activate immediately
