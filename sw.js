@@ -1,5 +1,5 @@
 // Service Worker — auto-update, network-first
-// Build marker: 2026-04-25-generate-multi-scene-video-direct
+// Build marker: 2026-04-25-force-cache-bust-verify-multi-scene
 const CACHE_VERSION = 'v' + Date.now();
 const CACHE_NAME = 'app-cache-' + CACHE_VERSION;
 
