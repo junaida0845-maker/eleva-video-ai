@@ -668,8 +668,13 @@ async function step1Submit(){
       return;
     }
     currentScenario = data.scenario || {};
-    currentScenarioJobId = data.job_id || null;
-    console.log('[scenario-generate] job_id:', data.job_id, 'scene_count:', data.scene_count);
+    // Try every plausible field name in case the backend renames it again.
+    currentScenarioJobId =
+      data.job_id || data.scenario_id || data.id
+      || data.scenario?.job_id || data.scenario?.id
+      || null;
+    console.log('[scenario-generate] full response:', data);
+    console.log('[scenario-generate] resolved job_id:', currentScenarioJobId, 'scene_count:', data.scene_count);
     renderScenario(currentScenario, data);
     goToStep(2);
   }catch(e){
@@ -858,8 +863,12 @@ async function step2SendChat(){
       return;
     }
     currentScenario = data.scenario || {};
-    currentScenarioJobId = data.job_id || null;
-    console.log('[scenario-generate/refine] job_id:', data.job_id, 'scene_count:', data.scene_count);
+    currentScenarioJobId =
+      data.job_id || data.scenario_id || data.id
+      || data.scenario?.job_id || data.scenario?.id
+      || currentScenarioJobId;   // keep prior id if refine response omits it
+    console.log('[scenario-generate/refine] full response:', data);
+    console.log('[scenario-generate/refine] resolved job_id:', currentScenarioJobId);
     renderScenario(currentScenario, data);
   }catch(e){
     console.error('[chat]', e);
@@ -871,12 +880,14 @@ async function step2SendChat(){
 
 // ---- STEP 3: kick off video generation ----
 async function generateVideo(){
+  console.log('[generateVideo] entered. currentScenario:', !!currentScenario, 'currentScenarioJobId:', currentScenarioJobId);
   clearAlert();
   // Accept either the flat shape (engine prompt) or the legacy multi-scene shape (scenes[]).
   const enginePromptRaw = currentScenario && currentScenario.kling_prompt;
   const hasEngine = typeof enginePromptRaw === 'string' && enginePromptRaw.trim();
   const hasScenes = currentScenario && Array.isArray(currentScenario.scenes) && currentScenario.scenes.length;
   if(!hasEngine && !hasScenes){
+    console.warn('[generateVideo] blocked: no engine prompt + no scenes', currentScenario);
     showAlert('シナリオが確定していません。STEP 1 からやり直してください。');
     return;
   }
@@ -885,16 +896,18 @@ async function generateVideo(){
   const token = session?.data?.session?.access_token;
   const userId = session?.data?.session?.user?.id || currentUser?.id;
   if(!token || !userId){
+    console.warn('[generateVideo] blocked: no session token/user');
     showAlert('ログインが必要です。');
     return;
   }
   // UUID v1-5 shape check — scenario-generate should have returned a job_id.
   const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if(!currentScenarioJobId || !UUID_RE.test(String(currentScenarioJobId))){
-    console.error('[generate] missing or invalid scenario job_id:', currentScenarioJobId);
-    showAlert('シナリオIDが取得できていません。STEP 1 からやり直してください。');
+    console.error('[generateVideo] BLOCKED: missing or invalid scenario job_id:', currentScenarioJobId);
+    showAlert('シナリオIDが取得できていません。STEP 1 からやり直してください。\n(scenario_id=' + currentScenarioJobId + ')');
     return;
   }
+  console.log('[generateVideo] guards passed, about to POST to generate-multi-scene-video');
 
   goToStep(3);
   document.getElementById('loader-text').textContent = '生成リクエストを送信中...';
