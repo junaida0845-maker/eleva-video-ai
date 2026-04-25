@@ -947,7 +947,8 @@ async function generateVideo(){
 function pollStatus(){
   if(pollingInterval) clearInterval(pollingInterval);
   let attempts = 0;
-  const MAX_ATTEMPTS = 60; // ~8 min at 8s interval
+  const POLL_INTERVAL = 10000;        // 10s
+  const MAX_ATTEMPTS = 60;             // ~10 min total
   pollingInterval = setInterval(async ()=>{
     attempts++;
     if(attempts > MAX_ATTEMPTS){
@@ -957,33 +958,78 @@ function pollStatus(){
       return;
     }
     try{
-      const url = '/api/video-status?taskId=' + encodeURIComponent(currentTaskId) + (currentGenId ? '&generationId=' + encodeURIComponent(currentGenId) : '');
-      const res = await fetch(url);
-      const data = await res.json();
-      const vUrl = data.videoUrl || data.video_url || '';
-      if(data.status === 'completed' || vUrl){
+      const {data:{session}} = await sb.auth.getSession();
+      const token = session?.access_token;
+      if(!token){
         clearInterval(pollingInterval);
+        showAlert('セッションが切れました。ログインし直してください。');
+        return;
+      }
+      const res = await fetch(SUPABASE_FN_BASE + '/sync-generation-status', {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          apikey: SUPABASE_ANON_KEY,
+          'Authorization':'Bearer ' + token,
+        },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json().catch(()=>({}));
+
+      const jobs = data.jobs || {};
+      const completed = jobs.jobs_completed ?? 0;
+      const failed = jobs.jobs_failed ?? 0;
+
+      if(completed > 0){
+        clearInterval(pollingInterval);
+        // Try to find the video URL: response shape varies, so probe a few.
+        const vUrl =
+          data.video_url
+          || data.videoUrl
+          || jobs.video_url
+          || jobs.completed?.[0]?.video_url
+          || jobs.completed?.[0]?.videoUrl
+          || (Array.isArray(data.completed) ? data.completed[0]?.video_url : '')
+          || '';
         if(vUrl){
           document.getElementById('result-video').src = vUrl;
           goToStep(4);
           setupWatermark();
         }else{
-          showAlert('動画URLが取得できませんでした。履歴から確認してください。');
-          goToStep(2);
+          // Fall back to generations table lookup
+          let url = '';
+          try{
+            if(currentGenId){
+              const {data:row} = await sb.from('generations').select('video_url').eq('id', currentGenId).single();
+              url = row?.video_url || '';
+            }
+            if(!url){
+              const {data:rows} = await sb.from('generations').select('video_url,created_at').eq('user_id', currentUser?.id).order('created_at',{ascending:false}).limit(1);
+              url = rows?.[0]?.video_url || '';
+            }
+          }catch(_){}
+          if(url){
+            document.getElementById('result-video').src = url;
+            goToStep(4);
+            setupWatermark();
+          }else{
+            showAlert('動画URLが取得できませんでした。履歴から確認してください。');
+            goToStep(2);
+          }
         }
-      }else if(data.status === 'failed'){
+      }else if(failed > 0){
         clearInterval(pollingInterval);
-        showAlert('生成に失敗しました: ' + (data.error || data.message || '不明なエラー'));
+        showAlert('生成に失敗しました: ' + (jobs.error || data.error || '不明なエラー'));
         goToStep(2);
       }else{
-        const mins = Math.floor(attempts * 8 / 60);
-        const secs = (attempts * 8) % 60;
+        const mins = Math.floor(attempts * 10 / 60);
+        const secs = (attempts * 10) % 60;
         document.getElementById('loader-text').textContent = '生成中... ('+mins+'分'+secs+'秒経過)';
       }
     }catch(e){
       console.warn('[poll]', e);
     }
-  }, 8000);
+  }, POLL_INTERVAL);
 }
 
 // ---- STEP 4 ----
